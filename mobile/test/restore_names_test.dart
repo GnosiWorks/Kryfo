@@ -191,12 +191,7 @@ void main() {
     final decoy = _Decoy();
     useDatabasesForTest(decoy, Session(decoy));
     await landQuietRestore(from, docs, manifest);
-    expect(under(docs), [
-      'halo_d.db',
-      'media_k2/a.jpg',
-      'onion_d.key',
-      'wallpapers_k2/w/b.jpg',
-    ]);
+    expect(under(docs), ['k2.db', 'media_k2/a.jpg', 'wallpapers_k2/w/b.jpg']);
   });
 
   test('an old text file restored in a decoy lands in the decoy and leaves '
@@ -230,11 +225,13 @@ void main() {
       File(p.join(docs, 'onion.key')).readAsStringSync(),
       'everyday onion',
     );
-    expect(File(p.join(docs, 'halo_d.db')).readAsStringSync(), 'old file');
-    expect(File(p.join(docs, 'onion_d.key')).readAsStringSync(), 'old onion');
+    expect(File(p.join(docs, 'k2.db')).readAsStringSync(), 'old file');
+    // no onion key of the decoy's lands beside it
+    expect(File(p.join(docs, 'onion_k2.key')).existsSync(), isFalse);
+    expect(File(p.join(docs, 'onion_d.key')).existsSync(), isFalse);
     const store = FlutterSecureStorage();
     expect(await store.read(key: 'halo.db.passphrase'), 'everyday key');
-    expect(await store.read(key: 'halo.d.key'), "x'${'4e' * 32}'");
+    expect(await store.read(key: 'halo.k2.key'), "x'${'4e' * 32}'");
     expect(await store.read(key: 'my_handle'), 'mine');
     // the everyday sessions are not the ones that came back
     final prefs = await SharedPreferences.getInstance();

@@ -29,6 +29,8 @@ import '../scam_prefs.dart';
 import '../typing.dart' show loadTypingOn;
 import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
+import '../share_targets.dart'
+    show loadShareMenuOn, saveShareMenuOn, shareTargets;
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'licences_screen.dart';
@@ -61,7 +63,8 @@ import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
-import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'dev_about_sheet.dart'
+    show devChatOffered, shareYourStory, storyHint, writeToMarios;
 import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
@@ -380,6 +383,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _shieldOn;
   bool? _typingOn;
   bool? _gifOn;
+  // android's share menu: null until read, and the row only where the
+  // menu can take chats
+  bool? _shareMenuOn;
+  bool _shareMenuShown = false;
   // only for copies from the site or github
   bool _updateOffered = false;
   bool? _updateOn;
@@ -431,6 +438,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadGifSearchOn(session.container).then((v) {
       if (mounted) setState(() => _gifOn = v);
+    });
+    shareTargets.supported().then((ok) async {
+      if (!ok) return;
+      final v = await loadShareMenuOn(session.container);
+      if (mounted) {
+        setState(() {
+          _shareMenuShown = true;
+          _shareMenuOn = v;
+        });
+      }
     });
     _readUpdateOn();
     if (kLinkedDevicesOn) _readDevices();
@@ -857,6 +874,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await saveGifSearchOn(true, session.container);
                   },
                 ),
+                // off by default. a decoy shows no such row: it could put
+                // nothing in the menu. under another icon nothing goes, and
+                // the row says so
+                if (_shareMenuShown && !appState.inDecoyView)
+                  HaloRow(
+                    icon: Icons.ios_share_rounded,
+                    label: l10n.settingsShareMenu,
+                    hint: lockState.enabled
+                        ? l10n.settingsShareMenuHintLocked
+                        : l10n.settingsShareMenuHint,
+                    note: appFaceNow.value == AppFace.kryfo
+                        ? null
+                        : l10n.settingsShareMenuDisguised,
+                    toggled: _shareMenuOn ?? false,
+                    pending: _shareMenuOn == null,
+                    onTap: () async {
+                      final v = !(_shareMenuOn ?? false);
+                      setState(() => _shareMenuOn = v);
+                      await saveShareMenuOn(v, session.container);
+                    },
+                  ),
               ],
             ),
             HaloSection(l10n.settingsSecurity),
@@ -1193,6 +1231,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: l10n.settingsWriteToMarios,
                     hint: l10n.settingsWriteToMariosHint,
                     onTap: () => writeToMarios(context),
+                  ),
+                // a story for the people who fund Kryfo, in the person's words
+                // its line follows the chat's first send
+                if (devChatOffered && !linkedRole)
+                  ListenableBuilder(
+                    listenable: appState,
+                    builder: (context, _) => HaloRow(
+                      icon: Icons.auto_stories_outlined,
+                      label: l10n.storyRow,
+                      hint: storyHint(appState.devRow?.started ?? false),
+                      onTap: () => shareYourStory(context),
+                    ),
                   ),
                 HaloRow(
                   icon: Icons.flag_outlined,

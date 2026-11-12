@@ -76,8 +76,7 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -85,8 +84,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -98,13 +96,12 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -124,7 +121,7 @@ abstract class AppLocalizations {
     Locale('uk'),
     Locale('vi'),
     Locale('zh'),
-    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+    Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant')
   ];
 
   /// atmosphere.dart
@@ -7849,6 +7846,12 @@ abstract class AppLocalizations {
   /// **'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.'**
   String get restoreDeletedComeBack;
 
+  /// screens/restore_screen.dart: a point under "What doesn't": burner room messages removed after the backup can show again until the room's members send their removals again
+  ///
+  /// In en, this message translates to:
+  /// **'Burner rooms may show messages that were removed, for a few days.'**
+  String get restoreRoomsMayShow;
+
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:
@@ -11392,8 +11395,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridge from a friend'**
-  String get bridgesBridgeFromAFriend;
+  /// **'Paste a bridge'**
+  String get bridgesPasteABridge;
 
   /// screens/bridges_screen.dart
   ///
@@ -11800,8 +11803,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'from a friend'**
-  String get bridgesFromAFriendLower;
+  /// **'pasted'**
+  String get bridgesPastedLower;
 
   /// screens/bridges_screen.dart
   ///
@@ -19195,6 +19198,12 @@ abstract class AppLocalizations {
   /// **'The other app can see this file. Kryfo keeps it encrypted until then.'**
   String get fileOpenWithNote;
 
+  /// under Open with…, the line after fileOpenWithNote: the app the file goes to keeps its own copy
+  ///
+  /// In en, this message translates to:
+  /// **'The other app keeps a copy.'**
+  String get fileOtherAppKeepsCopy;
+
   /// file viewer head: who sent the file
   ///
   /// In en, this message translates to:
@@ -19908,10 +19917,195 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protected'**
   String get archiveProtected;
+
+  /// settings, privacy: the switch that puts the latest everyday chats in android's share menu (android 13 and later)
+  ///
+  /// In en, this message translates to:
+  /// **'Show chats in the share menu'**
+  String get settingsShareMenu;
+
+  /// settings, privacy: the line under settingsShareMenu, app lock off
+  ///
+  /// In en, this message translates to:
+  /// **'Your latest chats appear by name when you share from another app.'**
+  String get settingsShareMenuHint;
+
+  /// settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while Kryfo is locked
+  ///
+  /// In en, this message translates to:
+  /// **'Your latest chats appear by name in other apps\' share menus only while Kryfo is unlocked.'**
+  String get settingsShareMenuHintLocked;
+
+  /// settings, privacy: a note under settingsShareMenu while a disguise icon (Notes, Weather...) is on: nothing is published then
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats stay out of the share menu while Kryfo wears another icon.'**
+  String get settingsShareMenuDisguised;
+
+  /// screens/conn_check_sheet.dart and the transport page's button: a report on how Tor gets out on this network, which the person can copy or send to the developer themselves
+  ///
+  /// In en, this message translates to:
+  /// **'Check my connection'**
+  String get connCheckTitle;
+
+  /// screens/conn_check_sheet.dart: above the report. says the report shown below is everything that would be shared, and what it never holds
+  ///
+  /// In en, this message translates to:
+  /// **'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, nothing that names your device. Nothing leaves until you copy or send it.'**
+  String get connCheckLine;
+
+  /// screens/conn_check_sheet.dart: under the report, which is always in English
+  ///
+  /// In en, this message translates to:
+  /// **'The check is in English, so it reads the same everywhere.'**
+  String get connCheckEnglish;
+
+  /// screens/conn_check_sheet.dart: builds the report again from what the app sees now
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get connCheckAgain;
+
+  /// screens/conn_check_sheet.dart: opens the chat with the developer with the report in the composer, for the person to send. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Marios'**
+  String get connCheckSend;
+
+  /// settings, about: opens the chat with the developer with a short template to tell why the person uses Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Share your story'**
+  String get storyRow;
+
+  /// settings, about: the line under storyRow once the chat with the developer has started
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. Stories are shared only with your consent.'**
+  String get storyHint;
+
+  /// settings, about: the line under storyRow before the first message to the developer, while the chat can still be started anonymously
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. You can write anonymously, and stories are shared only with your consent.'**
+  String get storyHintAnon;
+
+  /// the words put in the developer chat's composer by storyRow, for the person to fill in, change or drop before sending. three prompts, each followed by an empty line to write on; keep the line breaks
+  ///
+  /// In en, this message translates to:
+  /// **'Why I use Kryfo:\n\nWhat is blocked where I live:\n\nRegion (optional):\n'**
+  String get storyTemplate;
+
+  /// screens/chat_screen.dart: under the in-chat search, while a hit far up the chat is loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Finding the message'**
+  String get chatFindingMessage;
+
+  /// screens/chat_screen.dart: toast when a search hit, a quote or a pin points at a message that was unsent or burned
+  ///
+  /// In en, this message translates to:
+  /// **'That message is gone.'**
+  String get chatMessageGone;
+
+  /// stickers/sticker_sheet.dart: the picker tab of favourite gifs
+  ///
+  /// In en, this message translates to:
+  /// **'Favourites'**
+  String get gifFavTab;
+
+  /// message menu and gif picker: keep this gif in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favourites'**
+  String get gifFavAdd;
+
+  /// toast after a gif was kept in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Added to favourites'**
+  String get gifFavAdded;
+
+  /// toast when a gif could not be kept in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add it to favourites. Try again.'**
+  String get gifFavCouldNotAdd;
+
+  /// gifs/gif_fav_panel.dart: screen reader action that removes a favourite
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favourites'**
+  String get gifFavRemove;
+
+  /// gifs/gif_fav_panel.dart: said by the screen reader after a favourite was removed
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favourites'**
+  String get gifFavRemoved;
+
+  /// gifs/gif_fav_panel.dart: screen reader action that starts editing the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Edit favourites'**
+  String get gifFavEdit;
+
+  /// gifs/gif_fav_panel.dart: heading while editing the favourites. the word between asterisks is set in amber italics
+  ///
+  /// In en, this message translates to:
+  /// **'Your *favourites*'**
+  String get gifFavEditTitle;
+
+  /// gifs/gif_fav_panel.dart: line under the grid while editing
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag to reorder. Tap the cross to remove.'**
+  String get gifFavEditHint;
+
+  /// gifs/gif_fav_panel.dart: line under the favourites grid
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this phone, encrypted. Works without GIF search.'**
+  String get gifFavKept;
+
+  /// gifs/gif_fav_panel.dart: line under the favourites grid on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this computer, encrypted. Works without GIF search.'**
+  String get gifFavKeptDesk;
+
+  /// gifs/gif_fav_panel.dart: empty favourites tab, title
+  ///
+  /// In en, this message translates to:
+  /// **'No favourites yet'**
+  String get gifFavEmptyTitle;
+
+  /// gifs/gif_fav_panel.dart: empty favourites tab, how to add one
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a GIF in a chat or in GIFs to add it here.'**
+  String get gifFavEmptyLine;
+
+  /// gifs/gif_fav_panel.dart: screen reader action, move a favourite one place earlier
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get gifFavMoveEarlier;
+
+  /// gifs/gif_fav_panel.dart: screen reader action, move a favourite one place later
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get gifFavMoveLater;
+
+  /// gifs/gif_fav_panel.dart: screen reader label of a favourite in the grid. number is its place, already formatted
+  ///
+  /// In en, this message translates to:
+  /// **'Favourite GIF {number}'**
+  String gifFavTileA11y(String number);
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -19920,82 +20114,48 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => <String>[
-    'ar',
-    'de',
-    'en',
-    'es',
-    'fa',
-    'fr',
-    'hi',
-    'id',
-    'it',
-    'pl',
-    'pt',
-    'ru',
-    'tr',
-    'uk',
-    'vi',
-    'zh',
-  ].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'de', 'en', 'es', 'fa', 'fr', 'hi', 'id', 'it', 'pl', 'pt', 'ru', 'tr', 'uk', 'vi', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
   // Lookup logic when language+script codes are specified.
   switch (locale.languageCode) {
-    case 'zh':
-      {
-        switch (locale.scriptCode) {
-          case 'Hant':
-            return AppLocalizationsZhHant();
-        }
-        break;
-      }
+    case 'zh': {
+  switch (locale.scriptCode) {
+    case 'Hant': return AppLocalizationsZhHant();
+   }
+  break;
+   }
   }
 
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'de':
-      return AppLocalizationsDe();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'es':
-      return AppLocalizationsEs();
-    case 'fa':
-      return AppLocalizationsFa();
-    case 'fr':
-      return AppLocalizationsFr();
-    case 'hi':
-      return AppLocalizationsHi();
-    case 'id':
-      return AppLocalizationsId();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'pl':
-      return AppLocalizationsPl();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'ru':
-      return AppLocalizationsRu();
-    case 'tr':
-      return AppLocalizationsTr();
-    case 'uk':
-      return AppLocalizationsUk();
-    case 'vi':
-      return AppLocalizationsVi();
-    case 'zh':
-      return AppLocalizationsZh();
+    case 'ar': return AppLocalizationsAr();
+    case 'de': return AppLocalizationsDe();
+    case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'fa': return AppLocalizationsFa();
+    case 'fr': return AppLocalizationsFr();
+    case 'hi': return AppLocalizationsHi();
+    case 'id': return AppLocalizationsId();
+    case 'it': return AppLocalizationsIt();
+    case 'pl': return AppLocalizationsPl();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+    case 'tr': return AppLocalizationsTr();
+    case 'uk': return AppLocalizationsUk();
+    case 'vi': return AppLocalizationsVi();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

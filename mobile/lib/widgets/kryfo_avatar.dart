@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../profile_photo.dart' show PhotoBook, photoBook, photoImage;
 import '../theme.dart';
 import 'avatar_mark.dart';
+import 'pictures_gate.dart' show HeldPicture;
 
 // how many distinct avatars exist
 int get avatarChoiceCount => _palettes.length * markCount * rotCount;
@@ -158,7 +159,7 @@ class KryfoAvatar extends StatelessWidget {
 }
 
 // a profile photo, round, decoded at the size it is drawn. one that will
-// not decode shows the face
+// not decode shows the face. nothing decoded under the lock
 class _Photo extends StatelessWidget {
   const _Photo({
     super.key,
@@ -173,15 +174,25 @@ class _Photo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final px = (size * MediaQuery.devicePixelRatioOf(context)).ceil();
+    // under the lock its blur, or the face before one is made
     return ClipOval(
-      child: Image(
-        image: photoImage(bytes, px),
+      child: SizedBox(
         width: size,
         height: size,
-        fit: BoxFit.cover,
-        gaplessPlayback: true,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (_, _, _) => face(),
+        child: HeldPicture(
+          bytes: bytes,
+          shutGround: face(),
+          image: (fade) => Image(
+            image: photoImage(bytes, px),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.medium,
+            frameBuilder: fade,
+            errorBuilder: (_, _, _) => face(),
+          ),
+        ),
       ),
     );
   }

@@ -3191,7 +3191,7 @@ void main() {
       l.bridgesFastestWhereTorIsnt,
       "Fastest where Tor isn't blocked. Kryfo never connects outside Tor.",
     );
-    expect(l.bridgesBridgeFromAFriend, "Bridge from a friend");
+    expect(l.bridgesPasteABridge, "Paste a bridge");
     expect(
       l.bridgesPasteOrScanALine,
       "Paste or scan a line from the Tor Project or someone you trust.",
@@ -3247,7 +3247,7 @@ void main() {
     expect(l.bridgesTorNoBridge, "Tor, no bridge");
     expect(l.bridgesBuiltIn, "built-in");
     expect(l.bridgesFromTheTorProjectLower, "from the Tor Project");
-    expect(l.bridgesFromAFriendLower, "from a friend");
+    expect(l.bridgesPastedLower, "pasted");
     expect(l.bridgesMethodFrom("<method>", "<from>"), "<method>, <from>");
     expect(l.bridgesBuiltInBridges, "Built-in bridges");
     expect(

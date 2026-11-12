@@ -35,7 +35,8 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:enableOnBackInvokedCallback="true">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33">
         <!-- predictive back: dart says when it wants back (LockBack in
              lock_layer.dart), so a swipe while locked never reaches a page.
              one instance only: the engine attaches to one screen, and a
@@ -112,6 +113,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconNotes"
@@ -153,6 +158,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconWeather"
@@ -194,6 +203,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconTasks"
@@ -235,6 +248,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconNews"
@@ -276,6 +293,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <service
             android:name=".HaloListenerService"

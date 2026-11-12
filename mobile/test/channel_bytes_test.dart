@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // on flutter 3.41.7 a method channel's bytes are a read-only view. every
 // place that zeroes bytes it got from a channel has to zero its own copy:
-// a throw there blanked every pdf page and jammed the lock (phone check
-// 2026-11-10, F1 and F2). the answers here come read-only, as on a phone.
+// a throw there blanks every pdf page and jams the lock. the answers here
+// come read-only, as on a phone.
 import 'dart:io';
 
 import 'package:flutter/services.dart';

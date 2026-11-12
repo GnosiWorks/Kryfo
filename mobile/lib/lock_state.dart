@@ -835,6 +835,10 @@ class LockState extends ChangeNotifier {
   // what a finger opens, sealed (BioKey.kt). the same key and the same form
   // whichever side it opens
   static const _kSeal = 'halo.lock.biometric.seal';
+  // which pin roles exist, as one value at one length on every install
+  // with a lock (_flagsValue). the names before it said so by being there:
+  // they are read once, then go
+  static const _kFlags = 'halo.lock.flags';
   static const _kWipeOn = 'halo.lock.panic_enabled';
   // whether the decoy has a wipe pin, or a decoy pin, of its own
   static const _kDWipe = 'halo.lock.d.wipe';
@@ -1065,10 +1069,11 @@ class LockState extends ChangeNotifier {
 
   // Done on the card: it never comes back on this side
   Future<void> cardFinished() async {
-    await _store.write(_inDecoy ? _kDCardDone : _kCardDone, 'true');
     if (_inDecoy) {
       _dCardDone = true;
+      await _writeFlags();
     } else {
+      await _store.write(_kCardDone, 'true');
       _cardDone = true;
     }
     notifyListeners();
@@ -1083,9 +1088,6 @@ class LockState extends ChangeNotifier {
     try {
       _enabled = (await _store.read(_kEnabled)) == 'true';
       _biometric = (await _store.read(_kBio)) == 'true';
-      _panicEnabled = (await _store.read(_kWipeOn)) == 'true';
-      _dWipe = (await _store.read(_kDWipe)) == 'true';
-      _dDecoy = (await _store.read(_kDDecoy)) == 'true';
       _decoyListed = (await _store.read(kListedContainers) ?? '')
           .split(',')
           .contains(HaloContainer.decoy.id);
@@ -1116,9 +1118,8 @@ class LockState extends ChangeNotifier {
       _counters = c;
       _cardFlag = await _store.read(_kCard);
       _cardDone = await _store.read(_kCardDone) == 'true';
-      _dCardDone = await _store.read(_kDCardDone) == 'true';
       _setApp = await _store.read(_kSetApp) == 'true';
-      _setWipe = await _store.read(_kSetWipe) == 'true';
+      await _readFlags();
       _unreadable = false;
     } catch (e) {
       dlog('lock: storage read failed: $e');
@@ -1142,6 +1143,7 @@ class LockState extends ChangeNotifier {
       dlog('lock: decoy finger left (${e.runtimeType})');
     }
     await _upgradeTable();
+    await _settleFlags();
     await _dropLeftLegacy();
     await _markCard();
     await _readKey();
@@ -1644,8 +1646,64 @@ class LockState extends ChangeNotifier {
       _setApp = true;
     }
     if (slot == PinSlot.wipe && !_setWipe) {
-      await _store.write(_kSetWipe, 'true');
       _setWipe = true;
+      await _writeFlags();
+    }
+  }
+
+  static const _oldFlags = [
+    _kWipeOn,
+    _kDWipe,
+    _kDDecoy,
+    _kDCardDone,
+    _kSetWipe,
+  ];
+
+  String get _flagsValue => [
+    _panicEnabled,
+    _dWipe,
+    _dDecoy,
+    _dCardDone,
+    _setWipe,
+  ].map((b) => b ? '1' : '0').join();
+
+  Future<void> _writeFlags() => _store.write(_kFlags, _flagsValue);
+
+  // the flags as kept, or, with none kept yet, what the names before them
+  // say. once written they are the one answer: a name from before left
+  // beside them (a stop before it went) says nothing more
+  String? _flagsKept;
+  Future<void> _readFlags() async {
+    final v = _flagsKept = await _store.read(_kFlags);
+    final kept = v != null && v.length == 5;
+    Future<bool> at(int i) async =>
+        kept ? v[i] == '1' : await _store.read(_oldFlags[i]) == 'true';
+    _panicEnabled = await at(0);
+    _dWipe = await at(1);
+    _dDecoy = await at(2);
+    _dCardDone = await at(3);
+    _setWipe = await at(4);
+  }
+
+  // with a lock on the flags are written as one value before the names
+  // from before go, so a stop between loses none, and the finger switch is
+  // there whether a decoy pin ever turned it off or not. without a lock
+  // nothing is written and leftovers go. a write that fails leaves it all
+  // for the next start
+  Future<void> _settleFlags() async {
+    try {
+      if (_enabled) {
+        if (_flagsKept != _flagsValue) await _writeFlags();
+        if (await _store.read(_kBio) == null) {
+          await _store.write(_kBio, 'false');
+        }
+      }
+      for (final k in _oldFlags) {
+        if (await _store.read(k) != null) await _store.delete(k);
+      }
+      _flagsKept = _flagsValue;
+    } catch (e) {
+      dlog('lock: flags not settled (${e.runtimeType})');
     }
   }
 
@@ -1927,8 +1985,8 @@ class LockState extends ChangeNotifier {
       rethrow;
     }
     if (ok && _inDecoy) {
-      await _store.write(_kDDecoy, 'true');
       _dDecoy = true;
+      await _writeFlags();
       // as in any install: a decoy pin takes fingerprint unlock with it
       if (!hadInner) await _fingerOff();
       notifyListeners();
@@ -1975,14 +2033,13 @@ class LockState extends ChangeNotifier {
       PinSlot.decoyDecoy,
       PinSlot.decoyVault,
     ]);
-    await _store.delete(_kDWipe);
-    await _store.delete(_kDDecoy);
     await _store.delete(_kDBio);
+    _dWipe = false;
+    _dDecoy = false;
+    await _writeFlags();
     // a finger could only open the decoy: its seal and key go with it, and
     // the everyday switch comes back off
     if (_decoyListed) await _fingerOff();
-    _dWipe = false;
-    _dDecoy = false;
     _dWipeHidden = false;
     _decoyListed = false;
     notifyListeners();
@@ -1991,8 +2048,8 @@ class LockState extends ChangeNotifier {
   // inside the decoy: its own decoy pin goes
   Future<void> clearInnerDecoyPin() async {
     await _clearSlots(const [PinSlot.decoyDecoy]);
-    await _store.delete(_kDDecoy);
     _dDecoy = false;
+    await _writeFlags();
     notifyListeners();
   }
 
@@ -2149,20 +2206,20 @@ class LockState extends ChangeNotifier {
     if (_inDecoy) {
       final ok = await _setup(pin, PinSlot.decoyWipe, PinKind.wipe);
       if (ok) {
-        await _store.write(_kDWipe, 'true');
         _dWipe = true;
         _dWipeHidden = false;
+        await _writeFlags();
         notifyListeners();
       }
       return ok;
     }
     final ok = await _setup(pin, PinSlot.wipe, PinKind.wipe);
     if (ok) {
-      await _store.write(_kWipeOn, 'true');
+      _panicEnabled = true;
+      await _writeFlags();
       await _store.delete(_kPanicHash);
       await _store.delete(_kPanicSalt);
       _legacy = {..._legacy, 'ws': '', 'wh': ''};
-      _panicEnabled = true;
       notifyListeners();
     }
     return ok;
@@ -2227,6 +2284,7 @@ class LockState extends ChangeNotifier {
       _legacy = {..._legacy, 'as': '', 'ah': ''};
       await _store.write(_kEnabled, 'true');
       _enabled = true;
+      await _settleFlags();
       // a pin means the app is not to be read without it, and a
       // notification with the message in it is the app read without it
       if (!wasOn) await setHideNotifContent(true);
@@ -2259,9 +2317,9 @@ class LockState extends ChangeNotifier {
 
   Future<void> _dropDecoyWipe() async {
     await _clearSlots(const [PinSlot.decoyWipe]);
-    await _store.delete(_kDWipe);
     _dWipe = false;
     _dWipeHidden = false;
+    await _writeFlags();
   }
 
   Future<void> disablePanicPin() async {
@@ -2271,11 +2329,11 @@ class LockState extends ChangeNotifier {
       return;
     }
     await _clearSlots(const [PinSlot.wipe]);
+    _panicEnabled = false;
+    await _writeFlags();
     await _store.delete(_kPanicHash);
     await _store.delete(_kPanicSalt);
-    await _store.delete(_kWipeOn);
     _legacy = {..._legacy, 'ws': '', 'wh': ''};
-    _panicEnabled = false;
     notifyListeners();
   }
 
@@ -2287,7 +2345,7 @@ class LockState extends ChangeNotifier {
       _dWipeHidden = true;
       // its fingerprint goes with its lock, as in any install, the switch
       // included. nothing else is written
-      if (_biometric || await _store.read(_kBio) != null) {
+      if (_biometric || await _store.read(_kBio) == 'true') {
         await _fingerOff(forget: true);
       }
       notifyListeners();
@@ -2300,6 +2358,7 @@ class LockState extends ChangeNotifier {
     });
     for (final k in [
       _kEnabled,
+      _kFlags,
       _kState,
       _kBio,
       _kSeal,

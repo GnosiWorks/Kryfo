@@ -61,7 +61,9 @@ class SharedText {
   final String words;
   // the session it was shown in, once it was
   final String? seenIn;
-  const SharedText(this.id, this.words, {this.seenIn});
+  // the chat picked in the share menu (share_targets.dart), if one was
+  final String? chat;
+  const SharedText(this.id, this.words, {this.seenIn, this.chat});
 
   static SharedText? from(Object? raw) {
     if (raw is! Map) return null;
@@ -74,6 +76,7 @@ class SharedText {
         text: raw['text'] as String?,
       ),
       seenIn: raw['seen'] as String?,
+      chat: raw['chat'] as String?,
     );
   }
 }

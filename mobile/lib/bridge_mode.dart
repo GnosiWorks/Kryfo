@@ -581,7 +581,7 @@ BridgeLine bridgeStatusLine(
 String bridgeChoiceName(BridgeChoice c) => switch (c) {
   BridgeChoice.auto => l10n.bridgesAutomatic,
   BridgeChoice.direct => l10n.bridgesDirect,
-  BridgeChoice.friend => l10n.bridgesBridgeFromAFriend,
+  BridgeChoice.friend => l10n.bridgesPasteABridge,
   BridgeChoice.torProject => l10n.bridgesFromTheTorProject,
   BridgeChoice.builtin => l10n.bridgesBuiltInBridges,
   BridgeChoice.snowflake => 'Snowflake',
@@ -599,7 +599,7 @@ String bridgeMethodWords(BridgeStatus s, {BridgeChoice? choice}) {
   final from = switch (source) {
     'builtin' => l10n.bridgesBuiltIn,
     'moat' => l10n.bridgesFromTheTorProjectLower,
-    'own' => l10n.bridgesFromAFriendLower,
+    'own' => l10n.bridgesPastedLower,
     _ => '',
   };
   final name = ltr(s.method);

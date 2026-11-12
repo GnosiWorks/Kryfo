@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/msg_order.dart' show byWritten, rowWrittenAt;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
@@ -97,6 +98,24 @@ class _GroupDb implements HaloDb {
 
   // whole threads read
   int wholeLoads = 0;
+  // the pages held from their oldest, as a reload keeps them
+  @override
+  Future<List<Map<String, Object?>>> groupMessagesFrom(
+    String groupId, {
+    required int fromId,
+    required int fromAt,
+  }) async => [
+    for (final r in _ordered)
+      if (byWritten(
+            rowWrittenAt(r),
+            ((r['rowid'] ?? r['id']) as num).toInt(),
+            fromAt,
+            fromId,
+          ) >=
+          0)
+        r,
+  ];
+
   @override
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     wholeLoads++;

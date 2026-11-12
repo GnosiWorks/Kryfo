@@ -13,6 +13,8 @@ import 'package:path/path.dart' as p;
 
 import '../dlog.dart';
 
+import 'desktop_mode.dart' show EngineMemory;
+
 import 'desktop_posix.dart' show syncFolder;
 import 'desktop_vault.dart';
 import 'sealed_file.dart';
@@ -331,12 +333,14 @@ void makePlaceholders(String docs, {Random? random}) {
 /// key as docs/onion.key, the relay marks in support/engine.state. tor's
 /// own state stays on the disk through a link, docs/tor. windows makes a
 /// link only for an admin or in developer mode, and its engine folder is
-/// on the disk already: tor's is a real folder there, kept across starts
+/// on the disk: tor's is a real folder there, kept across starts, and the
+/// key, the marks and the wrap queue go in the engine's [memory] instead
 class EngineFiles {
   EngineFiles({
     required this.docs,
     required this.support,
     required this.runtime,
+    this.memory,
     bool? windows,
   }) : windows = windows ?? Platform.isWindows;
 
@@ -344,6 +348,7 @@ class EngineFiles {
   final String support;
   final String runtime;
   final bool windows;
+  final EngineMemory? memory;
   Timer? _watch;
   // a digest of the key start() put in the engine's folder: one still the
   // same is no news, and never goes over a key a restore sealed since
@@ -354,8 +359,10 @@ class EngineFiles {
   String get _sealedKey => p.join(docs, 'onion.key');
   String get _state => p.join(support, 'engine.state');
   // the batch book (engine/batches.go) is one of them: kept, a desktop
-  // start puts every address back in its batch
-  static final _marks = RegExp(r'^nostr_((seen|last|heard)_|book$)');
+  // start puts every address back in its batch. so is the wrap queue
+  // (engine/topup.go, sealed by the engine): a send a store missed is
+  // still topped up after a restart
+  static final _marks = RegExp(r'^nostr_((seen|last|heard)_|book$|topup$)');
 
   String get _anchorsEntry => 'kryfo.anchors';
 
@@ -366,11 +373,29 @@ class EngineFiles {
     clearMemory();
     rawFileAccess(() {
       Directory(dir).createSync(recursive: true);
+      // in memory from here: what a run before kept plain in the folder is
+      // in its sealed copy already, and goes
+      if (memory != null) _plainLeftInFolder();
       Directory(p.join(docs, 'tor')).createSync(recursive: true);
       _linkTor();
     });
     await _fromOlderLayout(vault);
     _restoreMarks(vault);
+  }
+
+  // the key and every nostr_ file in the folder, zeroed and gone. under
+  // rawFileAccess
+  void _plainLeftInFolder() {
+    for (final f in Directory(dir).listSync().whereType<File>()) {
+      final n = p.basename(f.path);
+      if (n != 'onion.key' && !n.startsWith('nostr_')) continue;
+      try {
+        _zero(f.path);
+        f.deleteSync();
+      } catch (e) {
+        dlog('engine folder: a plain file stayed (${e.runtimeType})');
+      }
+    }
   }
 
   // engine/tor is a link to docs/tor and nothing else: a real folder in
@@ -453,7 +478,12 @@ class EngineFiles {
     rawFileAccess(() {
       final queue = File(p.join(docs, 'nostr_topup'));
       final to = p.join(dir, 'nostr_topup');
-      if (queue.existsSync() && !File(to).existsSync()) {
+      final mem = memory;
+      if (mem != null) {
+        if (queue.existsSync() && mem.get('nostr_topup') == null) {
+          mem.put('nostr_topup', queue.readAsBytesSync());
+        }
+      } else if (queue.existsSync() && !File(to).existsSync()) {
         File('$to.new').writeAsBytesSync(queue.readAsBytesSync(), flush: true);
         File('$to.new').renameSync(to);
       }
@@ -525,6 +555,13 @@ class EngineFiles {
       for (final e in m!.entries) {
         if (!_marks.hasMatch(e.key) || e.key.contains('/')) continue;
         // whole or not at all: the engine never reads half a file
+        final mem = memory;
+        if (mem != null) {
+          final b = base64.decode(e.value);
+          mem.put(e.key, wholeLines(e.key, b));
+          b.fillRange(0, b.length, 0);
+          continue;
+        }
         final to = p.join(dir, e.key);
         File('$to.new').writeAsBytesSync(
           wholeLines(e.key, base64.decode(e.value)),
@@ -540,7 +577,14 @@ class EngineFiles {
   /// are ever lost
   Future<void> keepMarksOff(DesktopVault vault) async {
     final d = dir, st = _state;
-    final anchors = await runSealed(() => keepMarksIn(d, st, writer: 'tick'));
+    final mem = memory;
+    // the memory folder is read here, its copies sealed off the screen's
+    final held = mem == null ? null : marksIn(mem);
+    final anchors = await runSealed(
+      () => held == null
+          ? keepMarksIn(d, st, writer: 'tick')
+          : keepMarkMap(held, st, writer: 'tick'),
+    );
     await _keepAnchors(vault, anchors);
   }
 
@@ -553,7 +597,12 @@ class EngineFiles {
   }
 
   /// the same, here and now: as the app ends
-  void keepMarks() => keepMarksIn(dir, _state, writer: 'exit');
+  void keepMarks() {
+    final mem = memory;
+    mem == null
+        ? keepMarksIn(dir, _state, writer: 'exit')
+        : keepMarkMap(marksIn(mem), _state, writer: 'exit');
+  }
 
   /// every minute: the marks kept, and a key the engine wrote sealed at
   /// once, though it stays for the engine until a start succeeds
@@ -572,10 +621,13 @@ class EngineFiles {
   /// a key in the engine's folder that the sealed copy does not hold yet,
   /// sealed into it. the plain one stays
   void sealNewKey() {
-    final k = rawFileAccess(() {
-      final f = File(_key);
-      return f.existsSync() ? f.readAsBytesSync() : null;
-    });
+    final mem = memory;
+    final k = mem != null
+        ? mem.get('onion.key')
+        : rawFileAccess(() {
+            final f = File(_key);
+            return f.existsSync() ? f.readAsBytesSync() : null;
+          });
     if (k == null || k.isEmpty) return;
     try {
       // the engine made one (it differs from what was handed it), or there
@@ -598,7 +650,10 @@ class EngineFiles {
     _handed = null;
     if (File(_sealedKey).existsSync()) {
       final k = File(_sealedKey).readAsBytesSync();
-      rawFileAccess(() => File(_key).writeAsBytesSync(k, flush: true));
+      final mem = memory;
+      mem != null
+          ? mem.put('onion.key', k)
+          : rawFileAccess(() => File(_key).writeAsBytesSync(k, flush: true));
       _handed = sha256.convert(k);
       k.fillRange(0, k.length, 0);
     }
@@ -610,6 +665,7 @@ class EngineFiles {
   /// a key the engine wrote kept sealed, and its plain copy zeroed
   void takeKey() {
     sealNewKey();
+    memory?.drop('onion.key');
     rawFileAccess(() {
       if (!File(_key).existsSync()) return;
       _zero(_key);
@@ -620,6 +676,7 @@ class EngineFiles {
   /// the plain things memory holds: the onion key and the temporary files,
   /// zeroed and gone. at every start and as the app ends
   void clearMemory() {
+    memory?.drop();
     rawFileAccess(() {
       try {
         if (File(_key).existsSync()) {
@@ -719,9 +776,7 @@ Map<String, String> keepMarksIn(
   String state, {
   String writer = 'new',
 }) {
-  // a store after the first keeps its anchor under .<store>. the batch
-  // book is one sealed line
-  final marks = RegExp(r'^nostr_((seen|last|heard)_[0-9a-f]+(\.[0-9])?|book)$');
+  final marks = _kMarkName;
   final files = rawFileAccess(() {
     final d = Directory(dir);
     if (!d.existsSync()) return <File>[];
@@ -731,12 +786,44 @@ Map<String, String> keepMarksIn(
         .where((f) => marks.hasMatch(p.basename(f.path)))
         .toList();
   });
-  final m = {
-    for (final f in files)
-      p.basename(f.path): base64.encode(
-        rawFileAccess(() => File(f.path).readAsBytesSync()),
-      ),
-  };
+  return keepMarkMap(
+    {
+      for (final f in files)
+        p.basename(f.path): base64.encode(
+          rawFileAccess(() => File(f.path).readAsBytesSync()),
+        ),
+    },
+    state,
+    writer: writer,
+  );
+}
+
+/// the marks the engine's memory folder holds, by name
+Map<String, String> marksIn(EngineMemory mem) => {
+  for (final n in mem.names())
+    if (_kMarkName.hasMatch(n))
+      if (mem.get(n) case final b?) n: _b64Zeroed(b),
+};
+
+String _b64Zeroed(Uint8List b) {
+  final s = base64.encode(b);
+  b.fillRange(0, b.length, 0);
+  return s;
+}
+
+// a store after the first keeps its anchor under .<store>. the batch book
+// is one sealed line, the wrap queue sealed lines
+final _kMarkName = RegExp(
+  r'^nostr_((seen|last|heard)_[0-9a-f]+(\.[0-9])?|book|topup)$',
+);
+
+/// [m] sealed into [state] when it changed. answers the catch-up anchors
+/// (nostr_last_) as they are
+Map<String, String> keepMarkMap(
+  Map<String, String> m,
+  String state, {
+  String writer = 'new',
+}) {
   if (!mapEquals(m, readMarkState(state))) {
     writeMarkState(state, m, writer: writer);
   }

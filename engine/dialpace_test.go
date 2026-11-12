@@ -413,7 +413,7 @@ func TestPaceCheckInBoundsTheWait(t *testing.T) {
 }
 
 // tickets whose check-in wait runs out together go a short gap apart, not
-// all at once (fast-pace review: ~9 dials a second near a check-in's end)
+// all at once (else ~9 dials a second near a check-in's end)
 func TestPaceCheckInEndIsSpaced(t *testing.T) {
 	u := paceStore(t)
 	paceWith(t, time.Minute, 0)

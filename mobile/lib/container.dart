@@ -2,10 +2,11 @@
 // identity containers: each one is a database under its own key, its own
 // media folders and its own slice of settings
 
-import 'desktop/desktop_mode.dart' show containersSwept, onDesktop;
+import 'desktop/desktop_mode.dart' show containersSwept, onDesktop, rawFiles;
 import 'dart:io';
 import 'secure_store.dart';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -44,17 +45,20 @@ class HaloContainer {
   // the id sealed into a pin table entry: sixteen bytes, hex
   final String id;
   final Binding binding;
-  // the database file, in the documents folder
+  // the database file, in the documents folder: by number on every install
   final String _dbFile;
-  String get dbFile => onDesktop ? _desk.$1 : _dbFile;
+  String get dbFile => _desk.$1;
+
+  /// the database file a phone used before the numbers
+  String get oldDbFile => _dbFile;
   // where its database key sits in secure storage. none when wrapped
   final String? keyName;
   // after the media and wallpapers folder names, '' for the everyday one
   final String _suffix;
   String get suffix => onDesktop ? _desk.$2 : _suffix;
 
-  // a copied desktop folder names no decoy and no vault: the files of the
-  // others go by number. the everyday one keeps the names backups carry
+  // a copied folder names no decoy and no vault: the files of the others
+  // go by number. the everyday one keeps the names backups carry
   (String, String) get _desk => switch (id) {
     '00000000000000000000000000000002' => ('k2.db', '_k2'),
     '00000000000000000000000000000003' => ('k3.db', '_k3'),
@@ -110,7 +114,7 @@ class HaloContainer {
     id: '00000000000000000000000000000002',
     binding: Binding.quiet,
     dbFile: 'halo_d.db',
-    keyName: 'halo.d.key',
+    keyName: kDecoyKeyName,
     suffix: '_d',
     prefix: 'd.',
     rawKey: true,
@@ -189,6 +193,21 @@ class HaloContainer {
     ],
   ];
 
+  /// more of it than every install keeps: a sidecar of its database or a
+  /// file in its folders. a lone database file and its key may be the place
+  /// every phone holds, and stay as they are
+  Future<bool> beyondItsPlace() async {
+    final path = await dbPath();
+    for (final f in ['$path-wal', '$path-shm', '$path-journal']) {
+      if (await File(f).exists()) return true;
+    }
+    final docs = (await getApplicationDocumentsDirectory()).path;
+    for (final name in folderNames) {
+      if (await _holdsFiles(Directory(p.join(docs, name)))) return true;
+    }
+    return false;
+  }
+
   // every install has the numbered folders: an empty one says nothing
   static Future<bool> _holdsFiles(Directory d) async {
     if (!await d.exists()) return false;
@@ -247,16 +266,27 @@ class HaloContainer {
     final prefs = await SharedPreferences.getInstance();
     for (final k in containerKeys) {
       await _registry.delete(key: key(k));
-      await prefs.remove(key(k));
+      // read from memory: a sweep of a place held alone writes nothing here
+      if (prefs.containsKey(key(k))) await prefs.remove(key(k));
     }
   }
 }
 
 // which containers besides the everyday one exist. listed before a
 // container's pin entry is written, and struck after it is cleared, so a
-// crash in between leaves a listed container and never an unlisted one
+// crash in between leaves a listed container and never an unlisted one.
+// every install keeps it, at one length, listed or not
 const _registry = secureStore;
 const kListedContainers = 'halo.containers';
+const _kListWidth = 66;
+
+String _listValue(Iterable<String> ids) =>
+    ids.join(',').padRight(_kListWidth, ',');
+
+/// where the decoy's database key is kept, and where it was before the
+/// names went by number
+const kDecoyKeyName = 'halo.k2.key';
+const kOldDecoyKeyName = 'halo.d.key';
 
 Future<Set<String>> listedContainers() async {
   final s = await _registry.read(key: kListedContainers);
@@ -269,7 +299,7 @@ Future<void> listContainer(HaloContainer c, bool on) async {
   if (c.wrapped) throw ArgumentError('${c.dbFile} is never listed');
   final now = await listedContainers();
   on ? now.add(c.id) : now.remove(c.id);
-  await _registry.write(key: kListedContainers, value: now.join(','));
+  await _registry.write(key: kListedContainers, value: _listValue(now));
 }
 
 // a container on disk that no list names was being made or taken away
@@ -288,9 +318,109 @@ Future<void> sweepContainers(
                   listed.contains(c.extendsId))
         : listed.contains(c.id);
     if (mayOpen) continue;
-    if (await c.onDisk()) await c.wipeFiles();
+    // a database file alone may be the place every phone holds: wiped and
+    // made again each start, its times would say there is nothing there
+    if (await c.beyondItsPlace()) await c.wipeFiles();
+  }
+  await refillContainerPlaceholders();
+}
+
+/// after a sweep or a container went: every name back in its place
+Future<void> refillContainerPlaceholders() async {
+  try {
+    await makeContainerPlaceholders(
+      (await getApplicationDocumentsDirectory()).path,
+    );
+  } catch (e) {
+    dlog('containers: placeholders not made (${e.runtimeType})');
   }
   containersSwept?.call();
+}
+
+/// the names from before the numbers moved over, whatever version left
+/// them: the decoy's and the hidden chats' databases with their sidecars
+/// (the main file last, so a stop between leaves no database without its
+/// journal), the decoy's key (written under the new name before the old
+/// one goes) and the list at its one length. safe to run at every start
+Future<void> moveToNumberedNames(String docs) async {
+  if (!onDesktop) {
+    rawFiles(() {
+      for (final c in HaloContainer.all) {
+        if (c.oldDbFile == c.dbFile) continue;
+        for (final ext in const ['-wal', '-shm', '-journal', '']) {
+          final old = File(p.join(docs, '${c.oldDbFile}$ext'));
+          if (old.existsSync()) old.renameSync(p.join(docs, '${c.dbFile}$ext'));
+        }
+      }
+    });
+  }
+  // a decoy restore before this left its onion key beside it, unread
+  for (final n in const ['onion_d.key', 'onion_k2.key']) {
+    final f = p.join(docs, n);
+    if (rawFiles(() => File(f).existsSync())) {
+      await rawFiles(() => shredFile(f));
+    }
+  }
+  final key = await _registry.read(key: kOldDecoyKeyName);
+  if (key != null) {
+    await _registry.write(key: kDecoyKeyName, value: key);
+    await _registry.delete(key: kOldDecoyKeyName);
+  }
+  final list = await _registry.read(key: kListedContainers);
+  if (list != null && list.length != _kListWidth) {
+    await _registry.write(
+      key: kListedContainers,
+      value: _listValue(list.split(',').where((x) => x.isNotEmpty)),
+    );
+  }
+}
+
+/// the names every phone keeps whether a decoy or hidden chats exist or
+/// not: the list, a key in the decoy's place, and a file in the place of
+/// each numbered database. what is there stays
+Future<void> makeContainerPlaceholders(String docs, {Random? random}) async {
+  if (onDesktop) return;
+  final rnd = random ?? Random.secure();
+  rawFiles(() {
+    for (final c in HaloContainer.all) {
+      if (c == HaloContainer.everyday) continue;
+      final f = File(p.join(docs, c.dbFile));
+      if (f.existsSync()) continue;
+      // the size of a database that holds a few chats, in one write
+      f.writeAsBytesSync(randomBytes((40 + rnd.nextInt(80)) * 4096, rnd));
+    }
+  });
+  if (await _registry.read(key: kListedContainers) == null) {
+    await _registry.write(key: kListedContainers, value: _listValue(const []));
+  }
+  // a key under the name from before is the decoy's own until it moves
+  if (await _registry.read(key: kDecoyKeyName) == null &&
+      await _registry.read(key: kOldDecoyKeyName) == null) {
+    await _registry.write(
+      key: kDecoyKeyName,
+      value: HaloContainer.decoy.newKey(),
+    );
+  }
+}
+
+/// [n] random bytes: from the kernel in one read where it has them, else
+/// four at a time from [rnd]
+Uint8List randomBytes(int n, Random rnd) {
+  try {
+    final r = File('/dev/urandom').openSync();
+    try {
+      final b = r.readSync(n);
+      if (b.length == n) return b;
+    } finally {
+      r.closeSync();
+    }
+  } catch (_) {}
+  final out = Uint8List(n + 3);
+  final words = Uint32List.view(out.buffer, 0, out.length ~/ 4);
+  for (var i = 0; i < words.length; i++) {
+    words[i] = rnd.nextInt(1 << 32);
+  }
+  return Uint8List.sublistView(out, 0, n);
 }
 
 // an identity's own settings: a decoy starts without them and keeps its own.
@@ -320,6 +450,8 @@ const containerKeys = {
   'kryfo.typing.on',
   'kryfo.gif.on',
   'kryfo.gif.asked',
+  // chats in android's share menu: only the everyday one's puts any there
+  'kryfo.share_menu.on',
   'kryfo.update.on',
   // each identity hides the card for itself
   'kryfo.update.dismissed',
@@ -367,6 +499,8 @@ const deviceKeys = {
   'theme_light',
   'theme_accent',
   'wide_list_width',
+  // what the share menu's chat ids are made with (share_targets.dart)
+  'kryfo.share_menu.salt',
   // the computer's notification sound, one for every identity on it
   'desk_sound',
   'bridge_lines',
@@ -408,4 +542,6 @@ const deviceKeys = {
   // phone's, so what goes with it is too
   'notif_plain',
   'icon_changed',
+  // when our burner room unsends last went again (state_rooms.dart)
+  'room_unsends_again',
 };

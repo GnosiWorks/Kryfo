@@ -560,7 +560,7 @@ void main() {
                 icon: Icons.open_in_new_rounded,
                 label: l10n.fileOpenWith,
                 apart: true,
-                aside: l10n.fileOpenWithNote,
+                aside: openWithAside,
                 onTap: () {},
               ),
             ],
@@ -570,7 +570,7 @@ void main() {
       await t.pumpAndSettle();
       final view = t.getRect(find.text(l10n.fileViewInKryfo));
       final open = t.getRect(find.text(l10n.fileOpenWith));
-      final note = t.getRect(find.text(l10n.fileOpenWithNote));
+      final note = t.getRect(find.text(openWithAside));
       expect(view.top, lessThan(open.top));
       expect(open.bottom, lessThanOrEqualTo(note.top));
       expect(find.byType(AsideNote), findsOneWidget);
@@ -645,7 +645,7 @@ void main() {
       expect(calls, isNot(contains('shareFile')));
       // the way out is offered with what it means
       expect(find.text(l10n.fileOpenWith), findsOneWidget);
-      expect(find.text(l10n.fileOpenWithNote), findsOneWidget);
+      expect(find.text(openWithAside), findsOneWidget);
     });
 
     testWidgets('in a chat that blocks it opens with no way out', (t) async {

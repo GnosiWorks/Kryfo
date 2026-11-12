@@ -89,6 +89,8 @@ void main() {
           }
           expect(await old.query('translate_kept'), hasLength(msg.length));
           await old.close();
+          // the app's start moves the names from before the numbers
+          await moveToNumberedNames(docs.path);
 
           final db = f == 'halo.db'
               ? HaloDb()

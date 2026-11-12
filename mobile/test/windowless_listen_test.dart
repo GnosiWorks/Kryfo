@@ -22,7 +22,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateDelivery,
         AppStateSession,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateTyping;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -234,6 +235,25 @@ void main() {
     expect(w.engine.roomHeard, [_creator]);
     expect(w.heard(_devKey.xPub), 1);
     expect(w.io.marked, [
+      ['x-$_c'],
+    ]);
+  });
+
+  test('a start with no window ranks no top chats', () async {
+    final w = await _World.make();
+    w.app.inFrontForTest = false;
+    w.app.listenAtStart();
+    await w.app.listenedAtStart.timeout(const Duration(seconds: 5));
+    expect(w.heard('x-$_c'), 1);
+    expect(w.io.firsts, isEmpty);
+  });
+
+  test('a start in front tells the top chats', () async {
+    final w = await _World.make();
+    w.app.inFrontForTest = true;
+    w.app.listenAtStart();
+    await w.app.listenedAtStart.timeout(const Duration(seconds: 5));
+    expect(w.io.firsts, [
       ['x-$_c'],
     ]);
   });

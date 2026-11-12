@@ -4,6 +4,7 @@
 // nothing else of lib/desktop
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,6 +146,26 @@ Future<String> startEngineIn(
 /// set by the desktop start
 Future<String> Function(String docs, Future<String> Function(String dir) start)?
 engineStarter;
+
+/// the engine's memory folder (engine/folder_mem.go): on windows, which has
+/// no folder in memory, the onion key, the relay marks and the wrap queue
+/// live in the process alone and are sealed between runs
+abstract class EngineMemory {
+  /// [b] kept under [name]; the caller zeroes its copy
+  void put(String name, Uint8List b);
+
+  /// a copy the caller zeroes, null with none
+  Uint8List? get(String name);
+
+  List<String> names();
+
+  /// one file zeroed and gone, or all of them for ''
+  void drop([String name = '']);
+}
+
+/// set by the windows start; null elsewhere, where the engine's folder is
+/// a folder
+EngineMemory? engineMemory;
 
 /// where a backup is made: on desktop on the disk, not in memory, as it is
 /// encrypted already and can be large

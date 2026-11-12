@@ -105,6 +105,7 @@ const deskWordKeys = [
   'gifOptInWhereToTurnOff',
   'gifSavedOnPhone',
   'gifPhoneTab',
+  'gifFavKept',
   'gifPhoneLine',
   'voiceNoRoom',
   'translatePackTitle',
@@ -375,6 +376,7 @@ extension DeskWords on AppLocalizations {
   String get gifSavedOnPhoneShown =>
       onDesktop ? gifSavedOnPhoneDesk : gifSavedOnPhone;
   String get gifPhoneTabShown => onDesktop ? gifPhoneTabDesk : gifPhoneTab;
+  String get gifFavKeptShown => onDesktop ? gifFavKeptDesk : gifFavKept;
   String get gifPhoneLineShown => onDesktop ? gifPhoneLineDesk : gifPhoneLine;
   String get voiceNoRoomShown => onDesktop ? voiceNoRoomDesk : voiceNoRoom;
   String translatePackTitleShown(Object language) => onDesktop

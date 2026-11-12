@@ -326,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _pick(HaloTab t) {
-    if (t == _tab) return;
+    if (t == _tab || !shownTabs.contains(t)) return;
     setState(() {
       _towards = t.index > _tab.index ? 1 : -1;
       _tab = t;

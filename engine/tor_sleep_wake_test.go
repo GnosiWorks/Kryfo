@@ -41,14 +41,20 @@ func mustReturn(t *testing.T, what string, limit time.Duration, f func() string)
 		t.Logf("%-28s %-40s %s", what, r, time.Since(t0).Round(time.Millisecond))
 		return r
 	case <-time.After(limit):
-		buf := make([]byte, 16<<20)
-		n := runtime.Stack(buf, true)
-		p := filepath.Join(os.TempDir(), fmt.Sprintf("halo-wedge-%s.txt",
-			strings.ReplaceAll(what, " ", "_")))
-		_ = os.WriteFile(p, buf[:n], 0600)
-		t.Fatalf("%s did not return in %s: goroutines in %s (%d bytes)", what, limit, p, n)
+		p := dumpGoroutines(what)
+		t.Fatalf("%s did not return in %s: goroutines in %s", what, limit, p)
 		return ""
 	}
+}
+
+// every goroutine's stack in a file named for what, its path returned
+func dumpGoroutines(what string) string {
+	buf := make([]byte, 16<<20)
+	n := runtime.Stack(buf, true)
+	p := filepath.Join(os.TempDir(), fmt.Sprintf("halo-wedge-%s.txt",
+		strings.ReplaceAll(what, " ", "_")))
+	_ = os.WriteFile(p, buf[:n], 0600)
+	return p
 }
 
 func TestSleepWakeThenModeSwitch(t *testing.T) {
@@ -117,7 +123,10 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 			t.Fatalf("round %d sleep: %s", round, r)
 		}
 		time.Sleep(gap)
-		// always on chosen again
+		// always on chosen again. the wake's kick is the resume's last
+		// step and a runner dials at once on it, before the resume even
+		// returns: the clock starts before the resume
+		woke := time.Now()
 		if r := mustReturn(t, "resume (mode -> always on)", 90*time.Second, torResume); r != "ok" {
 			t.Fatalf("round %d wake: %s", round, r)
 		}
@@ -125,9 +134,18 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 		// no kick from the test here: the app does not send one when the
 		// mode goes back to always on, so a relay has to connect on the
 		// strength of the resume alone.
-		woke := time.Now()
-		since := func(at func(string) time.Time) (got, missing []string) {
-			for _, u := range strings.Split(testRelays, ",") {
+		// the relays this round must reach: our own, and every public one
+		// that connected over tor before. a public relay that never
+		// answers tor here (nos.lol and nostr.mom refuse it) sits in its
+		// one-dial-at-a-time backoff and proves nothing about the wake
+		var want []string
+		for _, u := range strings.Split(testRelays, ",") {
+			if isOwnRelay(u) || !relayConnectedAt(u).IsZero() {
+				want = append(want, u)
+			}
+		}
+		since := func(at func(string) time.Time, of []string) (got, missing []string) {
+			for _, u := range of {
 				if at(u).After(woke) {
 					got = append(got, u)
 				} else {
@@ -139,30 +157,37 @@ func TestSleepWakeThenModeSwitch(t *testing.T) {
 		// awake: every runner dials within seconds of the wake, not after
 		// the fifteen-minute sleep it takes while tor is paused.
 		for time.Since(woke) < 10*time.Second {
-			if _, m := since(relayDialledAt); len(m) == 0 {
+			if _, m := since(relayDialledAt, want); len(m) == 0 {
 				break
 			}
 			time.Sleep(250 * time.Millisecond)
 		}
-		if _, m := since(relayDialledAt); len(m) > 0 {
-			t.Fatalf("round %d: %d of 6 relays not even tried 10s after the wake: "+
-				"their runners are asleep: %v", round, len(m), m)
+		if _, m := since(relayDialledAt, want); len(m) > 0 {
+			p := dumpGoroutines(fmt.Sprintf("wake-round-%d", round))
+			t.Fatalf("round %d: %d of %d relays not even tried 10s after the wake: "+
+				"their runners are asleep: %v (goroutines in %s)", round, len(m), len(want), m, p)
 		}
-		// and through: most of them connect. a relay that is slow or down
-		// on this network that day is not the phone's fault, so not all.
+		// and through: our own relays, and all but one of the public ones
+		// that answered before. a relay slow or down on this network that
+		// day is not the phone's fault
 		for time.Since(woke) < 90*time.Second {
-			if got, _ := since(relayConnectedAt); len(got) == 6 {
+			if _, m := since(relayConnectedAt, want); len(m) == 0 {
 				break
 			}
 			time.Sleep(time.Second)
 		}
-		got, missing := since(relayConnectedAt)
-		if len(got) < 4 {
-			t.Fatalf("round %d: only %d of 6 relays connected in 90s after the wake; not: %v",
-				round, len(got), missing)
+		got, missing := since(relayConnectedAt, want)
+		for _, u := range missing {
+			if isOwnRelay(u) {
+				t.Fatalf("round %d: our relay %s did not connect in 90s after the wake", round, u)
+			}
 		}
-		t.Logf("round %d: all 6 tried at once, %d connected within %s (not: %v)",
-			round, len(got), time.Since(woke).Round(time.Second), missing)
+		if len(missing) > 1 {
+			t.Fatalf("round %d: only %d of %d reachable relays connected in 90s after the wake; not: %v",
+				round, len(got), len(want), missing)
+		}
+		t.Logf("round %d: all %d reachable tried at once, %d connected within %s (not: %v)",
+			round, len(want), len(got), time.Since(woke).Round(time.Second), missing)
 		// and the network change that followed
 		atomic.StoreInt64(&lastTorRestart, 0)
 		if r := mustReturn(t, "reconnect (network change)", 3*time.Minute, reconnectTor); r != "ok" {

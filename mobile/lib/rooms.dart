@@ -21,6 +21,11 @@ const roomDefaultExpiry = Duration(hours: 24);
 const roomCapOptions = <int>[5, 10, 25];
 const roomDefaultCap = 10;
 
+/// how often our room unsends go to every member again, and when they last
+/// did (a pref of the phone's)
+const kRoomUnsendsEvery = Duration(days: 1);
+const kRoomUnsendsAgainPref = 'room_unsends_again';
+
 String expiryLabel(Duration d) {
   if (d.inDays >= 1 && d.inHours % 24 == 0) {
     return d.inDays == 1 ? l10n.rooms24h : l10n.roomsD(whole(d.inDays));

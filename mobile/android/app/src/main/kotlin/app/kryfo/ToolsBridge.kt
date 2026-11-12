@@ -139,7 +139,7 @@ class ToolsBridge(private val activity: Activity) {
             return
         }
         if (uris.isEmpty()) return
-        sharedFiles = SharedFiles(newId(), uris.map { Pair(it, concrete(type)) })
+        sharedFiles = SharedFiles(newId(), uris.map { Pair(it, concrete(type)) }, chat = picked(intent))
         activity.runOnUiThread { channel?.invokeMethod("sharedFiles", null) }
     }
 
@@ -188,16 +188,25 @@ class ToolsBridge(private val activity: Activity) {
             return
         }
         if (!text.isNullOrBlank() || !subject.isNullOrBlank()) {
-            keepText(text, subject)
+            keepText(text, subject, picked(intent))
             return
         }
         // a text file sent alone goes as a file, to a chat picked for it
         offerFiles(intent, "text/plain")
     }
 
-    private fun keepText(text: String?, subject: String?) {
+    // the chat picked in the share menu (ShareTargets.kt), if one was: dart
+    // checks it is still one it may go to
+    // android 10 and later name it
+    private fun picked(intent: Intent): String? = if (Build.VERSION.SDK_INT < 29) null else try {
+        intent.getStringExtra(Intent.EXTRA_SHORTCUT_ID)?.takeIf { it.length in 1..64 }
+    } catch (e: Exception) {
+        null
+    }
+
+    private fun keepText(text: String?, subject: String?, chat: String? = null) {
         val id = newId()
-        sharedText = SharedWords(id, cut(text, TEXT_MOST), cut(subject, TEXT_MOST))
+        sharedText = SharedWords(id, cut(text, TEXT_MOST), cut(subject, TEXT_MOST), chat = chat)
         activity.runOnUiThread { channel?.invokeMethod("sharedText", null) }
     }
 
@@ -274,7 +283,7 @@ class ToolsBridge(private val activity: Activity) {
                             if (d["mime"] == null) d + ("mime" to m) else d
                         }
                         ex.shutdownNow()
-                        val out = mapOf("id" to f.id, "seen" to f.seen, "items" to items)
+                        val out = mapOf("id" to f.id, "seen" to f.seen, "items" to items, "chat" to f.chat)
                         activity.runOnUiThread { result.success(out) }
                     }.start()
                 }
@@ -291,7 +300,7 @@ class ToolsBridge(private val activity: Activity) {
                 result.success(true)
             }
             "takeSharedText" -> result.success(sharedText?.let {
-                mapOf("id" to it.id, "text" to it.text, "subject" to it.subject, "seen" to it.seen)
+                mapOf("id" to it.id, "text" to it.text, "subject" to it.subject, "seen" to it.seen, "chat" to it.chat)
             })
             "seenSharedText" -> {
                 val w = sharedText
@@ -747,12 +756,14 @@ data class SharedFiles(
     val id: String,
     // each uri with the type the share said, when it named one
     val items: List<Pair<Uri, String?>>,
-    val seen: String? = null
+    val seen: String? = null,
+    val chat: String? = null
 )
 
 data class SharedWords(
     val id: String,
     val text: String?,
     val subject: String?,
-    val seen: String? = null
+    val seen: String? = null,
+    val chat: String? = null
 )

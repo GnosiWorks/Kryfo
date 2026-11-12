@@ -59,6 +59,48 @@ mixin _SearchRows {
       ),
     );
   }
+
+  /// one chat's rows that match [match], in the chat's order (chat_find.dart)
+  Future<List<ChatHit>> chatHits(
+    String match, {
+    String? peerId,
+    String? groupId,
+    bool wordsOnly = false,
+  }) async => chatHitsIn(
+    await open(),
+    match,
+    peerId: peerId,
+    groupId: groupId,
+    wordsOnly: wordsOnly,
+  );
+
+  /// where a window around row [id] ends (chat_find.dart)
+  Future<ChatHit?> chatEndBelow(
+    int id, {
+    String? peerId,
+    String? groupId,
+    int after = 60,
+  }) async => chatEndIn(
+    await open(),
+    id,
+    peerId: peerId,
+    groupId: groupId,
+    after: after,
+  );
+
+  /// where to load one chat from so row [id] comes in with rows above it
+  Future<ChatHit?> chatStartAbove(
+    int id, {
+    String? peerId,
+    String? groupId,
+    int before = 30,
+  }) async => chatStartIn(
+    await open(),
+    id,
+    peerId: peerId,
+    groupId: groupId,
+    before: before,
+  );
 }
 
 /// the search query itself, on any database with the schema: the app's,
@@ -124,4 +166,110 @@ Future<void> indexSearchRow(
   final body = searchBody(r);
   if (body.trim().isEmpty) return;
   await db.insert('msg_fts', {'rowid': id, 'body': body});
+}
+
+/// a row of one chat: its id and the time it is placed by
+typedef ChatHit = ({int id, int at});
+
+// one chat's rows, by its person or its group
+(String, String) _chatScope(String? peerId, String? groupId) => groupId != null
+    ? ('m.group_id = ?', groupId)
+    : ('m.peer_id = ? AND m.group_id IS NULL', peerId ?? '');
+
+/// the rows of one chat that match [match], oldest first in the chat's
+/// order. only this database's: a hidden chat is found only while the vault
+/// is open, the decoy's only in the decoy. a sticker has no words, and a
+/// timed message past its time is not found even before the sweep takes
+/// it. a group leaves out what blocked people wrote, as its thread does;
+/// [wordsOnly] what came with a file, for a request still waiting
+Future<List<ChatHit>> chatHitsIn(
+  DatabaseExecutor db,
+  String match, {
+  String? peerId,
+  String? groupId,
+  bool wordsOnly = false,
+  int limit = 5000,
+}) async {
+  final (scope, key) = _chatScope(peerId, groupId);
+  final where = <String>[
+    'msg_fts MATCH ?',
+    scope,
+    'm.sticker IS NULL',
+    '(m.burn_at IS NULL OR m.burn_at > ?)',
+    if (groupId != null)
+      'm.peer_id NOT IN (SELECT halo_id FROM contacts WHERE blocked = 1)',
+    if (wordsOnly)
+      "NOT (m.direction = 'in' AND (m.media_path IS NOT NULL OR "
+          'm.file_path IS NOT NULL OR m.file_name IS NOT NULL))',
+  ];
+  final rows = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM msg_fts '
+    'JOIN messages m ON m.id = msg_fts.rowid WHERE ${where.join(' AND ')} '
+    'ORDER BY msg_fts.rowid DESC LIMIT ?',
+    [match, key, DateTime.now().millisecondsSinceEpoch, limit],
+  );
+  return [
+    for (final r in rows) (id: (r['id'] as num).toInt(), at: rowWrittenAt(r)),
+  ]..sort((a, b) => byWritten(a.at, a.id, b.at, b.id));
+}
+
+/// the row to load one chat from so row [id] comes in with up to [before]
+/// rows above it, or null when [id] is not in this chat any more: unsent,
+/// burned, or past its time
+Future<ChatHit?> chatStartIn(
+  DatabaseExecutor db,
+  int id, {
+  String? peerId,
+  String? groupId,
+  int before = 30,
+}) async {
+  final (scope, key) = _chatScope(peerId, groupId);
+  final now = DateTime.now().millisecondsSinceEpoch;
+  final t = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE m.id = ? '
+    'AND $scope AND (m.burn_at IS NULL OR m.burn_at > ?) LIMIT 1',
+    [id, key, now],
+  );
+  if (t.isEmpty) return null;
+  final at = rowWrittenAt(t.first);
+  if (before <= 0) return (id: id, at: at);
+  // written_at as the thread pages by; a row without it sorts by sent_at
+  final up = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE $scope AND '
+    '(COALESCE(m.written_at, m.sent_at) < ? OR '
+    '(COALESCE(m.written_at, m.sent_at) = ? AND m.id < ?)) '
+    'ORDER BY COALESCE(m.written_at, m.sent_at) DESC, m.id DESC LIMIT ?',
+    [key, at, at, id, before],
+  );
+  final r = up.isEmpty ? t.first : up.last;
+  return (id: (r['id'] as num).toInt(), at: rowWrittenAt(r));
+}
+
+/// the last row of a window [after] rows below row [id], or null when the
+/// newest is closer than that: the window then reaches the newest
+Future<ChatHit?> chatEndIn(
+  DatabaseExecutor db,
+  int id, {
+  String? peerId,
+  String? groupId,
+  int after = 60,
+}) async {
+  final (scope, key) = _chatScope(peerId, groupId);
+  final t = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE m.id = ? '
+    'AND $scope LIMIT 1',
+    [id, key],
+  );
+  if (t.isEmpty) return null;
+  final at = rowWrittenAt(t.first);
+  final down = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE $scope AND '
+    '(COALESCE(m.written_at, m.sent_at) > ? OR '
+    '(COALESCE(m.written_at, m.sent_at) = ? AND m.id > ?)) '
+    'ORDER BY COALESCE(m.written_at, m.sent_at) ASC, m.id ASC LIMIT ?',
+    [key, at, at, id, after + 1],
+  );
+  if (down.length <= after) return null;
+  final r = down[after - 1];
+  return (id: (r['id'] as num).toInt(), at: rowWrittenAt(r));
 }

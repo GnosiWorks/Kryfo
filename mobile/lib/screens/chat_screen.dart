@@ -3,9 +3,11 @@
 
 import '../lock_state.dart';
 import '../capture_watch.dart';
+import '../chat_find.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'home_screen.dart' show ContactPreview;
 import '../container.dart' show HaloContainer;
 import '../devices/own_answer.dart' show kAnswerBurns;
@@ -76,6 +78,7 @@ import '../sound_player.dart' show SoundItem, SoundPlayer;
 import '../recent_files.dart';
 import '../widgets/send_hold.dart';
 import '../widgets/send_sheet.dart';
+import '../widgets/file_viewer_parts.dart' show openWithAside;
 import '../widgets/file_actions.dart'
     show
         FileView,
@@ -107,6 +110,7 @@ import '../signal_session.dart';
 import '../message_envelope.dart'
     show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
+import '../cjk_locale.dart' show withHan;
 import '../theme.dart';
 import '../tor_valve.dart' show valveWaitFrom;
 import '../link_view.dart' show sendReadsBlocked;
@@ -139,6 +143,7 @@ import 'dev_about_sheet.dart'
 import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
+        ChatHit,
         typeLeaf,
         linkedRole,
         deviceReaches,
@@ -195,7 +200,7 @@ import '../stickers/sticker_pack.dart'
     show Sticker, StickerLibrary, StickerPack;
 import '../stickers/sticker_sheet.dart'
     show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
-import '../gifs/gif_engine.dart' show appGifTabs;
+import '../gifs/gif_engine.dart' show appGifTabs, keepGifOf;
 import '../gifs/gif_picture.dart';
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
@@ -864,7 +869,8 @@ class _ChatScreenState extends State<ChatScreen>
       if (!mounted) return;
       _hasMore = rows.length > _pageSize;
       if (_hasMore) rows.removeAt(0);
-      if (!_hasMore) _pagedOut = true;
+      // the whole thread is in only when the newest is too
+      if (!_hasMore && _windowEnd == null) _pagedOut = true;
       final older = <_Msg>[];
       final uids = <String>[];
       for (final r in rows) {
@@ -937,9 +943,124 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _onScrollPage() {
-    if (!_hasMore || !_scrollCtrl.hasClients) return;
+    if (!_scrollCtrl.hasClients) return;
     final p = _scrollCtrl.position;
-    if (p.pixels > p.maxScrollExtent - 600) _loadOlder();
+    if (_hasMore && p.pixels > p.maxScrollExtent - 600) _loadOlder();
+    // a window's next page down, near its bottom
+    if (_windowEnd != null && p.pixels < 600) _loadNewer();
+  }
+
+  // one page of the rows after the window, the window's end moved down; the
+  // newest reached ends the window
+  Future<void> _loadNewer() async {
+    final end = _windowEnd;
+    if (end == null || _loadingNewer || _loading) return;
+    _loadingNewer = true;
+    try {
+      final rows = List.of(
+        await session.messagesAfterAt(
+          widget.peerHaloId,
+          end,
+          limit: _pageSize + 1,
+        ),
+      );
+      if (!mounted || !identical(_windowEnd, end)) return;
+      final reached = rows.length <= _pageSize;
+      if (!reached) rows.removeLast();
+      final have = {for (final m in _messages) m.msgUid};
+      final newer = [
+        for (final r in rows)
+          if (!have.contains(r['msg_uid'])) _msgOfRow(r),
+      ];
+      final reactions = await session.loadReactionsFor([
+        for (final m in newer)
+          if (m.msgUid != null) m.msgUid!,
+      ]);
+      if (!mounted || !identical(_windowEnd, end)) return;
+      for (final m in newer) {
+        for (final e in reactions[m.msgUid] ?? const []) {
+          m.reactions[e.key] = e.value;
+        }
+      }
+      // reversed: rows added below the view would push it up
+      holdRowsInView(
+        ctrl: _scrollCtrl,
+        anchors: _anchors,
+        alive: () => mounted,
+      );
+      setState(() {
+        _messages.addAll(newer);
+        _normaliseMessages();
+        if (reached) {
+          _windowEnd = null;
+          _windowNew.clear();
+          _unseenNew = 0;
+        } else {
+          final last = rows.last;
+          _windowEnd = (
+            id: (last['rowid'] as int?) ?? 0,
+            at: rowWrittenAt(last),
+          );
+        }
+        if (_searching && _query.isNotEmpty) _relight();
+      });
+    } catch (e) {
+      dlog('window: next page not read (${e.runtimeType})');
+    } finally {
+      _loadingNewer = false;
+    }
+  }
+
+  // back to the newest page: the window is let go
+  Future<void> _toNewest() async {
+    if (_windowEnd == null) return;
+    // the window ends inside that load, never before it: a reload between
+    // would read from the window's top to the newest
+    _freshPage = true;
+    _jumpActive = false;
+    await _loadMessages();
+    if (mounted) _safeJump(0);
+  }
+
+  // a row as the thread draws it, for the rows read outside a full load
+  _Msg _msgOfRow(Map<String, Object?> r) {
+    final m = _Msg(
+      r['direction'] as String,
+      (r['plaintext'] as String?) ?? '',
+      DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
+      sticker: StickerWire.parse(r['sticker']),
+      burnAt: r['burn_at'] as int?,
+      burnSecs: (r['burn_secs'] as num?)?.toInt(),
+      burnUnseen: r['burn_unseen'] == 1,
+      msgUid: r['msg_uid'] as String?,
+      replyTo: r['reply_to'] as String?,
+      secure: (r['secure'] as int? ?? 0) == 1,
+      edited: (r['edited'] as int? ?? 0) == 1,
+      pinned: (r['pinned'] as int? ?? 0) == 1,
+      mediaPath: r['media_path'] as String?,
+      filePath: r['file_path'] as String?,
+      fileName: r['file_name'] as String?,
+      voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
+      saved: (r['saved'] as int? ?? 0) == 1,
+      viaDev: r['via_dev'] == 1,
+      album: AlbumTag.ofRow(r),
+      delivered: (r['delivered'] as int? ?? 0) == 1,
+      sending:
+          (r['direction'] as String) == 'out' && (r['sent'] as int? ?? 1) == 0,
+    );
+    m.rowid = (r['rowid'] as int?) ?? 0;
+    m.cameAt = (r['sent_at'] as num?)?.toInt();
+    _readNotSent(m, r);
+    final pv = r['preview'] as String?;
+    if (pv != null && pv.isNotEmpty) {
+      try {
+        final d = jsonDecode(pv) as Map<String, dynamic>;
+        m.preview = d.map((k, v) => MapEntry(k, v.toString()));
+      } catch (_) {
+        // a preview that does not parse is not shown
+      }
+    }
+    return m;
   }
 
   // keyed by the message the divider sits above, not by the day, so two
@@ -993,6 +1114,61 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   final Map<String, _Msg> _byUid = {};
+  // quoted messages above the rows held, read once by uid: what their
+  // quote shows until they are brought in. null while asked, absent for
+  // one gone
+  final Map<String, _Msg?> _farQuotes = {};
+
+  _Msg? _quoteOf(String uid) {
+    final held = _byUid[uid];
+    if (held != null) return held;
+    if (_farQuotes.containsKey(uid)) {
+      final far = _farQuotes[uid];
+      // one past its time is gone, read or not
+      final burn = far?.burnAt;
+      if (burn != null && burn <= DateTime.now().millisecondsSinceEpoch) {
+        _farQuotes.remove(uid);
+        _farGone.add(uid);
+        return null;
+      }
+      return far;
+    }
+    _farQuotes[uid] = null;
+    // after this frame: it is asked from a build
+    Future.microtask(() async {
+      Map<String, Object?>? r;
+      try {
+        r = await session.messageIn(widget.peerHaloId, uid);
+      } catch (_) {
+        r = null;
+      }
+      if (!mounted) return;
+      setState(() {
+        if (r == null) {
+          _farQuotes.remove(uid);
+          _farGone.add(uid);
+          return;
+        }
+        _farQuotes[uid] = _Msg(
+          r['direction'] as String,
+          (r['plaintext'] as String?) ?? '',
+          DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
+          sticker: StickerWire.parse(r['sticker']),
+          burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
+          burnUnseen: r['burn_unseen'] == 1,
+          msgUid: uid,
+          mediaPath: r['media_path'] as String?,
+          filePath: r['file_path'] as String?,
+          fileName: r['file_name'] as String?,
+        );
+      });
+    });
+    return null;
+  }
+
+  // quoted uids the database no longer has
+  final Set<String> _farGone = {};
 
   // a reload rebuilds every row from the database. a message already leaving
   // keeps its row so the burn and fold carry on, and one gone from the
@@ -1064,19 +1240,34 @@ class _ChatScreenState extends State<ChatScreen>
   // the quote a kept draft had, until the messages are here to find it in
   String? _draftReply;
 
-  // search in chat. _matches are indices into _messages, _matchPos the
-  // current hit, _matchKeys let a hit be scrolled into view.
+  // search in chat (chat_find.dart): the hits are over the whole chat,
+  // _matchSet their row ids, _matchAt the one in view
   bool _searching = false;
   // ctrl+f on the desktop's pane
   final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   String _query = '';
   String? _liftedUid;
-  List<int> _matches = [];
-  // same hits as _matches, for the per-row "is this one" test
+  final _hits = ChatFind();
   Set<int> _matchSet = {};
-  int _matchPos = 0;
-  final Map<int, GlobalKey> _matchKeys = {};
+  int _matchAt = -1;
+  // "finding the message" while a far one loads
+  bool _finding = false;
+  late final _slow = SlowLine((on) {
+    if (mounted) setState(() => _finding = on);
+  });
+  // where a jump loads the thread from, while it does
+  ChatHit? _reachFrom;
+  // the last row held while the rows stop short of the newest: a window
+  // around a message far up. null when the newest is held
+  ChatHit? _windowEnd;
+  bool _loadingNewer = false;
+  // the next load is the newest page alone
+  bool _freshPage = false;
+  // theirs that came while the window was away from the newest, and the
+  // newest row there was then
+  final Set<String> _windowNew = {};
+  int _windowFloor = 0;
   late String? _nickname = widget.nickname;
   late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
@@ -2145,6 +2336,26 @@ class _ChatScreenState extends State<ChatScreen>
       _loadMessages();
       return;
     }
+    // the window is away from the newest: what came is counted on the
+    // jump button, the rows held are reloaded for edits and receipts
+    if (_windowEnd != null) {
+      try {
+        final rows = await session.messagesAfter(
+          widget.peerHaloId,
+          _windowFloor,
+        );
+        for (final r in rows) {
+          final uid = r['msg_uid'] as String?;
+          if (uid != null && r['direction'] != 'out') _windowNew.add(uid);
+        }
+      } catch (e) {
+        dlog('window: new not counted (${e.runtimeType})');
+      }
+      if (!mounted) return;
+      setState(() => _unseenNew = _windowNew.length);
+      _loadMessages();
+      return;
+    }
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -2300,91 +2511,165 @@ class _ChatScreenState extends State<ChatScreen>
 
   // ---- search ----------------------------------------------------------
 
-  void _openSearch() {
-    setState(() => _searching = true);
-    // the page holds the last sixty; a search wants all of it
-    _loadMessages();
-  }
+  void _openSearch() => setState(() => _searching = true);
 
   void _closeSearch() {
+    _queryWait?.cancel();
     setState(() {
       _searching = false;
       _query = '';
       _searchCtrl.clear();
-      _matches = [];
+      _hits.clear();
       _matchSet = {};
-      _matchPos = 0;
-      _matchKeys.clear();
+      _matchAt = -1;
     });
   }
 
-  // recompute matches whenever the query changes. jumps to the most
-  // recent hit (bottom of the list) by default, then scrolls it in.
-  void _onQueryChanged(String q) {
-    final query = q.trim();
-    final matches = <int>[];
-    if (query.isNotEmpty) {
-      final lower = query.toLowerCase();
-      for (var i = 0; i < _messages.length; i++) {
-        // a sticker has no words; its emoji is not what was said. his
-        // first line is the app's, not the chat's
-        if (_messages[i].sticker == null &&
-            !_messages[i].welcome &&
-            !_heldBack(_messages[i]) &&
-            _messages[i].text.toLowerCase().contains(lower)) {
-          matches.add(i);
-        }
-      }
-    }
+  // the whole chat is looked in through its index; the newest hit first
+  // typing settles first: one question per pause, not per letter
+  Timer? _queryWait;
+  void _typedQuery(String q) {
+    // the head shows its arrows row at once; the question waits
+    setState(() {});
+    _queryWait?.cancel();
+    _queryWait = Timer(
+      const Duration(milliseconds: 150),
+      () => _onQueryChanged(q),
+    );
+  }
+
+  Future<void> _onQueryChanged(String q, {bool land = true}) async {
+    final fresh = await _hits.look(
+      q,
+      (match) => session.chatHits(
+        match,
+        peerId: widget.peerHaloId,
+        wordsOnly: _incomingRequest && !_vouched && !_isDev,
+      ),
+      [
+        for (final m in _messages)
+          // a sticker has no words; its emoji is not what was said. his
+          // first line is the app's, not the chat's
+          if (m.sticker == null && !m.welcome && !_heldBack(m))
+            (id: m.rowid, at: m.when.millisecondsSinceEpoch, text: m.text),
+      ],
+      stay: !land,
+    );
+    if (!fresh || !mounted || !_searching) return;
     setState(() {
-      _query = query;
-      _matches = matches;
-      _matchSet = matches.toSet();
-      _matchPos = matches.isEmpty ? 0 : matches.length - 1;
-      _matchKeys
-        ..clear()
-        ..addEntries(matches.map((i) => MapEntry(i, GlobalKey())));
+      _query = _hits.query;
+      _relight();
     });
-    _scrollToCurrentMatch();
+    if (land) unawaited(_toHit());
+  }
+
+  // the hits' row ids for the rows' test, after the hits changed
+  void _relight() {
+    _matchSet = _hits.ids;
+    _matchAt = _hits.current ?? -1;
   }
 
   // chevrons: delta -1 = previous (older) hit, +1 = next (newer). wraps.
   void _gotoMatch(int delta) {
-    if (_matches.isEmpty) return;
-    setState(() {
-      _matchPos = (_matchPos + delta) % _matches.length;
-      if (_matchPos < 0) _matchPos += _matches.length;
-    });
-    _scrollToCurrentMatch();
+    if (_hits.count == 0) return;
+    HapticFeedback.selectionClick();
+    _hits.step(delta);
+    setState(_relight);
+    unawaited(_toHit());
   }
 
-  // rough jump so the match gets built, then ensureVisible to centre it.
-  // saves a scroll-to-index dependency.
-  void _scrollToCurrentMatch() {
-    if (_matches.isEmpty || !_scrollCtrl.hasClients) return;
-    final idx = _matches[_matchPos];
-    if (_messages.isNotEmpty) {
-      // reversed list: newest is at offset 0, so a message at index idx sits at
-      // roughly (len-1-idx)/len of the extent.
-      final frac = (_messages.length - 1 - idx) / _messages.length;
-      final approx = frac * _scrollCtrl.position.maxScrollExtent;
-      if (_scrollReady) {
-        _scrollCtrl.jumpTo(
-          approx.clamp(0.0, _scrollCtrl.position.maxScrollExtent),
-        );
-      }
+  // to the hit in view: brought in first when it is above the rows held
+  Future<void> _toHit() async {
+    final id = _hits.current;
+    if (id == null) return;
+    final here = await _bringIn(id);
+    if (here == null) return;
+    if (!here) {
+      if (!mounted) return;
+      showHaloToast(context, l10n.chatMessageGone);
+      setState(() {
+        _hits.drop(id);
+        _relight();
+      });
+      return;
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _matchKeys[idx]?.currentContext;
-      if (ctx != null) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOut,
-          alignment: 0.4,
-        );
+    if (!mounted || _hits.current != id) return;
+    setState(_relight);
+    final at = _messages.lastIndexWhere((m) => m.rowid == id);
+    if (at >= 0) _landOn(_rowKey(_messages[at]));
+  }
+
+  // row [id] among the rows held: loaded from a little above it to the
+  // newest when it is not, never the whole thread. false when it is gone,
+  // null when it could not be brought in now
+  Future<bool?> _bringIn(int id) async {
+    if (_messages.any((m) => m.rowid == id)) return true;
+    if (!_loaded) return null;
+    return _slow.over(() async {
+      ChatHit? from;
+      try {
+        from = await session.chatStartAbove(id, peerId: widget.peerHaloId);
+      } catch (e) {
+        dlog('find: start not read (${e.runtimeType})');
+        return null;
       }
+      if (from == null) return false;
+      ChatHit? end;
+      try {
+        end = await session.chatEndBelow(id, peerId: widget.peerHaloId);
+      } catch (e) {
+        end = null;
+      }
+      // a reload under way would take this one as a later pass, without
+      // its start: wait for it
+      for (var i = 0; mounted && _loading && i < 200; i++) {
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
+      if (!mounted || _loading) return null;
+      _reachFrom = from;
+      if (end != null) {
+        if (_windowEnd == null) {
+          _windowFloor = _messages.fold(0, (a, m) => m.rowid > a ? m.rowid : a);
+          _windowNew.clear();
+        }
+        _windowEnd = end;
+        _showScrollDown = true;
+      }
+      _jumpActive = true;
+      try {
+        await _loadMessages();
+      } finally {
+        _reachFrom = null;
+        _jumpActive = false;
+      }
+      if (!mounted) return null;
+      return _messages.any((m) => m.rowid == id) ? true : null;
     });
+  }
+
+  // a quote's message, wherever it is in the chat
+  Future<void> _toQuoted(String uid) async {
+    var held = _messages.where((x) => x.msgUid == uid).firstOrNull;
+    if (held == null) {
+      Map<String, Object?>? r;
+      try {
+        r = await session.messageIn(widget.peerHaloId, uid);
+      } catch (e) {
+        dlog('quote: not read (${e.runtimeType})');
+        return;
+      }
+      final id = (r?['rowid'] as num?)?.toInt();
+      if (!mounted) return;
+      final here = id == null ? false : await _bringIn(id);
+      if (!mounted || here == null) return;
+      if (!here) {
+        showHaloToast(context, l10n.chatMessageGone);
+        return;
+      }
+      held = _messages.where((x) => x.msgUid == uid).firstOrNull;
+      if (held == null) return;
+    }
+    _scrollToMessage(held);
   }
 
   // the reaction pill above the long-pressed bubble, in an OverlayEntry so
@@ -2522,6 +2807,17 @@ class _ChatScreenState extends State<ChatScreen>
         fileAt.filePath != null &&
         !isVoiceName(fileAt.fileName) &&
         fileViewOf(fileFactsOrName(fileAt.filePath!, fileAt.fileName)) != null;
+    // a gif, theirs or mine, can be kept in the favourites. nothing kept
+    // to this chat leaves it, so not one under its rules
+    final gifPath = shareOn?.mediaPath;
+    final gifOn =
+        !welcome &&
+        !kept &&
+        // a timed one goes with its time: never kept past it
+        shareOn?.burnSecs == null &&
+        gifPath != null &&
+        !_keptHere(shareOn!) &&
+        knownGifFile(gifPath) == true;
     // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
     final still = motionStill(context);
@@ -2547,6 +2843,15 @@ class _ChatScreenState extends State<ChatScreen>
               from: _fileFrom(fileAt),
             );
           },
+        ),
+      if (gifOn)
+        MenuAction(
+          icon: Icons.star_outline_rounded,
+          label: l10n.gifFavAdd,
+          tint: HaloColors.amber,
+          onTap: () => dismiss(
+            then: () => keepGifOf(context, gifPath, widget.peerHaloId),
+          ),
         ),
       // his first line: copy, and nothing else
       if (!welcome)
@@ -2694,7 +2999,7 @@ class _ChatScreenState extends State<ChatScreen>
         icon: Icons.open_in_new_rounded,
         label: l10n.fileOpenWith,
         apart: true,
-        aside: l10n.fileOpenWithNote,
+        aside: openWithAside,
         onTap:
             kept ||
                 !canShare ||
@@ -3004,17 +3309,9 @@ class _ChatScreenState extends State<ChatScreen>
     await _refreshPinCount();
   }
 
-  Future<void> _jumpToPin(String uid) async {
-    if (!_messages.any((m) => m.msgUid == uid)) {
-      // pinned above what is loaded: bring the whole thread in, and hold
-      // the reload's own snap to the newest message off while we do
-      _pagedOut = true;
-      _jumpActive = true;
-      await _loadMessages();
-      if (!mounted) return;
-    }
-    _jumpToUid(uid);
-  }
+  // pinned above what is loaded: the thread from a little above it, as a
+  // quote's jump does
+  Future<void> _jumpToPin(String uid) => _toQuoted(uid);
 
   // the unsend frame on its own, queued like an edit so one made offline
   // still goes. the other side drops the row, or the half-file and its
@@ -3198,7 +3495,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
 
-  void _landOn(String rowKey) {
+  // [again]: a lazy list's guessed heights settle after a far landing and
+  // can carry the row out of view; it is looked for and landed on again
+  void _landOn(String rowKey, {bool ring = true, int again = 2}) {
     final at = _messages.lastIndexWhere((m) => _rowKey(m) == rowKey);
     if (at < 0) return;
     final uid = _messages[at].msgUid;
@@ -3221,13 +3520,36 @@ class _ChatScreenState extends State<ChatScreen>
       },
       done: (landed) {
         _jumpActive = false;
-        if (!mounted || !landed || uid == null) return;
+        if (!mounted || !landed) return;
+        if (again > 0) {
+          for (final wait in const [250, 1500]) {
+            Future.delayed(Duration(milliseconds: wait), () {
+              if (!mounted || _jumpActive || _rowInView(rowKey)) return;
+              _landOn(rowKey, ring: false, again: again - 1);
+            });
+          }
+        }
+        if (!ring || uid == null) return;
         setState(() => _rippleUid = uid);
         Future.delayed(const Duration(milliseconds: 1300), () {
           if (mounted && _rippleUid == uid) setState(() => _rippleUid = null);
         });
       },
     );
+  }
+
+  // whether row [key] is built and inside the viewport
+  bool _rowInView(String key) {
+    final ctx = _anchors.of(key);
+    final ro = ctx == null || !ctx.mounted ? null : ctx.findRenderObject();
+    if (ro is! RenderBox || !ro.attached || !_scrollReady) return false;
+    try {
+      final reveal = RenderAbstractViewport.of(ro).getOffsetToReveal(ro, 0.5);
+      final p = _scrollCtrl.positions.first;
+      return (reveal.offset - p.pixels).abs() < p.viewportDimension * 0.5;
+    } catch (_) {
+      return false;
+    }
   }
 
   // open an edit sheet for own message m. saves locally + tells the peer.
@@ -3340,10 +3662,28 @@ class _ChatScreenState extends State<ChatScreen>
     session.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
-    final wantAll = _searching || _pagedOut;
     // a reload keeps the pages already scrolled in: a receipt, a reaction
-    // or an edit must not drop what is being read
-    final keepFrom = wantAll || !_loaded ? null : _oldestHeld();
+    // or an edit must not drop what is being read. a jump to a far message
+    // starts a little above it
+    // quotes far up are read again: one unsent or burned since is gone
+    _farQuotes.clear();
+    _farGone.clear();
+    final fresh = _freshPage;
+    _freshPage = false;
+    if (fresh) {
+      _windowEnd = null;
+      _windowNew.clear();
+      _unseenNew = 0;
+      _pagedOut = false;
+    }
+    final wantAll = _pagedOut && _windowEnd == null;
+    final held = wantAll || !_loaded || fresh ? null : _oldestHeld();
+    final windowEnd = _windowEnd;
+    final keepFrom =
+        _reachFrom ??
+        (held == null
+            ? null
+            : (id: held.rowid, at: held.when.millisecondsSinceEpoch));
     // opened on a message: the newest page, and the whole thread only when
     // it is further up than that
     final jumpTo = _didJump ? null : widget.jumpToUid;
@@ -3353,11 +3693,17 @@ class _ChatScreenState extends State<ChatScreen>
       _hasMore = false;
     } else if (keepFrom != null) {
       rows = List.of(
-        await session.messagesFrom(
-          widget.peerHaloId,
-          rowid: keepFrom.rowid,
-          at: keepFrom.when.millisecondsSinceEpoch,
-        ),
+        windowEnd != null
+            ? await session.messagesBetween(
+                widget.peerHaloId,
+                keepFrom,
+                windowEnd,
+              )
+            : await session.messagesFrom(
+                widget.peerHaloId,
+                rowid: keepFrom.id,
+                at: keepFrom.at,
+              ),
       );
     } else {
       rows = List.of(
@@ -3547,13 +3893,13 @@ class _ChatScreenState extends State<ChatScreen>
     // a stored draft that would not read is tried again
     final kept = _draftRows;
     if (_rowUnread && kept != null) unawaited(_readDraft(kept));
-    // if a search is active, recompute matches against the fresh list.
+    // the search asked again over the fresh rows, staying where it is
     if (_searching && _query.isNotEmpty) {
-      _onQueryChanged(_query);
+      unawaited(_onQueryChanged(_query, land: false));
     } else if (!_didJump && widget.jumpToUid != null) {
       _didJump = true;
       _jumpToUid(widget.jumpToUid!);
-    } else if (snap) {
+    } else if ((snap || fresh) && _windowEnd == null) {
       _scrollToEnd(instant: true);
     }
     // a file still going from a screen left since is followed to its end
@@ -3883,6 +4229,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scrollToEnd({bool instant = false}) {
     if (_jumpActive) return;
+    // something of ours went: to the newest, the window let go
+    if (_windowEnd != null) {
+      unawaited(_toNewest());
+      return;
+    }
     // reversed list: the newest message lives at offset 0
     if (!_scrollCtrl.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3909,6 +4260,20 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_loaded || _searching) return;
     // cheap tick: only rows newer than our newest. never a full reload here,
     // once a second that blinks the list and snaps the scroll.
+    // a window away from the newest asks only what came since it opened
+    if (_windowEnd != null) {
+      final rows = await session.messagesAfter(widget.peerHaloId, _windowFloor);
+      if (!mounted) return;
+      if (rows.any(
+        (r) =>
+            r['direction'] != 'out' &&
+            r['msg_uid'] != null &&
+            !_windowNew.contains(r['msg_uid']),
+      )) {
+        await _tryAppendNew();
+      }
+      return;
+    }
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -4281,7 +4646,7 @@ class _ChatScreenState extends State<ChatScreen>
       context,
       container: session.container,
       // a gif goes as a photo: none in a request still waiting
-      gifs: _mediaWaits ? null : appGifTabs(),
+      gifs: _mediaWaits ? null : appGifTabs(chat: widget.peerHaloId),
     );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
@@ -6123,9 +6488,14 @@ class _ChatScreenState extends State<ChatScreen>
     String? quotedAuthor;
     StickerWire? quotedSticker;
     if (m.replyTo != null) {
-      final original = _byUid[m.replyTo];
+      final original = _farGone.contains(m.replyTo)
+          ? _byUid[m.replyTo]
+          : _quoteOf(m.replyTo!);
       if (original == null) {
-        quoted = l10n.chatMessageUnavailable;
+        // one still being read shows no words yet, not a wrong "gone"
+        quoted = _farGone.contains(m.replyTo)
+            ? l10n.chatMessageUnavailable
+            : '…';
       } else {
         quotedAuthor = original.direction == 'out'
             ? l10n.chatYou2
@@ -6157,17 +6527,11 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     // an album is a hit when its caption is
-    final rowsAt = run == null
-        ? [ix]
-        : [for (final x in members) _messages.indexOf(x)];
-    final hitAt = searchActive
-        ? rowsAt.where(_matchSet.contains).firstOrNull
-        : null;
-    final isMatch = hitAt != null;
-    final isCurrent =
-        searchActive &&
-        _matches.isNotEmpty &&
-        rowsAt.contains(_matches[_matchPos]);
+    final rowsAt = [
+      for (final x in run == null ? [m] : members) x.rowid,
+    ];
+    final isMatch = searchActive && rowsAt.any(_matchSet.contains);
+    final isCurrent = searchActive && rowsAt.contains(_matchAt);
     final dimmed = searchActive && !isMatch;
     final showDate = ix == 0 || !_sameDay(_messages[ix - 1].when, m.when);
     // the rows around it as drawn: an album's other rows are not
@@ -6202,7 +6566,6 @@ class _ChatScreenState extends State<ChatScreen>
         // back with no fade: the menu's copy has just landed right on it
         duration: lifted ? const Duration(milliseconds: 300) : Duration.zero,
         child: _Bubble(
-          key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
           openMedia: _openChatMedia,
           newestOut: switch (_newestOut()) {
@@ -6283,16 +6646,7 @@ class _ChatScreenState extends State<ChatScreen>
             blocked: _blocked,
           ),
           quotedText: quoted,
-          onQuoteTap: m.replyTo == null
-              ? null
-              : () {
-                  for (final x in _messages) {
-                    if (x.msgUid != null && x.msgUid == m.replyTo) {
-                      _scrollToMessage(x);
-                      break;
-                    }
-                  }
-                },
+          onQuoteTap: m.replyTo == null ? null : () => _toQuoted(m.replyTo!),
           quotedAuthor: quotedAuthor,
           query: searchActive ? _query : '',
           isCurrentMatch: isCurrent,
@@ -6452,6 +6806,8 @@ class _ChatScreenState extends State<ChatScreen>
     _msgCtrl.dispose();
     _composerFocus.dispose();
     _searchCtrl.dispose();
+    _slow.dispose();
+    _queryWait?.cancel();
     _stickyHideTimer?.cancel();
     _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.removeListener(_updateSticky);
@@ -7246,7 +7602,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
     // reversed list: bottom is offset 0
-    final show = pos.pixels > _jumpButtonAt;
+    final show = pos.pixels > _jumpButtonAt || _windowEnd != null;
     if (!show) _unseenNew = 0;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
@@ -7254,6 +7610,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _scrollToBottom() {
+    if (_windowEnd != null) {
+      unawaited(_toNewest());
+      return;
+    }
     if (!_scrollReady) return;
     setState(() => _unseenNew = 0);
     // reversed list: newest sits at offset 0.
@@ -7658,9 +8018,10 @@ class _ChatScreenState extends State<ChatScreen>
                   ? SearchHead(
                       key: const ValueKey('search'),
                       controller: _searchCtrl,
-                      matchCount: _matches.length,
-                      matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
-                      onChanged: _onQueryChanged,
+                      matchCount: _hits.count,
+                      matchPos: _hits.shown,
+                      finding: _finding,
+                      onChanged: _typedQuery,
                       onPrev: () => _gotoMatch(-1),
                       onNext: () => _gotoMatch(1),
                       onClose: _closeSearch,
@@ -8977,6 +9338,8 @@ class SearchHead extends StatefulWidget {
   final VoidCallback onPrev;
   final VoidCallback onNext;
   final VoidCallback onClose;
+  // a far hit is being loaded: said only after a noticeable wait
+  final bool finding;
   const SearchHead({
     super.key,
     required this.controller,
@@ -8986,6 +9349,7 @@ class SearchHead extends StatefulWidget {
     required this.onPrev,
     required this.onNext,
     required this.onClose,
+    this.finding = false,
   });
 
   @override
@@ -9015,6 +9379,32 @@ class _SearchHeadState extends State<SearchHead> {
       const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
     },
     child: _head(context),
+  );
+
+  Widget _count() => Text.rich(
+    key: const ValueKey('count'),
+    TextSpan(
+      style: HaloType.mono(size: 10, color: HaloColors.text),
+      children: widget.matchCount == 0
+          ? [
+              TextSpan(
+                text: l10n.chatNoMatches,
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text,
+                  weight: FontWeight.w500,
+                ),
+              ),
+            ]
+          : markedSpans(
+              l10n.chatOf(widget.matchCount, widget.matchPos),
+              HaloType.mono(
+                size: 10,
+                color: HaloColors.amberText,
+                weight: FontWeight.w500,
+              ),
+            ),
+    ),
   );
 
   Widget _head(BuildContext context) {
@@ -9135,34 +9525,18 @@ class _SearchHeadState extends State<SearchHead> {
                       padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 0, 0),
                       child: Row(
                         children: [
-                          Text.rich(
-                            TextSpan(
-                              style: HaloType.mono(
-                                size: 10,
-                                color: HaloColors.text,
-                              ),
-                              children: widget.matchCount == 0
-                                  ? [
-                                      TextSpan(
-                                        text: l10n.chatNoMatches,
-                                        style: HaloType.mono(
-                                          size: 10,
-                                          color: HaloColors.text,
-                                          weight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ]
-                                  : markedSpans(
-                                      l10n.chatOf(
-                                        widget.matchCount,
-                                        widget.matchPos,
-                                      ),
-                                      HaloType.mono(
+                          Flexible(
+                            child: FadeSwap(
+                              child: widget.finding
+                                  ? Text(
+                                      l10n.chatFindingMessage,
+                                      key: const ValueKey('finding'),
+                                      style: HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.amberText,
-                                        weight: FontWeight.w500,
+                                        color: HaloColors.text,
                                       ),
-                                    ),
+                                    )
+                                  : _count(),
                             ),
                           ),
                           const Spacer(),
@@ -9313,7 +9687,6 @@ class _Bubble extends StatelessWidget {
   // the newest of ours: the only one that spells Delivered
   final bool newestOut;
   const _Bubble({
-    super.key,
     required this.msg,
     this.newestOut = false,
     this.translation,
@@ -9363,7 +9736,7 @@ class _Bubble extends StatelessWidget {
     final base = HaloType.message(onAmber: isOut && !image);
     if (query.isEmpty && plainLinks) {
       final t = words ?? msg.text;
-      return Text(t, style: base, textDirection: writtenDir(t));
+      return Text(t, style: withHan(base, t), textDirection: writtenDir(t));
     }
     if (query.isEmpty) {
       return KryfoLinkText(
@@ -9376,7 +9749,7 @@ class _Bubble extends StatelessWidget {
     final text = msg.text;
     return Text.rich(
       TextSpan(
-        style: base,
+        style: withHan(base, text),
         children: searchLit(text, query, onAmber: isOut && !image),
       ),
       textDirection: writtenDir(text),
@@ -10374,7 +10747,9 @@ class _Bubble extends StatelessWidget {
                                     duration: const Duration(milliseconds: 820),
                                     curve: Curves.easeOut,
                                     builder: (context, t, child) => Opacity(
-                                      opacity: (1 - t) * 0.92,
+                                      opacity: motionStill(context)
+                                          ? 0.92
+                                          : (1 - t) * 0.92,
                                       child: Transform.scale(
                                         scale: motionStill(context)
                                             ? 1
@@ -10740,7 +11115,9 @@ class _Bubble extends StatelessWidget {
                                   duration: const Duration(milliseconds: 820),
                                   curve: Curves.easeOut,
                                   builder: (context, t, child) => Opacity(
-                                    opacity: (1 - t) * 0.92,
+                                    opacity: motionStill(context)
+                                        ? 0.92
+                                        : (1 - t) * 0.92,
                                     child: Transform.scale(
                                       scale: motionStill(context)
                                           ? 1
@@ -11265,7 +11642,9 @@ class _Composer extends StatelessWidget {
                         textDirection: dir,
                         inputFormatters: const [UnmarkedInput()],
                         cursorColor: HaloColors.amber,
-                        style: HaloType.sans(size: 14),
+                        style: HaloType.sans(
+                          size: 14,
+                        ).copyWith(locale: hanLocaleOf(controller.text)),
                         minLines: 1,
                         maxLines: 4,
                         decoration: InputDecoration(

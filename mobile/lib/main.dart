@@ -31,6 +31,7 @@ import 'devices/own_devices.dart'
 import 'photo_blur.dart' show makeBlurSoon;
 import 'picture_lock.dart' show capPictureCache, lockStep;
 import 'secure_store.dart';
+import 'share_targets.dart' show shareTargets;
 import 'desktop/desk_frames.dart' show deskRunApp;
 import 'desktop/desktop_trace.dart' as desk_trace;
 import 'desktop/desktop_mode.dart'
@@ -62,6 +63,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
+import 'conn_check.dart' show connTrail;
 import 'shred.dart';
 import 'heal.dart';
 import 'identities.dart';
@@ -314,6 +316,14 @@ part 'app/state_vault.dart';
 part 'app/state_voice.dart';
 part 'app/state_files.dart';
 
+Future<void> _numberedNames() async {
+  try {
+    await moveToNumberedNames((await getApplicationDocumentsDirectory()).path);
+  } catch (e) {
+    dlog('names: not moved (${e.runtimeType})');
+  }
+}
+
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
@@ -321,6 +331,8 @@ void main() async {
   capPictureCache();
   // the media folders sealed before anything reads or writes them
   await openPhoneSeal();
+  // the names from before the numbers, before anything opens a database
+  await _numberedNames();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;

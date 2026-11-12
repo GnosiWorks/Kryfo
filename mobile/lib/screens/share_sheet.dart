@@ -10,6 +10,7 @@ import '../l10n/l10n.dart';
 import '../lock_guard.dart';
 import '../lock_state.dart';
 import '../main.dart' show appState;
+import '../share_targets.dart';
 import '../share_text.dart';
 import '../tools/tools_bridge.dart';
 import '../voice_live.dart';
@@ -97,27 +98,33 @@ class ShareTexts {
         if (now?.id != s.id) continue;
         await _bridge.sawSharedText(s.id, _whereNow());
         if (!context.mounted) return;
-        final id = await _whileHere(
-          pickWordsChat(
-            context,
-            title: l10n.shareChooseChat,
-            empty: appState.contacts.isEmpty
-                ? l10n.shareNoChats
-                : l10n.shareNoOne,
-            dev: devForwardTarget,
-            words: s.words,
-            onSheet: (c) {
-              _sheet = c;
-              // one came before this sheet was up: it goes at once
-              if (_newer) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _popSheet(),
-                );
-              }
-            },
-          ),
-          null,
-        );
+        // a chat picked in the share menu goes straight there, when it
+        // still may
+        final menu = await shareTargets.chatFor(s.chat);
+        if (!context.mounted) return;
+        final id =
+            menu ??
+            await _whileHere(
+              pickWordsChat(
+                context,
+                title: l10n.shareChooseChat,
+                empty: appState.contacts.isEmpty
+                    ? l10n.shareNoChats
+                    : l10n.shareNoOne,
+                dev: devForwardTarget,
+                words: s.words,
+                onSheet: (c) {
+                  _sheet = c;
+                  // one came before this sheet was up: it goes at once
+                  if (_newer) {
+                    WidgetsBinding.instance.addPostFrameCallback(
+                      (_) => _popSheet(),
+                    );
+                  }
+                },
+              ),
+              null,
+            );
         _sheet = null;
         if (!alive()) return;
         if (_newer) continue;

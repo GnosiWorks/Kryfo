@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/file_viewer_parts.dart' show openWithAside;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -260,7 +261,7 @@ void main() {
       expect(find.text('plan.pdf'), findsOneWidget);
       expect(find.text('PDF · 3 KB'), findsOneWidget);
       expect(find.text(l10n.fileOpenWith), findsOneWidget);
-      expect(find.text(l10n.fileOpenWithNote), findsOneWidget);
+      expect(find.text(openWithAside), findsOneWidget);
       await t.tap(find.text(l10n.fileSaveToDevice));
       await t.pumpAndSettle();
       // the answer lands on the zone the sheet was opened from

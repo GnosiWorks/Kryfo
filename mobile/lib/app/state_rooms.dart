@@ -959,8 +959,43 @@ extension AppStateRooms on AppState {
   // own, this only has to notice the end.
   void _armRoomTimer() {
     _roomTimer ??= Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!haloWiping) unawaited(sweepRooms());
+      if (haloWiping) return;
+      unawaited(sweepRooms());
+      unawaited(roomUnsendsAgain());
     });
+  }
+
+  // once a day while a room lives our unsends in it go to every member
+  // again: a member whose restore brought back what we took back loses it
+  // again, though a room has no heal to ask, and a relay that dropped the
+  // first copy early gets another
+  @visibleForTesting
+  Future<int> roomUnsendsAgain({int? nowMs}) async {
+    if (haloWiping || everydayHeld) return 0;
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final prefs = await SharedPreferences.getInstance();
+    final last = prefs.getInt(kRoomUnsendsAgainPref) ?? 0;
+    // a clock set back starts the day again
+    if (last <= now && now - last < kRoomUnsendsEvery.inMilliseconds) return 0;
+    await prefs.setInt(kRoomUnsendsAgainPref, now);
+    var n = 0;
+    try {
+      for (final g in await live.rooms()) {
+        final id = g['group_id'] as String;
+        if (((g['expires_at'] as int?) ?? 0) <= now) continue;
+        final to = await _othersIn(live, id);
+        if (to.isEmpty) continue;
+        final k = await live.requeueRoomUnsends(id, to, now: now);
+        if (k == 0) continue;
+        n += k;
+        for (final m in to) {
+          unawaited(_ctlLane(live, id, m));
+        }
+      }
+    } catch (e) {
+      dlog('rooms: unsends not queued again (${e.runtimeType})');
+    }
+    return n;
   }
 
   // on boot: drop what ended while we were away, then listen to what lives

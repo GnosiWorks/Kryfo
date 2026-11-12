@@ -521,6 +521,9 @@ extension AppStateBoot on AppState {
       }
     });
     listenAtStart();
+    // chats in android's share menu, if turned on: what an earlier run
+    // left is put right, then the lock and the chats are followed
+    unawaited(shareTargets.start());
     // once after the update: each group's admin hears what this app can
     unawaited(_announceCaps(live));
     // what the removed ntfy mode left behind in the prefs

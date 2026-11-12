@@ -23,7 +23,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"runtime"
 	"slices"
 	"strconv"
@@ -1642,7 +1641,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			a := anchors[st]
 			a.path = storeLastPath(lastPath, st)
 			goneFiles.Delete(a.path)
-			if b, err := os.ReadFile(a.path); err == nil {
+			if b, err := vRead(a.path); err == nil {
 				if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
 					a.onDisk = v
 					a.saved = anchorNow(v, time.Now())
@@ -1752,7 +1751,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		if fileGone(a.path) {
 			return
 		}
-		if os.WriteFile(a.path, []byte(strconv.FormatInt(disk, 10)), 0600) == nil {
+		if vWrite(a.path, []byte(strconv.FormatInt(disk, 10))) == nil {
 			a.onDisk = disk
 		}
 	}
@@ -1956,21 +1955,35 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				sweeping = false
 				// a backup is read only while our first store is down and tor
-				// carries. the wait ends when either changes
+				// carries, or on private once in a slow round (slowBackupRead).
+				// the wait ends when either changes
 				if backup {
 					wake, torMoved := liveWakeChan(), torWakeChan()
 					if !backupsOn() {
-						t := time.NewTimer(backupLook)
-						select {
-						case <-ctx.Done():
-							t.Stop()
-							return
-						case <-wake:
-						case <-torMoved:
-						case <-t.C:
+						wait := backupLook
+						slow := slowBackupRead()
+						if slow {
+							now := ownClock()
+							if nextSweep == 0 {
+								nextSweep = now + firstSlowBackupDelay()
+							}
+							wait = min(nextSweep-now, backupLook)
 						}
-						t.Stop()
-						continue
+						if !slow || wait > 0 {
+							t := time.NewTimer(wait)
+							select {
+							case <-ctx.Done():
+								t.Stop()
+								return
+							case <-wake:
+							case <-torMoved:
+							case <-t.C:
+							}
+							t.Stop()
+							continue
+						}
+						// read to its end, then let go until the next round
+						sweeping = true
 					}
 				}
 				// both channels before the look, so a change of the round or
@@ -3015,7 +3028,7 @@ func heldOnFile(path string) int {
 	if path == "" {
 		return 0
 	}
-	b, err := os.ReadFile(path)
+	b, err := vRead(path)
 	if err != nil || !(strings.HasPrefix(string(b), seenHeldMark) || strings.Contains(string(b), "\n"+seenHeldMark)) {
 		return 0
 	}

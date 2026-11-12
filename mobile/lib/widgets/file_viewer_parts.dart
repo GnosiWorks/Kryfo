@@ -632,10 +632,14 @@ class _BarPick extends StatelessWidget {
   );
 }
 
-/// what "Open with…" means, said under it wherever it is offered
+/// what "Open with…" means, said under it wherever it is offered: the
+/// other app sees the file and keeps a copy of its own
+String get openWithAside =>
+    '${l10n.fileOpenWithNote}\n${l10n.fileOtherAppKeepsCopy}';
+
 class OpenWithNote extends StatelessWidget {
   const OpenWithNote({super.key});
 
   @override
-  Widget build(BuildContext context) => AsideNote(l10n.fileOpenWithNote);
+  Widget build(BuildContext context) => AsideNote(openWithAside);
 }

@@ -63,7 +63,7 @@ void main() {
     test('chinese in simplified characters, whatever the model wrote', () {
       final gz = File('assets/opencc/STCharacters.txt.gz').readAsBytesSync();
       final h = HansChars.parse(utf8.decode(gzip.decode(gz)));
-      // what the samsung run heard for simplified speech
+      // what a run heard for simplified speech
       expect(cleanSegment('我剛到公司,地鐵說', hans: h), '我刚到公司,地铁说');
       // a character that is a simplified one itself stays
       expect(h.convert('著名的乾杯'), '著名的干杯');

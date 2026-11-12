@@ -380,6 +380,8 @@ void main() {
     // the other side: the second identity 0.5.0 kept, opened by this version
     File('$_fixtures/halo_d.db').copySync(p.join(docs.path, 'halo_d.db'));
     await secureStore.write(key: 'halo.d.key', value: _keys['decoy']!);
+    // as the app's start moves them
+    await moveToNumberedNames(docs.path);
     final restart = HaloDb();
     useDatabasesForTest(restart, Session(restart));
     final raw = await restart.open();

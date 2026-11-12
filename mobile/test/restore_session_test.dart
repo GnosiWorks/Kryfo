@@ -141,18 +141,18 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({
       'halo.db.passphrase': 'everyday key',
-      'halo.d.key': 'decoy key',
+      'halo.k2.key': 'decoy key',
     });
     forgetLeftoverSweep();
     restoreRunningForTest = false;
     forgetRestoredHidden();
     // both accounts, each with hidden chats of its own
     put('halo.db', 'everyday');
-    put('halo_d.db', 'decoy');
-    put('halo_v.db', 'everyday hidden');
-    put('halo_dv.db', 'decoy hidden');
+    put('k2.db', 'decoy');
+    put('k3.db', 'everyday hidden');
+    put('k4.db', 'decoy hidden');
     live = _Db(HaloContainer.everyday, at('halo.db'));
-    decoy = _Db(HaloContainer.decoy, at('halo_d.db'));
+    decoy = _Db(HaloContainer.decoy, at('k2.db'));
     engine = _Engine();
     useEngineForTest(engine);
   });
@@ -216,13 +216,13 @@ void main() {
     expect(lock.entries.keys, contains('${PinSlot.vault}'));
     expect((lock.entries['${PinSlot.vault}'] as Map)['p'], vaultPin);
     expect(lock.entries.keys, isNot(contains('${PinSlot.decoyVault}')));
-    expect(read('halo_v.db'), 'everyday hidden');
-    expect(read('halo_dv.db'), isNull);
+    expect(read('k3.db'), 'everyday hidden');
+    expect(read('k4.db'), isNull);
     // the decoy's database closed, the everyday one never
     expect(decoy.log, ['close']);
     expect(live.log, isEmpty);
     expect(read('halo.db'), 'everyday');
-    expect(read('halo_d.db'), 'restored');
+    expect(read('k2.db'), 'restored');
     expect(engine.restored, isEmpty);
     // the everyday sessions are not the ones that came back
     final prefs = await SharedPreferences.getInstance();
@@ -241,10 +241,10 @@ void main() {
 
     expect((lock.entries['${PinSlot.decoyVault}'] as Map)['p'], decoyVaultPin);
     expect(lock.entries.keys, isNot(contains('${PinSlot.vault}')));
-    expect(read('halo_dv.db'), 'decoy hidden');
-    expect(read('halo_v.db'), isNull);
+    expect(read('k4.db'), 'decoy hidden');
+    expect(read('k3.db'), isNull);
     expect(decoy.log, isEmpty);
-    expect(read('halo_d.db'), 'decoy');
+    expect(read('k2.db'), 'decoy');
     expect(read('halo.db'), 'restored');
     expect(engine.restored, ['ed']);
     // the next start marks the sessions the file brought back
@@ -258,10 +258,10 @@ void main() {
     useDatabasesForTest(live, Session(live));
     restoreCipherForTest = _Cipher.new;
     await restoreBackupFile(await file(), 'pass', own: decoy, lock: lock.state);
-    expect(read('halo_d.db'), 'restored');
+    expect(read('k2.db'), 'restored');
     expect(read('halo.db'), 'everyday');
     expect(live.log, isEmpty);
-    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('k3.db'), 'everyday hidden');
     expect(engine.restored, isEmpty);
   });
 
@@ -353,7 +353,7 @@ void main() {
     );
     await first;
     expect(read('halo.db'), 'restored');
-    expect(read('halo_d.db'), 'decoy');
+    expect(read('k2.db'), 'decoy');
     expect(decoy.log, isEmpty);
     expect(restoreRunning, isTrue);
   });
@@ -394,13 +394,13 @@ void main() {
   test('an everyday restore with hidden chats open retires them before '
       'their file goes', () async {
     final lock = await pins(inDecoy: false);
-    final vault = _Db(HaloContainer.vault, at('halo_v.db'));
+    final vault = _Db(HaloContainer.vault, at('k3.db'));
     useDatabasesForTest(live, await Session.withVault(live, vault));
     restoreCipherForTest = _Cipher.new;
     await restoreBackupFile(await file(), 'pass', lock: lock.state);
     // an arrival for a hidden chat has nowhere to be kept and acknowledged
     expect(vault.log, ['retire over everyday hidden']);
-    expect(read('halo_v.db'), isNull);
+    expect(read('k3.db'), isNull);
     expect(live.log, ['retire over everyday']);
     expect(lock.entries.keys, isNot(contains('${PinSlot.vault}')));
   });
@@ -408,7 +408,7 @@ void main() {
   test('a restore begun in the decoy leaves the everyday hidden chats open '
       'when they are what is open by then', () async {
     final lock = await pins(inDecoy: true);
-    final vault = _Db(HaloContainer.vault, at('halo_v.db'));
+    final vault = _Db(HaloContainer.vault, at('k3.db'));
     final everyday = await Session.withVault(live, vault);
     useDatabasesForTest(live, Session(decoy));
     restoreCipherForTest = () => _Cipher(() {
@@ -418,7 +418,7 @@ void main() {
     });
     await restoreBackupFile(await file(), 'pass', lock: lock.state);
     expect(vault.log, isEmpty);
-    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('k3.db'), 'everyday hidden');
   });
 
   test('a landing that fails once the database is retired says the app has '
@@ -508,8 +508,8 @@ void main() {
       lock: lock.state,
     );
     expect(read('halo.db'), 'everyday');
-    expect(read('halo_d.db'), 'old file');
-    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('k2.db'), 'old file');
+    expect(read('k3.db'), 'everyday hidden');
     expect(lock.entries.keys, contains('${PinSlot.vault}'));
     expect(live.log, isEmpty);
     expect(decoy.log, ['close']);
@@ -532,14 +532,14 @@ void main() {
       own: decoy,
       lock: lock.state,
     );
-    expect(read('halo_d.db'), 'old file');
+    expect(read('k2.db'), 'old file');
     expect(lock.entries.keys, isNot(contains('${PinSlot.decoyVault}')));
-    expect(read('halo_dv.db'), isNull);
+    expect(read('k4.db'), isNull);
     expect(read('media_dv/a.jpg'), isNull);
     expect(restoredHidden, isFalse);
     // the everyday account and its hidden chats as they were
     expect((lock.entries['${PinSlot.vault}'] as Map)['p'], vaultPin);
-    expect(read('halo_v.db'), 'everyday hidden');
+    expect(read('k3.db'), 'everyday hidden');
     expect(read('halo.db'), 'everyday');
   });
 
@@ -562,7 +562,7 @@ void main() {
     expect(read('halo.db'), 'old file');
     expect(lock.entries.keys, isNot(contains('${PinSlot.vault}')));
     expect((lock.entries['${PinSlot.decoyVault}'] as Map)['p'], decoyVaultPin);
-    expect(read('halo_dv.db'), 'decoy hidden');
+    expect(read('k4.db'), 'decoy hidden');
   });
 
   test('hidden chats a restore brought are sealed into its own vault, '

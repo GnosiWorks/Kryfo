@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the sending strip above the composer: its words change as the send goes,
-// one line or two, and its Cancel stays where the finger is going (phone
-// check 2026-11-10, F6)
+// one line or two, and its Cancel stays where the finger is going
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';

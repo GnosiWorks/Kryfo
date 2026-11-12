@@ -162,8 +162,14 @@ class ArrivalSeal implements VaultSeal {
 class ArrivalIo implements AppIo {
   @override
   Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
+  // the top chats told at a start, each time
+  final firsts = <List<String>>[];
   @override
-  Future<String> firstChats(List<(int, String)> peers) async => 'ok';
+  Future<String> firstChats(List<(int, String)> peers) async {
+    firsts.add([for (final (_, x) in peers) x]);
+    return 'ok';
+  }
+
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];

@@ -628,13 +628,14 @@ void main() {
       await s.disablePanicPin();
       store.m['halo.lock.panic_salt'] = 'Yg==';
       store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
-      // an old version's wipe pin that showed on
+      // an old version's wipe pin that showed on, as it kept it
+      store.m.remove('halo.lock.flags');
       store.m['halo.lock.panic_enabled'] = 'true';
       final s2 = await make(cardPad: Duration.zero);
       expect(s2.legacyWipe, isTrue);
       expect(await s2.cardTry('7531'), CardAnswer.taken);
       expect(store.m.containsKey('halo.lock.panic_hash'), isFalse);
-      expect(store.m['halo.lock.panic_enabled'], 'true');
+      expect(store.m['halo.lock.flags']![0], '1');
       expect(gOf(store, PinSlot.wipe), 3);
       expect(await s2.verifyPin('7531'), PinResult.panic);
     });
@@ -836,7 +837,7 @@ void main() {
       await s.verifyPin('1234');
       expect(await s.cardTry('7531'), CardAnswer.taken);
       expect(s.panicEnabled, isFalse);
-      expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
+      expect(store.m['halo.lock.flags']![0], '0');
       // and it no longer wipes: App lock never showed it
       store.m['halo.lock.state'] = const LockCounters().encode();
       expect(await (await make()).verifyPin('7531'), PinResult.invalid);
@@ -848,7 +849,7 @@ void main() {
         final s = await make(cardPad: Duration.zero);
         await s.verifyPin('1234');
         expect(await s.setupPanicPin('8080'), isTrue);
-        expect(store.m['halo.lock.set.wipe'], 'true');
+        expect(store.m['halo.lock.flags']![4], '1');
         // a stop between the table and the deletes left the old hash
         store.m['halo.lock.panic_salt'] = 'Yg==';
         store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');

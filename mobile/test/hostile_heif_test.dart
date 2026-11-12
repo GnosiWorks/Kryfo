@@ -13,7 +13,9 @@ import 'package:kryfo/meta/meta_reader.dart';
 
 import 'meta_fixtures.dart';
 
-const _fast = Timeout(Duration(seconds: 5));
+// about a second each alone; a quadratic walk at these sizes takes minutes,
+// so the bound holds under a loaded full suite too
+const _fast = Timeout(Duration(seconds: 30));
 
 List<int> _head(String type, int body) => [...be32(8 + body), ...t(type)];
 

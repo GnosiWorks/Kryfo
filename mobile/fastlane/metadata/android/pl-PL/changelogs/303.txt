@@ -1,0 +1,3 @@
+Nowe: wiadomości głosowe jako tekst, rozpoznawane na telefonie. Pliki otwierają się w Kryfo, kilka plików idzie jako jedna wiadomość i możesz przeszukać cały czat. Ulubione GIF-y, głosówki w 1,5x lub 2x, podwójne stuknięcie, by zareagować, przytrzymaj wysyłanie, by wysłać bez dźwięku, szkice na liście czatów.
+
+Lepiej: tłumaczenie kilku języków naraz, godzina i znacznik w ostatniej linii, a Tor sam wraca po zerwaniu sieci.

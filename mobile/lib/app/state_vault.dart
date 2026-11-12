@@ -355,6 +355,7 @@ extension AppStateVault on AppState {
     try {
       if (c == HaloContainer.vault) await _router.retire();
       await _host.wipeVault(c);
+      await refillContainerPlaceholders();
     } catch (e) {
       dlog('vault: left for the next setup (${e.runtimeType})');
     }
@@ -376,6 +377,7 @@ extension AppStateVault on AppState {
   Future<void> destroyVault() => _movingChats(
     () => _serial(() async {
       await _destroy(_ownVault);
+      await refillContainerPlaceholders();
       // linked devices: what its cards named is heard on no more
       await _listenHiddenDevices();
     }),
@@ -519,6 +521,7 @@ extension AppStateVault on AppState {
       if (identical(_madeVault, v)) _madeVault = null;
       await v.close();
       await _host.wipeVault(v.container);
+      await refillContainerPlaceholders();
       await refreshContacts();
       await refreshGroups();
     }),

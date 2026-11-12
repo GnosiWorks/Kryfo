@@ -462,6 +462,24 @@ func publishToBackups(lane string, ev nostr.Event, routeC <-chan struct{}) {
 	}
 }
 
+// while 0.5.x senders matter: on private with the backups listed (the
+// switch on), each address reads them once a round (sweepRound, an hour)
+// with our first store up too, so a copy an old sender's publish left only
+// there still comes. off the private route, or with no backups, never
+var slowBackupReads = true
+
+func slowBackupRead() bool {
+	return slowBackupReads && currentMode() == modePrivate &&
+		len(backupsNow()) > 0 && torCarriesNow() && !torIsPaused()
+}
+
+// the first slow read after a start: in the second half of the round, so a
+// start dials no backup and the reads spread out
+func firstSlowBackupDelay() time.Duration {
+	every := sweepRound()
+	return every/2 + time.Duration(mrand.Int64N(int64(every/2)+1))
+}
+
 // the backups are read and written: our first store is down, and tor can
 // carry them
 func backupsOn() bool {

@@ -123,20 +123,26 @@ func TestARemovedComputerLinksAgainOnAFreshKey(t *testing.T) {
 // a link while removed devices' last words still go never takes one of
 // their ids: with every id but one leaving, the new device gets that one
 func TestALinkPassesOverLeavingIds(t *testing.T) {
+	devLeavingReset()
+	t.Cleanup(devLeavingReset)
 	w := newLinkWorld(t)
 	_, first := w.linkWhole(t)
 	w.as(w.pState)
-	t.Cleanup(devLeavingReset)
+	// the first device takes a random id, 77 among them
+	free := 77
+	if first.ID == free {
+		free = 78
+	}
 	var held []map[string]any
 	for id := 2; id <= devices.MaxID; id++ {
-		if id != 77 && id != first.ID {
+		if id != free && id != first.ID {
 			held = append(held, map[string]any{"id": id, "key": first.Key})
 		}
 	}
 	mustOK(t, devCallJSON("own_leaving", devJSON(t, map[string]any{"ident": 0, "held": held})))
 	w.devKey = newDevSigner(t, w.l)
 	_, second := w.linkWhole(t)
-	if second.ID != 77 {
+	if second.ID != free {
 		t.Fatalf("a link took id %d, not the one free of leaving ids", second.ID)
 	}
 }

@@ -21,6 +21,7 @@ import 'halo_hero.dart';
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show motionStill;
 import 'press_scale.dart';
+import 'pictures_gate.dart' show PicturesGate;
 import 'sealed_picture.dart';
 import 'swap.dart';
 
@@ -568,11 +569,14 @@ Widget albumFlight(
   animation: a,
   builder: (_, _) => ClipRRect(
     borderRadius: BorderRadius.circular(radius * (1 - a.value)),
-    child: video
-        ? switch (videoInfoNow(path)?.jpeg) {
-            final j? => Image.memory(j, fit: BoxFit.cover),
-            _ => const ColoredBox(color: Colors.black),
-          }
-        : Image.file(File(path), fit: BoxFit.cover, gaplessPlayback: true),
+    // a lock mid flight takes the picture with it
+    child: PicturesGate(
+      child: video
+          ? switch (videoInfoNow(path)?.jpeg) {
+              final j? => Image.memory(j, fit: BoxFit.cover),
+              _ => const ColoredBox(color: Colors.black),
+            }
+          : Image.file(File(path), fit: BoxFit.cover, gaplessPlayback: true),
+    ),
   ),
 );

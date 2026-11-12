@@ -3,6 +3,9 @@
 
 part of '../main.dart';
 
+/// how many uids one reactions read binds
+const kReactionsPart = 500;
+
 mixin _MessageRows {
   // what these rows take from the rest of HaloDb
   Future<Database> open();
@@ -294,6 +297,8 @@ mixin _MessageRows {
   static const _kNewestFirst = 'written_at DESC, id DESC';
   static const _kBefore = '(written_at < ? OR (written_at = ? AND id < ?))';
   static const _kFrom = '(written_at > ? OR (written_at = ? AND id >= ?))';
+  static const _kUpTo = '(written_at < ? OR (written_at = ? AND id <= ?))';
+  static const _kAfter = '(written_at > ? OR (written_at = ? AND id > ?))';
 
   // the args for _kBefore or _kFrom at row [id]. its own time when [at] is
   // not given, null when that row is gone
@@ -658,13 +663,24 @@ mixin _MessageRows {
   ) async {
     if (msgUids.isEmpty) return {};
     final db = await open();
-    final placeholders = List.filled(msgUids.length, '?').join(',');
-    final rows = await db.query(
-      'reactions',
-      columns: ['msg_uid', 'reactor', 'emoji'],
-      where: 'msg_uid IN ($placeholders)',
-      whereArgs: msgUids,
-    );
+    // in parts: sqlite takes a bounded number of values in one statement
+    final rows = <Map<String, Object?>>[];
+    for (var i = 0; i < msgUids.length; i += kReactionsPart) {
+      final part = msgUids.sublist(
+        i,
+        i + kReactionsPart > msgUids.length
+            ? msgUids.length
+            : i + kReactionsPart,
+      );
+      rows.addAll(
+        await db.query(
+          'reactions',
+          columns: ['msg_uid', 'reactor', 'emoji'],
+          where: 'msg_uid IN (${List.filled(part.length, '?').join(',')})',
+          whereArgs: part,
+        ),
+      );
+    }
     final out = <String, List<MapEntry<String, String>>>{};
     for (final r in rows) {
       final uid = r['msg_uid'] as String;
@@ -764,6 +780,94 @@ mixin _MessageRows {
       where: 'peer_id = ? AND group_id IS NULL AND $_kFrom',
       whereArgs: [peerId, ...from],
       orderBy: _kOldestFirst,
+    );
+  }
+
+  // a 1:1 thread from row [fromId] to row [toId], both kept, oldest first:
+  // a window around a message far up, as it reloads
+  Future<List<Map<String, Object?>>> messagesBetween(
+    String peerId, {
+    required int fromId,
+    required int fromAt,
+    required int toId,
+    required int toAt,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'peer_id = ? AND group_id IS NULL AND $_kFrom AND $_kUpTo',
+      whereArgs: [peerId, fromAt, fromAt, fromId, toAt, toAt, toId],
+      orderBy: _kOldestFirst,
+    );
+  }
+
+  // the [limit] rows of a 1:1 thread after row [id], written at [at],
+  // oldest first: a window's next page down
+  Future<List<Map<String, Object?>>> messagesAfterAt(
+    String peerId, {
+    required int id,
+    required int at,
+    int limit = 60,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'peer_id = ? AND group_id IS NULL AND $_kAfter',
+      whereArgs: [peerId, at, at, id],
+      orderBy: _kOldestFirst,
+      limit: limit,
+    );
+  }
+
+  // the same three for a group
+  Future<List<Map<String, Object?>>> groupMessagesFrom(
+    String groupId, {
+    required int fromId,
+    required int fromAt,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'group_id = ? AND $_kFrom',
+      whereArgs: [groupId, fromAt, fromAt, fromId],
+      orderBy: _kOldestFirst,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> groupMessagesBetween(
+    String groupId, {
+    required int fromId,
+    required int fromAt,
+    required int toId,
+    required int toAt,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'group_id = ? AND $_kFrom AND $_kUpTo',
+      whereArgs: [groupId, fromAt, fromAt, fromId, toAt, toAt, toId],
+      orderBy: _kOldestFirst,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> groupMessagesAfterAt(
+    String groupId, {
+    required int id,
+    required int at,
+    int limit = 60,
+  }) async {
+    final db = await open();
+    return db.query(
+      'messages',
+      columns: ['*', 'rowid AS rowid'],
+      where: 'group_id = ? AND $_kAfter',
+      whereArgs: [groupId, at, at, id],
+      orderBy: _kOldestFirst,
+      limit: limit,
     );
   }
 

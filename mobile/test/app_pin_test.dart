@@ -99,6 +99,7 @@ void main() {
       PinSlot.decoy: (decoyPin, PinKind.decoy),
       PinSlot.decoyWipe: (_decoyWipePin, PinKind.wipe),
     });
+    lock.store.m.remove('halo.lock.flags');
     lock.store.m['halo.lock.d.wipe'] = 'true';
     await lock.state.load();
     lock.state.inDecoy = true;
@@ -114,7 +115,7 @@ void main() {
     // as a turn off reads anywhere, while the owner's entry stays
     expect(lock.state.panicEnabled, isFalse);
     expect(lock.entries['${PinSlot.decoyWipe}']['p'], _decoyWipePin);
-    expect(lock.store.m['halo.lock.d.wipe'], 'true');
+    expect(lock.store.m['halo.lock.flags']![1], '1');
 
     await t.tap(find.text(l10n.pinsSetAPin));
     await t.pumpAndSettle();
@@ -134,6 +135,7 @@ void main() {
       PinSlot.decoy: (decoyPin, PinKind.decoy),
       PinSlot.decoyWipe: (_decoyWipePin, PinKind.wipe),
     });
+    lock.store.m.remove('halo.lock.flags');
     lock.store.m['halo.lock.d.wipe'] = 'true';
     await lock.state.load();
     lock.state.inDecoy = true;
@@ -154,7 +156,7 @@ void main() {
     expect(lock.state.lockOn, isTrue);
     expect(lock.entries['${PinSlot.decoy}']['p'], _decoyWipePin);
     expect(lock.entries.containsKey('${PinSlot.decoyWipe}'), isFalse);
-    expect(lock.store.m.containsKey('halo.lock.d.wipe'), isFalse);
+    expect(lock.store.m['halo.lock.flags']![1], '0');
     expect(lock.state.panicEnabled, isFalse);
     expect(await lock.state.confirmPin(_decoyWipePin), PinResult.normal);
   });

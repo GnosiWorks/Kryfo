@@ -201,7 +201,7 @@ Future<void> _phone(String docs, {bool hidden = true}) async {
   await _put(p.join(docs, 'media', 'v1.jpg'), 'visible photo');
   await _put(p.join(docs, 'wallpapers', 'w.jpg'), 'visible wallpaper');
   if (!hidden) return;
-  await _put(p.join(docs, 'halo_v.db'), jsonEncode(_vault()));
+  await _put(p.join(docs, 'k3.db'), jsonEncode(_vault()));
   await _put(p.join(docs, 'media_k3', 'h1.jpg'), 'hidden photo');
   await _put(p.join(docs, 'media_k3', 'docs', 'h2.pdf'), 'hidden file');
   await _put(p.join(docs, 'wallpapers_k3', 'hw.jpg'), 'hidden wallpaper');
@@ -539,7 +539,7 @@ class _Side extends BackupSide {
     final k = madeKey;
     if (k == null) return super.copyHidden(vault, to);
     expect(vault.container, HaloContainer.vault);
-    await File(p.join(docs!, 'halo_v.db')).copy(to);
+    await File(p.join(docs!, 'k3.db')).copy(to);
     return k()!;
   }
 
@@ -845,7 +845,7 @@ void main() {
       // a new phone, with hidden chats of its own and an app lock
       final docs2 = p.join(root.path, 'docs2');
       await _phone(docs2, hidden: false);
-      await _put(p.join(docs2, 'halo_v.db'), 'an older vault');
+      await _put(p.join(docs2, 'k3.db'), 'an older vault');
       await _put(p.join(docs2, 'media_k3', 'old.jpg'), 'old hidden photo');
       docsAt(docs2);
       final hiddenAt = p.join(docs2, 'restore_hidden');
@@ -862,15 +862,15 @@ void main() {
         hiddenAt,
         back,
         clearEntry: () async => order.add(
-          'clear, old file ${File(p.join(docs2, 'halo_v.db')).readAsStringSync()}',
+          'clear, old file ${File(p.join(docs2, 'k3.db')).readAsStringSync()}',
         ),
       );
       expect(order, ['clear, old file an older vault']);
       expect(
-        await File(p.join(docs2, 'halo_v.db')).readAsString(),
-        await File(p.join(docs, 'halo_v.db')).readAsString(),
+        await File(p.join(docs2, 'k3.db')).readAsString(),
+        await File(p.join(docs, 'k3.db')).readAsString(),
       );
-      final hidden = await _read(p.join(docs2, 'halo_v.db'));
+      final hidden = await _read(p.join(docs2, 'k3.db'));
       expect(_uids(hidden), {'h0', 'h1', 'h2', 'g2m'});
       expect(hidden['groups']!.single['group_id'], _g2);
       for (final (from, to) in [
@@ -929,7 +929,7 @@ void main() {
         clearEntry: () async => cleared = true,
       );
       expect(cleared, isTrue);
-      expect(File(p.join(docs2, 'halo_v.db')).existsSync(), isFalse);
+      expect(File(p.join(docs2, 'k3.db')).existsSync(), isFalse);
       expect(Directory(p.join(docs2, 'media_k3')).existsSync(), isFalse);
       expect(Directory(p.join(docs2, 'wallpapers_k3')).existsSync(), isFalse);
       expect(restoredHidden, isFalse);
@@ -995,7 +995,7 @@ void main() {
       expect(d.manifest['vault'], {'key': vaultKey});
       expect(
         await File(d.sources[kHiddenDb]!).readAsString(),
-        await File(p.join(docs, 'halo_v.db')).readAsString(),
+        await File(p.join(docs, 'k3.db')).readAsString(),
       );
     });
 
@@ -1177,7 +1177,7 @@ void main() {
         'waiting', () async {
       await _phone(docs);
       await waiting('halo.db', 'w-everyday');
-      await waiting('halo_v.db', 'w-hidden');
+      await waiting('k3.db', 'w-hidden');
       await openVault();
       final before = DateTime.now().millisecondsSinceEpoch;
       final d = await draftBackup(stage, side: side, hidden: true);
@@ -1198,7 +1198,7 @@ void main() {
         isNull,
       );
       expect(
-        row(await _read(p.join(docs, 'halo_v.db')), 'w-hidden')['burn_at'],
+        row(await _read(p.join(docs, 'k3.db')), 'w-hidden')['burn_at'],
         isNull,
       );
     });
@@ -1218,12 +1218,12 @@ void main() {
     // a decoy beside a phone with hidden chats, and hidden chats of its own
     Future<_Db> decoyPhone() async {
       await _phone(docs);
-      await _put(p.join(docs, 'halo_d.db'), jsonEncode(_decoy()));
+      await _put(p.join(docs, 'k2.db'), jsonEncode(_decoy()));
       await _put(p.join(docs, 'media_k2', 'd1.jpg'), 'decoy photo');
-      await _put(p.join(docs, 'halo_dv.db'), 'the decoy vault');
+      await _put(p.join(docs, 'k4.db'), 'the decoy vault');
       await _put(p.join(docs, 'media_k4', 'dv.jpg'), 'decoy hidden photo');
       FlutterSecureStorage.setMockInitialValues({
-        'halo.d.key': "x'${'2e' * 32}'",
+        'halo.k2.key': "x'${'2e' * 32}'",
       });
       return _Db(HaloContainer.decoy, docs)
         ..mem = _MemDb(p.join(root.path, 'unused'), {
@@ -1236,7 +1236,7 @@ void main() {
     test('carries the decoy\'s own face, never the everyday one', () async {
       final decoy = await decoyPhone();
       FlutterSecureStorage.setMockInitialValues({
-        'halo.d.key': "x'${'2e' * 32}'",
+        'halo.k2.key': "x'${'2e' * 32}'",
         'my_avatar': '3',
         HaloContainer.decoy.key('my_avatar'): '7',
       });
@@ -1287,7 +1287,7 @@ void main() {
       expect(_uids(carried), {'d0'});
       expect(_madeName(carried), isEmpty);
       expect(side.devScrubbed, ["x'${'2e' * 32}'"]);
-      expect(_madeName(await _read(p.join(docs, 'halo_d.db'))), isNotEmpty);
+      expect(_madeName(await _read(p.join(docs, 'k2.db'))), isNotEmpty);
       expect(await File(d.sources['onion.key']!).readAsBytes(), [10, 11, 12]);
     });
 
@@ -1344,7 +1344,7 @@ void main() {
         into: HaloContainer.decoyVault,
       );
       expect(
-        await File(p.join(docs, 'halo_dv.db')).readAsString(),
+        await File(p.join(docs, 'k4.db')).readAsString(),
         'the decoy vault',
       );
       expect(
@@ -1353,7 +1353,7 @@ void main() {
       );
       // the everyday vault is not touched
       expect(
-        await File(p.join(docs, 'halo_v.db')).readAsString(),
+        await File(p.join(docs, 'k3.db')).readAsString(),
         jsonEncode(_vault()),
       );
       expect(restoredHidden, isTrue);
@@ -1391,15 +1391,15 @@ void main() {
       };
       await _put(p.join(from, 'halo.db'), 'restored');
       await landQuietRestore(from, docs, manifest);
-      expect(await File(p.join(docs, 'halo_d.db')).readAsString(), 'restored');
+      expect(await File(p.join(docs, 'k2.db')).readAsString(), 'restored');
       expect(
-        await const FlutterSecureStorage().read(key: 'halo.d.key'),
+        await const FlutterSecureStorage().read(key: 'halo.k2.key'),
         "x'${'4d' * 32}'",
       );
 
       await _put(p.join(from, 'halo.db'), 'restored again');
       // a folder where the log is: it cannot be deleted as a file
-      await _put(p.join(docs, 'halo_d.db-wal', 'x'), 'held');
+      await _put(p.join(docs, 'k2.db-wal', 'x'), 'held');
       await expectLater(
         landQuietRestore(from, docs, manifest),
         throwsA(isA<FileSystemException>()),

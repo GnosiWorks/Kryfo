@@ -276,7 +276,7 @@ void main() {
     });
     FlutterSecureStorage.setMockInitialValues({
       'halo.db.passphrase': 'everyday key',
-      'halo.d.key': "x'${'2e' * 32}'",
+      'halo.k2.key': "x'${'2e' * 32}'",
       ..._changedSecure,
       ..._never,
       'd.disguise_on': '0',
@@ -709,9 +709,9 @@ void main() {
       newPhone();
       FlutterSecureStorage.setMockInitialValues({
         'halo.db.passphrase': 'fresh key',
-        'halo.d.key': 'decoy key',
+        'halo.k2.key': 'decoy key',
       });
-      put('halo_d.db', 'decoy');
+      put('k2.db', 'decoy');
       await restore(out, inDecoy: true);
       expect(engine.restored, isEmpty);
       expect(decoy.log, ['close']);
@@ -737,7 +737,7 @@ void main() {
     test('a decoy backup carries the decoy\'s own settings, never the '
         'everyday side\'s, and they land as an account\'s own', () async {
       oldPhone();
-      put('halo_d.db', 'decoy db');
+      put('k2.db', 'decoy db');
       useDatabasesForTest(live, Session(decoy));
       final d = await draftQuietBackup(stage, side: const _Side());
       final carried = d.manifest['settings'] as Map;

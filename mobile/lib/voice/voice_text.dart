@@ -146,10 +146,9 @@ bool _isPrompt(String t) {
 /// quarter of the fastest one's top speed), at most 8 and at most half the
 /// cores. the rest stay for the ui, its raster thread, the app's other work
 /// and the kernel's memory work: whisper's threads wait for each other at
-/// every step, so one that loses its core stalls them all. on the a12 (8
-/// a53s) 8 threads ran a note 3.4x slower in the app than alone, and lmkd
-/// killed apps around it, then kryfo; 4 take about what they take alone (a
-/// 60 s note 44 s vs 41 s) and the phone stays calm. [maxFreq] reads one
+/// every step, so one that loses its core stalls them all. on 8 slow cores
+/// 8 threads run several times slower in the app than alone and lmkd kills
+/// apps around it; 4 take about what they take alone. [maxFreq] reads one
 /// core's top speed in khz, null when it cannot be read
 int voiceThreads({int? cores, int? Function(int core)? maxFreq}) {
   final n = cores ?? _cores();

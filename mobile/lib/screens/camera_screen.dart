@@ -36,6 +36,7 @@ import '../orientation.dart';
 import '../file_kind.dart' show fileFits;
 import 'scan_screen.dart' show cameraDenied;
 import '../save_names.dart' show cameraName, savesPlain;
+import '../widgets/pictures_gate.dart' show PicturesGate;
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -819,12 +820,14 @@ class _CameraScreenState extends State<CameraScreen>
 
   Widget _review() {
     if (_shot != null) {
-      return Image.memory(
-        _shot!,
+      return PicturesGate(
         key: const ValueKey('shot'),
-        fit: BoxFit.contain,
-        gaplessPlayback: true,
-        cacheWidth: screenPx(context),
+        child: Image.memory(
+          _shot!,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+          cacheWidth: screenPx(context),
+        ),
       );
     }
     // the clip plays where it was framed, with its size over a corner and

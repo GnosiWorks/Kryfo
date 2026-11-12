@@ -16,6 +16,7 @@ import 'package:kryfo/devices/device_store.dart' show deviceTables;
 import 'package:kryfo/file_drop.dart' show dropFetchTable;
 import 'package:kryfo/main.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -265,6 +266,12 @@ Future<Map<String, List<String>>> _rows(
   return out;
 }
 
+// the app's start: the names from before the numbers move first (main.dart)
+Future<HaloDb> _start(String f) async {
+  await moveToNumberedNames((await getApplicationDocumentsDirectory()).path);
+  return _files[f]!();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -284,7 +291,7 @@ void main() {
       final d = Directory.systemTemp.createTempSync('upgrade_051_fresh');
       m.setMockMethodCallHandler(paths, (_) async => d.path);
       FlutterSecureStorage.setMockInitialValues({});
-      final db = _files[f]!();
+      final db = await _start(f);
       fresh[f] = await _schema(await db.open());
       await db.close();
       d.deleteSync(recursive: true);
@@ -385,7 +392,7 @@ void main() {
         if (skip()) return;
         if (from > 80) await stepTo(f, from);
         final start = sql!.said.length;
-        final db = _files[f]!();
+        final db = await _start(f);
         final raw = await db.open();
         expect(await raw.getVersion(), _version);
         final got = await _schema(raw);
@@ -433,7 +440,7 @@ void main() {
         await e.value.$1(one);
         await one.setVersion(81);
         await one.close();
-        final db = _files[f]!();
+        final db = await _start(f);
         final raw = await db.open();
         expect(await raw.getVersion(), _version);
         final got = await _schema(raw);
@@ -453,19 +460,19 @@ void main() {
       '$f: every step run again on a file that has it changes nothing',
       () async {
         if (skip()) return;
-        final db = _files[f]!();
+        final db = await _start(f);
         final first = await db.open();
         final schema = await _schema(first);
         final rows = await _rows(first);
         await db.close();
         // a file whose steps went but whose number did not
         final raw = await openDatabase(
-          p.join(docs.path, f),
+          await (await _start(f)).container.dbPath(),
           singleInstance: false,
         );
         await raw.setVersion(80);
         await raw.close();
-        final again = _files[f]!();
+        final again = await _start(f);
         final up = await again.open();
         expect(await up.getVersion(), _version);
         expect(await _schema(up), schema);
@@ -476,13 +483,13 @@ void main() {
 
     test('$f: a second open changes nothing', () async {
       if (skip()) return;
-      final db = _files[f]!();
+      final db = await _start(f);
       final first = await db.open();
       final schema = await _schema(first);
       final rows = await _rows(first);
       await db.close();
       final from = sql!.said.length;
-      final again = _files[f]!();
+      final again = await _start(f);
       final raw = await again.open();
       final said = sql!.said.sublist(from);
       expect(await raw.getVersion(), _version);
