@@ -12587,4 +12587,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'جارٍ التحضير';
+
+  @override
+  String get mediaProgressFinishing => 'جارٍ الإنهاء';
 }

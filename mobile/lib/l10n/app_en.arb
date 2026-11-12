@@ -15700,5 +15700,9 @@
   "mediaProgressPreparingNow": "Preparing",
   "@mediaProgressPreparingNow": {
     "description": "send strip and file bubble: a send made ready, before its first byte goes"
+  },
+  "mediaProgressFinishing": "Finishing",
+  "@mediaProgressFinishing": {
+    "description": "send strip: the last part of a send is on its way, held at its share for a moment"
   }
 }

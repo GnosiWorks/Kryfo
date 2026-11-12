@@ -12544,4 +12544,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Preparando';
+
+  @override
+  String get mediaProgressFinishing => 'Finalizando';
 }

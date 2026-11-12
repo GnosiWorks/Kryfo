@@ -12640,4 +12640,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Підготовка';
+
+  @override
+  String get mediaProgressFinishing => 'Завершення';
 }

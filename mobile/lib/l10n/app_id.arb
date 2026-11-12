@@ -3268,5 +3268,6 @@
   "sendSheetKeep": "Simpan",
   "fileDocUnreadable": "Dokumen ini tidak bisa ditampilkan di sini. Kamu bisa menyimpannya atau membukanya dengan aplikasi lain.",
   "fileDocCut": "Sisa dokumen ini terlalu panjang untuk ditampilkan di sini.",
-  "mediaProgressPreparingNow": "Menyiapkan"
+  "mediaProgressPreparingNow": "Menyiapkan",
+  "mediaProgressFinishing": "Menyelesaikan"
 }

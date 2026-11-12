@@ -3268,5 +3268,6 @@
   "sendSheetKeep": "Оставить",
   "fileDocUnreadable": "Этот документ нельзя показать здесь. Его можно сохранить или открыть в другом приложении.",
   "fileDocCut": "Остальная часть документа слишком длинная, чтобы показать её здесь.",
-  "mediaProgressPreparingNow": "Подготовка"
+  "mediaProgressPreparingNow": "Подготовка",
+  "mediaProgressFinishing": "Завершение"
 }

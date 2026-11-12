@@ -3268,5 +3268,6 @@
   "sendSheetKeep": "Tut",
   "fileDocUnreadable": "Bu belge burada gösterilemiyor. Kaydedebilir ya da başka bir uygulamayla açabilirsin.",
   "fileDocCut": "Bu belgenin geri kalanı burada gösterilemeyecek kadar uzun.",
-  "mediaProgressPreparingNow": "Hazırlanıyor"
+  "mediaProgressPreparingNow": "Hazırlanıyor",
+  "mediaProgressFinishing": "Tamamlanıyor"
 }

@@ -110,6 +110,32 @@ Timer? _sweeper;
 
 void _bump() => mediaProgressTick.value++;
 
+// a send's last stretch, by chat: when its share first reached it. held at
+// its share, the strip says it is finishing once a moment has passed
+// true once the moment has passed
+final Map<String, bool> _outNearDone = {};
+Timer? _finishTimer;
+const _finishAfter = Duration(milliseconds: 500);
+
+bool _finishing(String chatKey, double v) {
+  if (v < 0.97) {
+    _outNearDone.remove(chatKey);
+    return false;
+  }
+  if (!_outNearDone.containsKey(chatKey)) {
+    _outNearDone[chatKey] = false;
+    _finishTimer?.cancel();
+    _finishTimer = Timer(_finishAfter, () {
+      _finishTimer = null;
+      for (final k in _outNearDone.keys.toList()) {
+        _outNearDone[k] = true;
+      }
+      _bump();
+    });
+  }
+  return _outNearDone[chatKey]!;
+}
+
 // a transfer quiet for 75s is shown as paused; one quiet for a day is
 // dropped from the banner (its slices are swept from the db separately).
 void _ensureSweeper() {
@@ -140,6 +166,9 @@ void _ensureSweeper() {
 void stopMediaSweeper() {
   _sweeper?.cancel();
   _sweeper = null;
+  _finishTimer?.cancel();
+  _finishTimer = null;
+  _outNearDone.clear();
 }
 
 /// [quiet]: a gif's or a voice note's, which shows no share anywhere
@@ -164,6 +193,11 @@ void mediaProgressUpdate(String msgUid, double v) {
 
 void mediaProgressEnd(String msgUid) {
   _sendChat.remove(msgUid);
+  if (_sendChat.isEmpty) {
+    _finishTimer?.cancel();
+    _finishTimer = null;
+    _outNearDone.clear();
+  }
   _quiet.remove(msgUid);
   mediaPreparing.remove(msgUid);
   _bytes.remove(msgUid);
@@ -289,6 +323,7 @@ class IncomingMediaBanner extends StatelessWidget {
         } else {
           _outBegun.remove(chatKey);
           _outTotal.remove(chatKey);
+          _outNearDone.remove(chatKey);
         }
         final v = outV ?? incomingMediaProgress[chatKey];
         Widget strip = const SizedBox(width: double.infinity);
@@ -339,6 +374,8 @@ class IncomingMediaBanner extends StatelessWidget {
     // it is done: never back
     final line = sending && !_outBegun.contains(chatKey)
         ? l10n.mediaProgressPreparingNow
+        : sending && _finishing(chatKey, v)
+        ? l10n.mediaProgressFinishing
         : sending
         ? l10n.transferSending(detail ?? percent(v))
         : stalled && count != null

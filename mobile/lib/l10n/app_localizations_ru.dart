@@ -12644,4 +12644,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Подготовка';
+
+  @override
+  String get mediaProgressFinishing => 'Завершение';
 }

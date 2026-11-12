@@ -12459,4 +12459,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'در حال آماده‌سازی';
+
+  @override
+  String get mediaProgressFinishing => 'در حال تکمیل';
 }

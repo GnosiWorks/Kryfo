@@ -3268,5 +3268,6 @@
   "sendSheetKeep": "نگه دار",
   "fileDocUnreadable": "این سند اینجا نمایش داده نمی‌شود. می‌توانی ذخیره‌اش کنی یا با برنامهٔ دیگری بازش کنی.",
   "fileDocCut": "بقیهٔ این سند برای نمایش اینجا خیلی طولانی است.",
-  "mediaProgressPreparingNow": "در حال آماده‌سازی"
+  "mediaProgressPreparingNow": "در حال آماده‌سازی",
+  "mediaProgressFinishing": "در حال تکمیل"
 }

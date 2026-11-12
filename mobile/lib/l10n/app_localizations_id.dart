@@ -12448,4 +12448,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Menyiapkan';
+
+  @override
+  String get mediaProgressFinishing => 'Menyelesaikan';
 }

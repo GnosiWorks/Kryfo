@@ -12470,4 +12470,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Hazırlanıyor';
+
+  @override
+  String get mediaProgressFinishing => 'Tamamlanıyor';
 }

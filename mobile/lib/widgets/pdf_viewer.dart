@@ -994,7 +994,8 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
         _drawn[(i, 2)] ??
         _drawn[(i, 3)] ??
         pdfThumbNow(widget.path, i) ??
-        (i == 0 ? pdfGlanceNow(widget.path)?.image : null);
+        // the bubble's page stands in for any not drawn yet: never empty
+        pdfGlanceNow(widget.path)?.image;
     if (img == null) return const SizedBox.expand();
     return RawImage(
       image: img,

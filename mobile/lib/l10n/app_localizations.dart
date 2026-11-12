@@ -19908,6 +19908,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preparing'**
   String get mediaProgressPreparingNow;
+
+  /// send strip: the last part of a send is on its way, held at its share for a moment
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing'**
+  String get mediaProgressFinishing;
 }
 
 class _AppLocalizationsDelegate

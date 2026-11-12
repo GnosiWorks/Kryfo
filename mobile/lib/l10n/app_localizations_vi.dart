@@ -12437,4 +12437,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'Đang chuẩn bị';
+
+  @override
+  String get mediaProgressFinishing => 'Đang hoàn tất';
 }

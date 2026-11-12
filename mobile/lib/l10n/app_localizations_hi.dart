@@ -12454,4 +12454,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => 'तैयार हो रहा है';
+
+  @override
+  String get mediaProgressFinishing => 'पूरा हो रहा है';
 }

@@ -390,7 +390,8 @@ class _FileCardState extends State<FileCard> {
                           if (meta.isNotEmpty) ...[
                             const SizedBox(height: 3),
                             ExcludeSemantics(
-                              child: RiseSwap(
+                              // waiting, then its size: never both at once
+                              child: OutInSwap(
                                 child: Text(
                                   meta,
                                   key: ValueKey(going == null ? meta : 'going'),

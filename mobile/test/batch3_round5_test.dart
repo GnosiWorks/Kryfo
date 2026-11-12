@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/pdf_pages.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/widgets/file_badge.dart';
+import 'package:kryfo/widgets/swap.dart';
 
 import 'source_body.dart';
 
@@ -91,6 +93,60 @@ void main() {
     expect(
       sourceOf('lib/widgets/file_viewer_parts.dart'),
       contains('animation.status == AnimationStatus.reverse'),
+    );
+  });
+
+  testWidgets('held at its last share, the strip says finishing after a '
+      'moment', (t) async {
+    mediaProgressStart('s1', chatKey: 'chat', bytes: 4096);
+    mediaProgressUpdate('s1', 0.97);
+    await t.pumpWidget(_frame(const IncomingMediaBanner(chatKey: 'chat')));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text('Sending · 97%'), findsOneWidget);
+    await t.pump(const Duration(milliseconds: 300));
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(l10n.mediaProgressFinishing), findsOneWidget);
+    mediaProgressEnd('s1');
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('waiting gives way to its size with no frame showing both', (
+    t,
+  ) async {
+    Widget line(String s) =>
+        _frame(OutInSwap(child: Text(s, key: ValueKey(s))));
+    await t.pumpWidget(line('Waiting to send'));
+    await t.pumpWidget(line('4 KB'));
+    for (var ms = 0; ms <= 260; ms += 10) {
+      final both = <double>[
+        for (final s in ['Waiting to send', '4 KB'])
+          if (find.text(s).evaluate().isNotEmpty)
+            t
+                .widget<FadeTransition>(
+                  find
+                      .ancestor(
+                        of: find.text(s),
+                        matching: find.byType(FadeTransition),
+                      )
+                      .first,
+                )
+                .opacity
+                .value,
+      ];
+      expect(both.where((o) => o > 0).length, lessThanOrEqualTo(1));
+      await t.pump(const Duration(milliseconds: 10));
+    }
+    expect(find.text('Waiting to send'), findsNothing);
+    expect(find.text('4 KB'), findsOneWidget);
+  });
+
+  test('every empty strip tile takes the bubble\'s page', () {
+    expect(
+      sourceOf('lib/widgets/pdf_viewer.dart'),
+      contains(
+        '''        // the bubble's page stands in for any not drawn yet: never empty
+        pdfGlanceNow(widget.path)?.image;''',
+      ),
     );
   });
 }

@@ -41,6 +41,36 @@ class RiseSwap extends StatelessWidget {
   }
 }
 
+/// one line giving way to the next with no frame where both show: the old
+/// fades out in the first half, the new fades in over the second
+class OutInSwap extends StatelessWidget {
+  final Widget child;
+  final AlignmentGeometry alignment;
+  const OutInSwap({
+    super.key,
+    required this.child,
+    this.alignment = AlignmentDirectional.centerStart,
+  });
+
+  static final _half = CurveTween(
+    curve: const Interval(0.5, 1, curve: Curves.easeOut),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 240),
+      transitionBuilder: (c, a) =>
+          FadeTransition(opacity: a.drive(_half), child: c),
+      layoutBuilder: (top, gone) =>
+          Stack(alignment: alignment, children: [...gone, ?top]),
+      child: child,
+    );
+  }
+}
+
 class FadeSwap extends StatelessWidget {
   final Widget child;
   const FadeSwap({super.key, required this.child});

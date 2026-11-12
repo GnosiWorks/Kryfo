@@ -11768,6 +11768,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mediaProgressPreparingNow => '正在准备';
+
+  @override
+  String get mediaProgressFinishing => '正在完成';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23414,4 +23417,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mediaProgressPreparingNow => '正在準備';
+
+  @override
+  String get mediaProgressFinishing => '正在完成';
 }

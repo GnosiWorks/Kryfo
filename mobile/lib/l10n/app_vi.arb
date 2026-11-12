@@ -3268,5 +3268,6 @@
   "sendSheetKeep": "Giữ lại",
   "fileDocUnreadable": "Không thể hiển thị tài liệu này tại đây. Bạn có thể lưu hoặc mở bằng ứng dụng khác.",
   "fileDocCut": "Phần còn lại của tài liệu quá dài để hiển thị tại đây.",
-  "mediaProgressPreparingNow": "Đang chuẩn bị"
+  "mediaProgressPreparingNow": "Đang chuẩn bị",
+  "mediaProgressFinishing": "Đang hoàn tất"
 }
