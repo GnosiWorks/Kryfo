@@ -72,6 +72,23 @@ class TransferPace {
   }
 }
 
+/// a careful pace for a send over tor, the files service's last stretch
+/// included: 5 MB took about a minute and a half on the 0.6.1 checks. slower
+/// than most circuits manage, so the guess is seldom short
+const kTorBytesPerSecond = 64 * 1024;
+
+/// a send this big is asked about first; anything smaller just goes
+const kBigSendBytes = 512 * 1024;
+
+/// the one guess before a send of how long [bytes] take over tor, the same
+/// words in the sending sheet and in the question before a big send:
+/// "Under a minute over Tor", "About 3 min over Tor"
+String torTimeLine(int bytes) {
+  final secs = (bytes / kTorBytesPerSecond).ceil();
+  if (secs < 60) return l10n.trayTimeSoon;
+  return l10n.trayTimeMinutes(whole((secs / 60).ceil()));
+}
+
 /// how long is left, as a part of a line: under a minute, whole minutes
 /// rounded up, whole hours past ninety minutes
 String leftText(int secs) {

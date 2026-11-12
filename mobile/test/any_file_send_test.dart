@@ -143,7 +143,7 @@ void main() {
     });
     final chat = sourceOf('lib/screens/chat_screen.dart');
     final sheet = bodyOf(chat, 'Future<bool> _confirmBigSend(');
-    expect(sheet, contains('if (!big) return true;'));
+    expect(sheet, contains('if (bytes < kBigSendBytes) return true;'));
     expect(sheet, isNot(contains('raw')));
   });
 

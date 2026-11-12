@@ -117,6 +117,10 @@ class SendSheetResult {
     ];
   }
 
+  /// every pick's size together: the tray's total, which its time over tor
+  /// and the question before a big send are both of
+  int get total => picks.fold(0, (a, p) => a + p.size);
+
   /// the copies let go, once the chat is done with them
   Future<void> release() async {
     for (final p in picks) {

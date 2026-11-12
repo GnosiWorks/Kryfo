@@ -16,11 +16,13 @@ import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/recent_files.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/transfers.dart' show torTimeLine;
 import 'package:kryfo/widgets/send_sheet.dart';
 import 'package:kryfo/widgets/send_tray.dart';
 import 'package:kryfo/widgets/media_bubbles.dart' show humanFileSize;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'source_body.dart';
 import 'sqlite_channel.dart';
 
 void main() {
@@ -234,11 +236,58 @@ void main() {
       expect(find.byType(SendTray), findsOneWidget);
       expect(find.textContaining(l10n.trayToSend(2, '2')), findsOneWidget);
       expect(find.text(l10n.trayHint), findsOneWidget);
-      // 41 MB at a careful pace is about three minutes
-      expect(find.textContaining(l10n.trayTimeMinutes('3')), findsOneWidget);
+      // 41 MB at a careful pace is about eleven minutes
+      expect(
+        find.textContaining(torTimeLine(41 * 1024 * 1024)),
+        findsOneWidget,
+      );
+      expect(torTimeLine(41 * 1024 * 1024), l10n.trayTimeMinutes('11'));
       expect(
         find.textContaining(l10n.trayMost(humanFileSize(50 * 1024 * 1024))),
         findsOneWidget,
+      );
+    });
+
+    test('the tray and the question before a big send give one time over '
+        'Tor, of the same total', () {
+      const mb = 1024 * 1024;
+      expect(torTimeLine(500 * 1024), l10n.trayTimeSoon);
+      // the 0.6.1 check's 5 MB zip: no longer under a minute on one and
+      // three on the other
+      expect(torTimeLine(5 * mb), l10n.trayTimeMinutes('2'));
+      final r = SendSheetResult([
+        SendPick(
+          path: '/x/a.zip',
+          name: 'a.zip',
+          size: 3 * mb,
+          from: SendTab.files,
+        ),
+        SendPick(
+          path: '/x/b.jpg',
+          name: 'b.jpg',
+          size: 2 * mb,
+          from: SendTab.gallery,
+          media: true,
+        ),
+      ]);
+      expect(r.total, 5 * mb);
+      final chat = sourceOf('lib/screens/chat_screen.dart');
+      expect(
+        chat,
+        contains(r"'${_humanBytes(bytes)} · ${torTimeLine(bytes)}'"),
+      );
+      expect(chat, isNot(contains('_wireEstimate')));
+      // the sheet asks once, of its total, before any of it goes
+      final ask = bodyOf(chat, 'Future<bool> _askSheet(');
+      expect(ask, contains('_confirmSend('));
+      expect(ask, contains('r.total,'));
+      final send = bodyOf(chat, 'Future<void> _sendFromSheet(');
+      expect(send, contains('if (!await _askSheet(r) || !mounted) return;'));
+      expect(send, isNot(contains('_askBig')));
+      expect(send, contains('asked: true,'));
+      expect(
+        sourceOf('lib/widgets/send_tray.dart'),
+        contains('torTimeLine(total)'),
       );
     });
 

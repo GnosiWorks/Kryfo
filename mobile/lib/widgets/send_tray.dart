@@ -15,23 +15,13 @@ import '../file_kind.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart' show whole;
 import '../theme.dart';
+import '../transfers.dart' show torTimeLine;
 import 'file_badge.dart';
 import 'file_bubble.dart' show fileNameDir;
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show motionStill;
 import 'pictures_gate.dart' show PicturesGate;
 import 'press_scale.dart';
-
-/// a careful pace for a file going up over tor: slower than most circuits
-/// manage, so the guess is seldom short
-const kTorBytesPerSecond = 250 * 1024;
-
-/// "about 3 min over Tor", or under a minute
-String trayTimeLine(int bytes) {
-  final secs = (bytes / kTorBytesPerSecond).ceil();
-  if (secs < 60) return l10n.trayTimeSoon;
-  return l10n.trayTimeMinutes(whole((secs / 60).ceil()));
-}
 
 /// the house spring with its damping at critical: it settles as fast as
 /// the house one, with no swing past the end a card could show
@@ -223,7 +213,7 @@ class _SendTrayState extends State<SendTray> {
         ),
         const SizedBox(height: 4),
         Text(
-          '${trayTimeLine(total)} · ${l10n.trayMost(humanFileSize(widget.most))}',
+          '${torTimeLine(total)} · ${l10n.trayMost(humanFileSize(widget.most))}',
           style: HaloType.mono(size: 10.5, color: HaloColors.text),
         ),
       ],

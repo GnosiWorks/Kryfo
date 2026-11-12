@@ -115,7 +115,8 @@ import '../theme.dart';
 import '../tor_valve.dart' show valveWaitFrom;
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
-import '../transfers.dart' show fileWaitOf, fileWaits;
+import '../transfers.dart'
+    show fileWaitOf, fileWaits, kBigSendBytes, torTimeLine;
 import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
@@ -4793,6 +4794,7 @@ class _ChatScreenState extends State<ChatScreen>
       // the sheet is the preview: one send, one caption, in the order
       // picked, with no second screen
       var caption = r.caption;
+      if (!await _askSheet(r) || !mounted) return;
       for (final run in r.runs) {
         if (!mounted || lockState.locked) break;
         if (run.media) {
@@ -4809,7 +4811,7 @@ class _ChatScreenState extends State<ChatScreen>
             for (final m in run.picks) m.source as XFile? ?? XFile(m.path),
           ], spoilers: r.spoilers);
           try {
-            if (items.isEmpty || !mounted || !await _askBig(items)) break;
+            if (items.isEmpty || !mounted) break;
             await _sendPicked(MediaSendResult(items: items, caption: caption));
           } finally {
             await shredPickedImages([for (final m in items) ?m.video]);
@@ -4827,6 +4829,7 @@ class _ChatScreenState extends State<ChatScreen>
             ],
             caption,
             spoilers: r.spoilers,
+            asked: true,
           );
         }
         caption = '';
@@ -5074,17 +5077,6 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // rough wire time: 16k slices, base64 adds a third, five in flight at
-  // about two seconds a round over tor
-  String _wireEstimate(int bytes) {
-    final slices = ((bytes * 4 / 3) / (16 * 1024)).ceil();
-    final secs = ((slices / 5).ceil() * 2.2).round();
-    if (secs < 20) return l10n.chatAFewSeconds;
-    if (secs < 90) return l10n.chatUnderAMinute;
-    final mins = (secs / 60).round();
-    return l10n.chatRoughlyMin(mins);
-  }
-
   // the shared size line: 5.0 MB as everywhere else
   String _humanBytes(int b) => humanFileSize(b);
 
@@ -5092,16 +5084,21 @@ class _ChatScreenState extends State<ChatScreen>
   // straight out: a dialog on a 40kb photo is noise.
   // [asItIs]: a kind the send lane does not clean, which it says
   Future<bool> _confirmBigSend(int bytes, {bool asItIs = false}) async {
-    final big = bytes >= 512 * 1024;
-    if (!big) return true;
+    if (bytes < kBigSendBytes) return true;
+    return _confirmSend(bytes, line: asItIs ? l10n.fileGoesAsItIs : '');
+  }
+
+  // the question itself: [bytes] and the time over tor the sending sheet
+  // gives for them, by the same guess (torTimeLine)
+  Future<bool> _confirmSend(int bytes, {String line = ''}) async {
     if (!mounted) return false;
     final ok = await showConfirmSheet(
       context,
       title: l10n.chatSendThis,
       figure: appState.sendMode == 'private'
-          ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
+          ? '${_humanBytes(bytes)} · ${torTimeLine(bytes)}'
           : _humanBytes(bytes),
-      line: asItIs ? l10n.fileGoesAsItIs : '',
+      line: line,
 
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
@@ -5145,9 +5142,11 @@ class _ChatScreenState extends State<ChatScreen>
     String src,
     String picked, {
     String caption = '',
+    // the sheet asked its one question already
+    bool asked = false,
   }) async {
     if (_requestLocked || _sayMediaLater()) return false;
-    final ready = await _readyFile(src, picked);
+    final ready = await _readyFile(src, picked, asked: asked);
     if (ready == null) return false;
     await _sendReady(ready, caption);
     return true;
@@ -5162,17 +5161,24 @@ class _ChatScreenState extends State<ChatScreen>
     String caption, {
     // the photos among them marked as spoilers, by their path
     Set<String> spoilers = const {},
+    // the sheet asked its one question already
+    bool asked = false,
   }) async {
     if (files.isEmpty || _requestLocked || _sayMediaLater()) return;
     // one alone goes as a file always went
     if (files.length == 1) {
-      await _sendFileFrom(files.first.$1, files.first.$2, caption: caption);
+      await _sendFileFrom(
+        files.first.$1,
+        files.first.$2,
+        caption: caption,
+        asked: asked,
+      );
       return;
     }
     final ready = <_Ready>[];
     for (final (path, name) in files) {
       if (!mounted || lockState.locked) break;
-      if (await _readyFile(path, name) case final r?) {
+      if (await _readyFile(path, name, asked: asked) case final r?) {
         ready.add(
           spoilers.contains(path)
               ? _Ready(r.uid, r.path, fileName: r.fileName, spoiler: true)
@@ -5206,7 +5212,7 @@ class _ChatScreenState extends State<ChatScreen>
     String picked, {
     // its bubble's, when it shows before it is ready
     String? uid,
-    // the big file's question was asked in the preview
+    // the big file's question was asked in the preview or the sheet
     bool asked = false,
   }) async {
     final name = sentFileName(picked);
@@ -5487,6 +5493,31 @@ class _ChatScreenState extends State<ChatScreen>
   // a stranger's request takes none (_mediaWaits)
   int get _roomLeft =>
       _requestPending && !_vouched && _isDev ? kDevCap - _sentCount : kPickMax;
+
+  // the sheet's one question, before any of it goes: its whole size and
+  // the time the tray showed for it. asked when what is not a photo is big,
+  // as a video or a file alone would be. a photo through the preview never
+  // asks
+  Future<bool> _askSheet(SendSheetResult r) async {
+    var weighs = 0;
+    final files = <SendPick>[];
+    for (final run in r.runs) {
+      for (final p in run.picks) {
+        if (run.media && !p.video) continue;
+        weighs += p.size;
+        if (!run.media) files.add(p);
+      }
+    }
+    if (weighs < kBigSendBytes) return true;
+    var asIs = 0;
+    for (final f in files) {
+      if (!await sendLaneCleans(f.path, f.name)) asIs++;
+    }
+    return _confirmSend(
+      r.total,
+      line: asIs == 1 && files.length == 1 ? l10n.fileGoesAsItIs : '',
+    );
+  }
 
   // a big file's question, asked over the preview before it closes
   Future<bool> _askBig(List<PickedMedia> items) async {
