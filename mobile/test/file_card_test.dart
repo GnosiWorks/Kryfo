@@ -12,6 +12,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart' show percent;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/file_badge.dart' show ZipMark;
 import 'package:kryfo/widgets/media_bubbles.dart';
 
 import 'zip_maker.dart';
@@ -231,7 +232,8 @@ void main() {
     );
     await show(t, f.path, 'a.zip', isOut: true);
     expect(t.widget<Text>(find.text('a')).style?.color, HaloColors.onAmber);
-    expect(find.text('ZIP'), findsOneWidget);
+    // the archive mark on its tile, and its glance above in the bubble's ink
+    expect(find.byType(ZipMark), findsWidgets);
   });
 
   test('sizes read like the rest of the app', () {

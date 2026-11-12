@@ -345,7 +345,8 @@ void main() {
       mediaProgressEnd('u1');
       await settle(t);
       expect(find.byType(FileSendRing), findsNothing);
-      expect(find.text('ZIP'), findsOneWidget);
+      // a zip's tile carries the archive mark
+      expect(find.byType(ZipMark), findsWidgets);
       h.dispose();
     });
 

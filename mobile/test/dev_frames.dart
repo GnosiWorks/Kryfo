@@ -4,6 +4,7 @@
 // another contact planted wherever a frame can carry them, the frames each
 // call site builds, and what a frame to him must never hold
 import 'dart:convert';
+import 'package:kryfo/zip_glance.dart';
 
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/devchat/dev_frame.dart';
@@ -154,6 +155,7 @@ final frameParams = <String, Object>{
   'spoiler': true,
   'gif': true,
   'silent': true,
+  'zipGlance': const ZipGlance(count: 2, top: [ZipTop('a.txt', -1)]),
   'drop': DropFrame(
     host: kDropHost,
     id: 'ab' * 16,
@@ -179,6 +181,7 @@ const neverParams = {
   'groupShots',
   'shotsNudge',
   'drop',
+  'zipGlance',
 };
 
 T? _param<T>(Set<String> on, String k) =>
@@ -230,6 +233,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       spoiler: on.contains('spoiler'),
       gif: on.contains('gif'),
       silent: on.contains('silent'),
+      zipGlance: _param(on, 'zipGlance'),
       drop: _param(on, 'drop'),
     );
 
