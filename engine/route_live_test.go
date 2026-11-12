@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-// a wifi that passes no tcp for a while and says nothing (redmi and
-// samsung, 2026-11-08). android goes on calling it validated, so the dead
-// route is tor's own state and the waits between bounces stop growing.
+// a wifi that passes no tcp for a while and says nothing. android goes on
+// calling it validated, so the dead route is tor's own state and the waits
+// between bounces stop growing.
 
 // the wifi-recheck reconnect left out: a test moving one network to
 // validated would otherwise start a real reconnect behind its own back
