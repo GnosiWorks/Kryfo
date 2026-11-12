@@ -87,11 +87,12 @@ void main() {
       ))!;
       expect(g.count, 7);
       expect(g.unpacked, 10 + 300 + 5 + 50 + 1);
+      // folders first, then files, each in name order
       expect(g.top, const [
-        ZipTop('route.gpx', -1),
-        ZipTop('photos', 3),
-        ZipTop('notes.txt', -1),
         ZipTop('docs', 1),
+        ZipTop('photos', 3),
+        ZipTop('extra.md', -1),
+        ZipTop('notes.txt', -1),
       ]);
       expect(g.more, 1);
       expect(g.locked, isFalse);
@@ -108,9 +109,9 @@ void main() {
       }),
     ))!;
     _bounded(g);
-    expect(g.top.first.name, 'ingpj.exe');
+    expect(g.top[0], const ZipTop('abs', 1));
     expect(g.top[1], const ZipTop('etc', 1));
-    expect(g.top[2], const ZipTop('abs', 1));
+    expect(g.top[2].name, 'ingpj.exe');
     expect(g.top[3].name.runes.length, kZipNameMost);
     expect(g.top[3].name, endsWith('\u2026'));
   });
@@ -225,7 +226,7 @@ void main() {
     ]);
     final g = (await zipGlanceOfBytes(z64))!;
     expect(g.count, 2);
-    expect(g.top, const [ZipTop('a.txt', -1), ZipTop('big', 1)]);
+    expect(g.top, const [ZipTop('big', 1), ZipTop('a.txt', -1)]);
     // its record pointing past the end
     final bad = Uint8List.fromList(z64);
     _put32(bad, e + 56 + 8, z64.length);

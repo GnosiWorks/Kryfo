@@ -14,7 +14,7 @@ import '../l10n/l10n.dart';
 import '../main.dart' show appState, AppStateScreen;
 import '../theme.dart';
 import 'file_badge.dart';
-import 'file_bubble.dart' show fileNameDir;
+import 'file_bubble.dart' show fileNameDir, kPdfPillInset;
 import 'halo_hero.dart';
 import 'media_bubbles.dart' show splitFileName;
 import 'message_menu.dart' show AsideNote;
@@ -151,43 +151,41 @@ class GrowFromRect extends StatelessWidget {
     );
     final landing = this.landing;
     if (landing != null) {
-      // the page is there from the first frame, only small: it shows at
-      // once and goes at the very end of the way back
-      final seen = CurvedAnimation(
-        parent: animation,
-        curve: const Interval(0, 0.12),
-        reverseCurve: const Interval(0, 0.12),
-      );
+      // the page is there from the first frame, solid, clipped to what the
+      // bubble showed: frame one looks as the bubble did. the bubble's pill
+      // rides the window's corner, the only one there, and fades as it opens
       final mark = closingMark;
       return LayoutBuilder(
         builder: (context, box) => AnimatedBuilder(
           animation: animation,
           child: child,
           builder: (context, page) {
-            final landed = Opacity(
-              opacity: seen.value,
-              child: _Landing(
-                t: grow.value,
-                from: from,
-                landing: landing,
-                child: page,
-              ),
+            final t = grow.value;
+            final landed = _Landing(
+              t: t,
+              from: from,
+              landing: landing,
+              child: page,
             );
-            // one tree all the way, so the page keeps its state
-            final back =
-                mark != null && animation.status == AnimationStatus.reverse;
             final full = Offset.zero & box.biggest;
-            final r = Rect.lerp(from, full, grow.value)!;
+            final w = landingWindow(from, _laidOut(landing), full, t);
             final rtl = Directionality.of(context) == TextDirection.rtl;
+            final markSeen = (1 - t / 0.3).clamp(0.0, 1.0);
+            // one tree all the way, so the page keeps its state
             return Stack(
               children: [
                 Positioned.fill(child: landed),
-                if (back)
+                if (mark != null && markSeen > 0)
                   Positioned(
-                    left: rtl ? r.left + 8 : null,
-                    right: rtl ? null : full.width - r.right + 8,
-                    bottom: full.height - r.bottom + 8,
-                    child: Opacity(opacity: seen.value, child: mark),
+                    left: rtl ? w.left + kPdfPillInset : null,
+                    right: rtl ? null : full.width - w.right + kPdfPillInset,
+                    top: w.top + kPdfPillInset,
+                    child: IgnorePointer(
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Opacity(opacity: markSeen, child: mark),
+                      ),
+                    ),
                   ),
               ],
             );
@@ -232,6 +230,50 @@ class GrowFromRect extends StatelessWidget {
       },
     );
   }
+}
+
+// [landing]'s place as it was last laid out, on screen: the frame before
+Rect? _laidOut(GlobalKey landing) {
+  final ro = landing.currentContext?.findRenderObject();
+  if (ro is! RenderBox || !ro.attached || !ro.hasSize) return null;
+  try {
+    return ro.localToGlobal(Offset.zero) & ro.size;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// how the page moves at [t]: [a], its place in the viewer, scaled and
+/// moved onto [at], what the bubble showed, at t 0
+Matrix4 landingMove(Rect at, Rect? a, double t) {
+  if (a == null || a.width <= 0) return Matrix4.identity();
+  final s0 = at.width / a.width;
+  final s = s0 + (1 - s0) * t;
+  return Matrix4.identity()
+    ..translateByDouble(
+      (at.left - a.left * s0) * (1 - t),
+      (at.top - a.top * s0) * (1 - t),
+      0,
+      1,
+    )
+    ..scaleByDouble(s, s, 1, 1);
+}
+
+/// what of it shows at [t]: the crop the bubble showed, growing with the
+/// page first, then opening to the rest of it and to [full]
+Rect landingWindow(Rect at, Rect? a, Rect full, double t) {
+  if (a == null || a.width <= 0) return Rect.lerp(at, full, t)!;
+  final s0 = at.width / a.width;
+  final s = s0 + (1 - s0) * t;
+  final left = (at.left - a.left * s0) * (1 - t) + a.left * s;
+  final top = (at.top - a.top * s0) * (1 - t) + a.top * s;
+  final crop = Rect.fromLTWH(
+    left,
+    top,
+    a.width * s,
+    math.min(at.height / s0 * s, a.height * s),
+  );
+  return Rect.lerp(crop, full, t * t)!;
 }
 
 // paints the page so that [landing] sits on [from] at t 0 and where it
@@ -306,35 +348,8 @@ class _RenderLanding extends RenderProxyBox {
     final a = _target();
     final t = _t;
     final at = from.shift(-offset);
-    Matrix4 m;
-    Rect window;
-    if (a == null || a.width <= 0) {
-      m = Matrix4.identity();
-      window = Rect.lerp(at, full, t)!;
-    } else {
-      final s0 = at.width / a.width;
-      final s = s0 + (1 - s0) * t;
-      final dx = (at.left - a.left * s0) * (1 - t);
-      final dy = (at.top - a.top * s0) * (1 - t);
-      m = Matrix4.identity()
-        ..translateByDouble(dx, dy, 0, 1)
-        ..scaleByDouble(s, s, 1, 1);
-      // the crop the bubble showed grows with the page first, and only
-      // then opens to the rest of it and the screen
-      final page = Rect.fromLTWH(
-        dx + a.left * s,
-        dy + a.top * s,
-        a.width * s,
-        a.height * s,
-      );
-      final crop = Rect.fromLTWH(
-        page.left,
-        page.top,
-        page.width,
-        math.min(at.height / s0 * s, page.height),
-      );
-      window = Rect.lerp(crop, full, t * t)!;
-    }
+    final m = landingMove(at, a, t);
+    final window = landingWindow(at, a, full, t);
     _clip.layer = context.pushClipRRect(
       needsCompositing,
       offset,

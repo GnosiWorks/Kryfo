@@ -93,7 +93,7 @@ void main() {
     expect(viewer, contains('closingMark: pages == null'));
     expect(
       sourceOf('lib/widgets/file_viewer_parts.dart'),
-      contains('animation.status == AnimationStatus.reverse'),
+      contains('landingWindow(from, _laidOut(landing), full, t)'),
     );
   });
 

@@ -368,8 +368,9 @@ void main() {
       await settle(t);
       expect(find.byType(PdfFirstPage), findsOneWidget);
       expect(find.text(l10n.filePages(12, '12')), findsOneWidget);
-      // a glance reads the first page's size only
-      expect(fake.firsts, [true]);
+      // a glance reads the first page's size only, and so does the strip's
+      // pages drawn behind it
+      expect(fake.firsts, [true, true]);
       // the glance's document is shut once its page is drawn
       expect(fake.live, isEmpty);
       expect(pdfGlanceNow(f.path), isNotNull);
@@ -410,7 +411,8 @@ void main() {
       await settle(t);
       await settle(t);
       expect(find.byType(PdfFirstPage), findsOneWidget);
-      expect(fake.opens, 1);
+      // its page, then the strip's pages behind it
+      expect(fake.opens, 2);
     });
 
     testWidgets('a pdf over ten mb keeps its tile in the bubble', (t) async {

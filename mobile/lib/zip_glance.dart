@@ -269,8 +269,15 @@ Future<ZipGlance?> zipGlanceRead(int length, ZipRead read) async {
   return ZipGlance(
     count: whole ? files : math.min(math.max(files, entries), _countMost),
     unpacked: whole ? bytes : null,
+    // folders first, then files, each in name order
     top: [
-      for (final k in order.take(kZipRowsMost))
+      for (final k
+          in (order.toList()..sort((x, y) {
+                final fx = folders.containsKey(x), fy = folders.containsKey(y);
+                if (fx != fy) return fx ? -1 : 1;
+                return x.toLowerCase().compareTo(y.toLowerCase());
+              }))
+              .take(kZipRowsMost))
         ZipTop(zipShownName(k), folders[k] ?? -1),
     ],
     locked: locked,

@@ -838,6 +838,9 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   }
 }
 
+/// where the pages pill sits from the first page's top and end corner
+const kPdfPillInset = 8.0;
+
 /// how many pages a pdf has, on its first page in the bubble
 class PdfPagesPill extends StatelessWidget {
   final int pages;
@@ -892,10 +895,6 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   // drawn from its first frame: no paper, no fade, the page as it is
   bool _hadIt = false;
 
-  // the top of the page in a 4:3 window at the card's width: its heading
-  // and a good part of what follows, the pill clear of it in the corner
-  static const _height = 178.0;
-
   @override
   void initState() {
     super.initState();
@@ -924,7 +923,13 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_image == null && !_failed) _ask();
+    if (_image == null && !_failed) {
+      _ask();
+    } else if (_image != null && !picturesShut.value) {
+      // its page was drawn before: the strip's pages follow behind it
+      final dpr = MediaQuery.devicePixelRatioOf(context);
+      unawaited(warmPdfThumbs(widget.path, (64 * dpr).round()));
+    }
   }
 
   @override
@@ -957,9 +962,11 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
 
   Future<void> _ask() async {
     if (picturesShut.value) return;
-    final px = (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context))
-        .round();
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final px = (kFilePreviewWidth * dpr).round();
     final g = await pdfGlance(widget.path, px);
+    // the viewer's strip, drawn behind it at the strip's size
+    if (g != null) unawaited(warmPdfThumbs(widget.path, (64 * dpr).round()));
     if (!mounted || picturesShut.value) return;
     setState(() {
       if (g == null) {
@@ -978,40 +985,45 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
     final pages = _pages;
     return ClipRRect(
       borderRadius: previewRadius(context),
+      // the top of the page in a 4:3 window at whatever width the card has
+      // (wider out to a bubble's edges, wider with large text)
       child: SizedBox(
         width: kFilePreviewWidth,
-        height: _height,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: Color(0xFFFFFFFF)),
-            if (!_hadIt)
-              AnimatedOpacity(
-                opacity: img == null ? 1 : 0,
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                child: const _PaperLines(),
-              ),
-            if (img != null)
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: still || _hadIt ? 1 : 0, end: 1),
-                duration: const Duration(milliseconds: 240),
-                builder: (_, v, c) => Opacity(opacity: v, child: c),
-                child: RawImage(
-                  image: img,
-                  fit: BoxFit.fitWidth,
-                  alignment: Alignment.topCenter,
-                  filterQuality: FilterQuality.medium,
+        child: AspectRatio(
+          aspectRatio: 4 / 3,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const ColoredBox(color: Color(0xFFFFFFFF)),
+              if (!_hadIt)
+                AnimatedOpacity(
+                  opacity: img == null ? 1 : 0,
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  child: const _PaperLines(),
                 ),
-              ),
-            if (pages != null)
-              PositionedDirectional(
-                end: 8,
-                bottom: 8,
-                child: PdfPagesPill(pages: pages),
-              ),
-          ],
+              if (img != null)
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: still || _hadIt ? 1 : 0, end: 1),
+                  duration: const Duration(milliseconds: 240),
+                  builder: (_, v, c) => Opacity(opacity: v, child: c),
+                  child: RawImage(
+                    image: img,
+                    fit: BoxFit.fitWidth,
+                    alignment: Alignment.topCenter,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                ),
+              // over the page's top margin, never over its words
+              if (pages != null)
+                PositionedDirectional(
+                  end: kPdfPillInset,
+                  top: kPdfPillInset,
+                  child: PdfPagesPill(pages: pages),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -380,6 +380,50 @@ Future<PdfGlance?> pdfGlance(String path, int width) {
   }();
 }
 
+// the files whose strip pages were drawn ahead this run
+final Set<String> _thumbsAhead = {};
+
+/// the strip's small pages of [path], drawn behind the bubble's first page
+/// and kept, so the viewer's strip opens with them: the first
+/// [kThumbsAhead] pages, [width] pixels wide, one document at a time in
+/// the glances' queue
+const kThumbsAhead = 12;
+Future<void> warmPdfThumbs(String path, int width) async {
+  if (!_thumbsAhead.add(path)) return;
+  final gen = _glanceGen;
+  final turn = _queue;
+  final mine = Completer<void>();
+  _queue = mine.future;
+  try {
+    await turn;
+    if (gen != _glanceGen || picturesShut.value) return;
+    PdfDoc? d;
+    try {
+      d = await PdfDoc.open(path, first: true, most: kGlanceMostBytes);
+      final n = d.pages < kThumbsAhead ? d.pages : kThumbsAhead;
+      for (var i = 0; i < n; i++) {
+        if (pdfThumbNow(path, i) != null) continue;
+        final img = await d.page(i, width);
+        if (img == null) continue;
+        if (gen != _glanceGen || picturesShut.value) {
+          img.dispose();
+          return;
+        }
+        keepPdfThumb(path, i, img);
+        img.dispose();
+      }
+    } on PdfOpenFailed {
+      return;
+    } finally {
+      await d?.close();
+    }
+  } catch (_) {
+    // a page that will not draw: the strip draws it when it opens
+  } finally {
+    mine.complete();
+  }
+}
+
 // the viewer's small pages, by file then page, for the strip the next
 // time it opens: a few documents, gone at the lock with the first pages
 final LinkedHashMap<String, Map<int, ui.Image>> _thumbs = LinkedHashMap();
@@ -415,6 +459,7 @@ void forgetPdfPreviews() {
     }
   }
   _thumbs.clear();
+  _thumbsAhead.clear();
   pdfGlancesGone.value++;
 }
 
