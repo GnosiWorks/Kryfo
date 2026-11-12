@@ -502,7 +502,7 @@ class _GetAll extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: still ? Duration.zero : const Duration(milliseconds: 200),
             switchInCurve: kHouseCurve,
-            // at the start of the row, under the files, as the mockup has it
+            // at the start of the row, under the files
             layoutBuilder: (c, prev) => Stack(
               alignment: AlignmentDirectional.centerStart,
               children: [...prev, ?c],

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the second samsung round: chat info reads after its slide and sorts a
+// chat info reads after its slide and sorts a
 // long history off the ui isolate, our own file's glance is ready before
 // its bubble, a picture picked as a file is a photo in the tray, and a word
 // document opens in kryfo's own reader, read with caps

@@ -140,7 +140,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
 
-  // a gallery video: a file never comes on its own (mario 2026-11-11), a
+  // a gallery video: a file never comes on its own, a
   // gallery video still does on wi-fi, so the fetch path is read through one
   Future<String> drop(
     String uid, {

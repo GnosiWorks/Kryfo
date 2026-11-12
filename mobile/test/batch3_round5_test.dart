@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the fifth samsung round: no outlines on file tiles, the strip in a share,
+// no outlines on file tiles, the strip in a share,
 // a photo among files is a row like the rest, the pdf strip and its turns
 // never draw blank, and the bubble's pill is there as the page shrinks
 import 'package:flutter/material.dart';

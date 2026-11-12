@@ -243,7 +243,7 @@ void main() {
             )
             .map((c) => c.decoration! as BoxDecoration)
             .toList();
-        // no outline (mario 2026-11-12): a faint wash of the kind's colour
+        // no outline: a faint wash of the kind's colour
         expect(boxes[0].border, isNull);
         expect(boxes[0].color!.a, lessThan(0.2));
         // ours on the amber bubble: a wash of the bubble's dark ink

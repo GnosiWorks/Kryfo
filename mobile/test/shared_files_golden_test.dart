@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the shared page's files tab pixel for pixel, as the mockup has it: two
+// the shared page's files tab pixel for pixel: two
 // months, a kind's tile each, one file still to come. dark, light, right
 // to left and the largest text
 import 'dart:io';

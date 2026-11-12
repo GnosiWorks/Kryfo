@@ -227,7 +227,7 @@ class FileWaitMark extends StatelessWidget {
             duration: morph,
             curve: kHouseCurve,
             decoration: BoxDecoration(
-              // a faint wash, no outline (mario 2026-11-12)
+              // a faint wash, no outline
               color: asks
                   ? HaloColors.amber.withValues(alpha: 0.14)
                   : HaloColors.amberSoft,

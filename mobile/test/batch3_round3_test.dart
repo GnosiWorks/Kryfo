@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the third samsung round: a mixed pick is one bubble, the strip says
+// a mixed pick is one bubble, the strip says
 // preparing only before the first byte, a word document's glance reads like
 // its reader, a pdf grows out of its bubble and turns sideways, and a
 // person's page is read before it slides in
