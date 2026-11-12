@@ -12400,7 +12400,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get gifFavEdit => 'Editar favoritos';
 
   @override
-  String get gifFavEditTitle => 'Seus favoritos';
+  String get gifFavEditTitle => 'Seus *favoritos*';
 
   @override
   String get gifFavEditHint =>

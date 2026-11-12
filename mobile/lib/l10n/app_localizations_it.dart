@@ -12406,7 +12406,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get gifFavEdit => 'Modifica preferiti';
 
   @override
-  String get gifFavEditTitle => 'I tuoi preferiti';
+  String get gifFavEditTitle => 'I tuoi *preferiti*';
 
   @override
   String get gifFavEditHint =>

@@ -12329,7 +12329,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gifFavEdit => 'Favorileri düzenle';
 
   @override
-  String get gifFavEditTitle => 'Favorilerin';
+  String get gifFavEditTitle => '*Favorilerin*';
 
   @override
   String get gifFavEditHint =>

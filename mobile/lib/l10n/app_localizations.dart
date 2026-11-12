@@ -19699,10 +19699,10 @@ abstract class AppLocalizations {
   /// **'Edit favourites'**
   String get gifFavEdit;
 
-  /// gifs/gif_fav_panel.dart: heading while editing the favourites
+  /// gifs/gif_fav_panel.dart: heading while editing the favourites. the word between asterisks is set in amber italics
   ///
   /// In en, this message translates to:
-  /// **'Your favourites'**
+  /// **'Your *favourites*'**
   String get gifFavEditTitle;
 
   /// gifs/gif_fav_panel.dart: line under the grid while editing

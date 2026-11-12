@@ -15501,9 +15501,9 @@
   "@gifFavEdit": {
     "description": "gifs/gif_fav_panel.dart: screen reader action that starts editing the favourites"
   },
-  "gifFavEditTitle": "Your favourites",
+  "gifFavEditTitle": "Your *favourites*",
   "@gifFavEditTitle": {
-    "description": "gifs/gif_fav_panel.dart: heading while editing the favourites"
+    "description": "gifs/gif_fav_panel.dart: heading while editing the favourites. the word between asterisks is set in amber italics"
   },
   "gifFavEditHint": "Hold and drag to reorder. Tap the cross to remove.",
   "@gifFavEditHint": {

@@ -3234,7 +3234,7 @@
   "gifFavRemove": "从收藏中移除",
   "gifFavRemoved": "已从收藏中移除",
   "gifFavEdit": "编辑收藏",
-  "gifFavEditTitle": "你的收藏",
+  "gifFavEditTitle": "你的*收藏*",
   "gifFavEditHint": "长按并拖动可调整顺序，点叉号可移除。",
   "gifFavKept": "加密保存在这部手机上。关闭 GIF 搜索也能用。",
   "gifFavKeptDesk": "加密保存在这台电脑上。关闭 GIF 搜索也能用。",

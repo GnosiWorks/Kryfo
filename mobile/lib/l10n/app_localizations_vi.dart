@@ -12296,7 +12296,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get gifFavEdit => 'Sửa mục yêu thích';
 
   @override
-  String get gifFavEditTitle => 'Mục yêu thích của bạn';
+  String get gifFavEditTitle => 'Mục *yêu thích* của bạn';
 
   @override
   String get gifFavEditHint => 'Giữ và kéo để sắp xếp. Chạm dấu chéo để bỏ.';

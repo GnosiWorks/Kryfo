@@ -138,29 +138,12 @@ Future<SheetPick?> showStickerSheet(
 }) {
   HapticFeedback.selectionClick();
   FocusScope.of(context).unfocus();
-  return () async {
-    // read before the sheet rises, so it opens on them when there are any
-    List<GifFav>? favs;
-    final store = gifs?.favs;
-    if (store != null) {
-      try {
-        favs = await store.load();
-      } catch (e) {
-        dlog('gif favs: not read (${e.runtimeType})');
-        favs = const [];
-      }
-    }
-    if (!context.mounted) return null;
-    return showHaloSheet<SheetPick>(
-      context,
-      scroll: true,
-      builder: (_) => StickerSheet(
-        recents: StickerRecents(container),
-        gifs: gifs,
-        favs: favs,
-      ),
-    );
-  }();
+  return showHaloSheet<SheetPick>(
+    context,
+    scroll: true,
+    builder: (_) =>
+        StickerSheet(recents: StickerRecents(container), gifs: gifs),
+  );
 }
 
 class StickerSheet extends StatefulWidget {
@@ -169,15 +152,11 @@ class StickerSheet extends StatefulWidget {
     required this.recents,
     this.library,
     this.gifs,
-    this.favs,
   });
   final StickerRecents recents;
   // for tests: packs already in hand
   final StickerLibrary? library;
   final GifTabs? gifs;
-  // the favourites as read before the sheet rose; null with no favourites
-  // tab
-  final List<GifFav>? favs;
 
   @override
   State<StickerSheet> createState() => StickerSheetState();
@@ -198,11 +177,12 @@ class StickerSheetState extends State<StickerSheet>
   int _tab = 0;
   // where each section starts in the grid, one per tab
   List<double> _starts = const [];
-  // favourites, stickers, gifs or on this phone: the favourites first when
-  // there are any
-  late _Kind _kind = _favOn && widget.favs!.isNotEmpty
-      ? _Kind.favourites
-      : _Kind.stickers;
+  // favourites, gifs, stickers or on this phone. it opens on the
+  // favourites, and goes to the stickers once they read as none
+  late _Kind _kind = _favOn ? _Kind.favourites : _Kind.stickers;
+  // the favourites, null until read
+  List<GifFav>? _favs;
+  bool _kindPicked = false;
   // null until read
   bool? _gifOn;
   bool? _gifAsked;
@@ -233,6 +213,7 @@ class StickerSheetState extends State<StickerSheet>
   void initState() {
     super.initState();
     _load();
+    _loadFavs();
     final g = widget.gifs;
     if (g != null) {
       Future.wait([g.loadOn(), g.loadAsked()]).then((v) {
@@ -250,16 +231,37 @@ class StickerSheetState extends State<StickerSheet>
   @visibleForTesting
   void showKind(int i) => _setKind(_kinds[i]);
 
-  bool get _favOn => widget.gifs?.favs != null && widget.favs != null;
+  bool get _favOn => widget.gifs?.favs != null;
 
   List<_Kind> get _kinds => [
     if (_favOn) _Kind.favourites,
-    _Kind.stickers,
     if (widget.gifs != null) _Kind.gifs,
+    _Kind.stickers,
     _Kind.phone,
   ];
 
+  // read while the sheet rises: none, and the stickers take the place
+  Future<void> _loadFavs() async {
+    final store = widget.gifs?.favs;
+    if (store == null) return;
+    List<GifFav> got;
+    try {
+      got = await store.load();
+    } catch (e) {
+      dlog('gif favs: not read (${e.runtimeType})');
+      got = const [];
+    }
+    if (!mounted) return;
+    setState(() {
+      _favs = got;
+      if (got.isEmpty && !_kindPicked && _kind == _Kind.favourites) {
+        _kind = _Kind.stickers;
+      }
+    });
+  }
+
   void _setKind(_Kind k) {
+    _kindPicked = true;
     if (k == _kind) return;
     HapticFeedback.selectionClick();
     FocusManager.instance.primaryFocus?.unfocus();
@@ -640,12 +642,16 @@ class StickerSheetState extends State<StickerSheet>
                         controller: controller,
                         onChoose: _phonePicked,
                       ),
-                      _Kind.favourites => GifFavPanel(
-                        store: g!.favs!,
-                        initial: widget.favs!,
-                        controller: controller,
-                        onPick: _gifPicked,
-                      ),
+                      _Kind.favourites =>
+                        _favs == null
+                            // a moment while they are read
+                            ? ListView(controller: controller)
+                            : GifFavPanel(
+                                store: g!.favs!,
+                                initial: _favs!,
+                                controller: controller,
+                                onPick: _gifPicked,
+                              ),
                       _ => _gifBody(g!, controller),
                     },
                   ),

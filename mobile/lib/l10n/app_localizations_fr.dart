@@ -12445,7 +12445,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gifFavEdit => 'Modifier les favoris';
 
   @override
-  String get gifFavEditTitle => 'Vos favoris';
+  String get gifFavEditTitle => 'Vos *favoris*';
 
   @override
   String get gifFavEditHint =>

@@ -3234,7 +3234,7 @@
   "gifFavRemove": "Favorilerden çıkar",
   "gifFavRemoved": "Favorilerden çıkarıldı",
   "gifFavEdit": "Favorileri düzenle",
-  "gifFavEditTitle": "Favorilerin",
+  "gifFavEditTitle": "*Favorilerin*",
   "gifFavEditHint": "Sıralamak için basılı tutup sürükle. Çıkarmak için çarpıya dokun.",
   "gifFavKept": "Bu telefonda şifreli saklanır. GIF araması kapalıyken de çalışır.",
   "gifFavKeptDesk": "Bu bilgisayarda şifreli saklanır. GIF araması kapalıyken de çalışır.",

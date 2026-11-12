@@ -418,7 +418,6 @@ void main() {
           builder: (_) => StickerSheet(
             recents: StickerRecents(HaloContainer.everyday),
             library: lib,
-            favs: favs,
             gifs: GifTabs(
               source: _Gifs(),
               route: GifRoute.onion,
@@ -434,11 +433,15 @@ void main() {
         return picked;
       }
 
-      testWidgets('opens on the favourites when there are some', (t) async {
+      testWidgets('opens on the favourites, first of the tabs', (t) async {
         final (s, favs) = await seed(t, 2);
         await open(t, s, favs);
         expect(find.text('Favourites'), findsOneWidget);
         expect(find.bySemanticsLabel('Favourite GIF 1'), findsOneWidget);
+        // the board's order: favourites, gifs, stickers, then the phone's
+        double x(String s) => t.getCenter(find.text(s)).dx;
+        expect(x('Favourites'), lessThan(x('GIFs')));
+        expect(x('GIFs'), lessThan(x('Stickers')));
       }, skip: skip != null);
 
       testWidgets('none yet: the stickers first, the tab still there', (

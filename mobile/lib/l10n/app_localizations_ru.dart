@@ -12499,7 +12499,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gifFavEdit => 'Изменить избранное';
 
   @override
-  String get gifFavEditTitle => 'Твоё избранное';
+  String get gifFavEditTitle => 'Твоё *избранное*';
 
   @override
   String get gifFavEditHint =>

@@ -12311,7 +12311,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get gifFavEdit => 'पसंदीदा बदलें';
 
   @override
-  String get gifFavEditTitle => 'आपके पसंदीदा';
+  String get gifFavEditTitle => 'आपके *पसंदीदा*';
 
   @override
   String get gifFavEditHint =>

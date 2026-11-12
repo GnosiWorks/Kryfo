@@ -3234,7 +3234,7 @@
   "gifFavRemove": "Quitar de favoritos",
   "gifFavRemoved": "Quitado de favoritos",
   "gifFavEdit": "Editar favoritos",
-  "gifFavEditTitle": "Tus favoritos",
+  "gifFavEditTitle": "Tus *favoritos*",
   "gifFavEditHint": "Mantén y arrastra para ordenar. Toca la cruz para quitar.",
   "gifFavKept": "Guardados en este teléfono, cifrados. Funciona sin la búsqueda de GIF.",
   "gifFavKeptDesk": "Guardados en este ordenador, cifrados. Funciona sin la búsqueda de GIF.",

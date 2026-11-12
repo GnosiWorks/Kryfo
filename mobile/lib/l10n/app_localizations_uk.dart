@@ -12496,7 +12496,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get gifFavEdit => 'Змінити обране';
 
   @override
-  String get gifFavEditTitle => 'Твоє обране';
+  String get gifFavEditTitle => 'Твоє *обране*';
 
   @override
   String get gifFavEditHint =>

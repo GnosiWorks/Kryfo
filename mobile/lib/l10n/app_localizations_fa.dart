@@ -12322,7 +12322,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get gifFavEdit => 'ویرایش برگزیده‌ها';
 
   @override
-  String get gifFavEditTitle => 'برگزیده‌های شما';
+  String get gifFavEditTitle => '*برگزیده‌های* شما';
 
   @override
   String get gifFavEditHint =>

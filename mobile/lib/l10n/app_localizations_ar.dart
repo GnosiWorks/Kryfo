@@ -12443,7 +12443,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gifFavEdit => 'تعديل المفضلة';
 
   @override
-  String get gifFavEditTitle => 'مفضلتك';
+  String get gifFavEditTitle => '*مفضلتك*';
 
   @override
   String get gifFavEditHint =>

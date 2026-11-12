@@ -12308,7 +12308,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get gifFavEdit => 'Ubah favorit';
 
   @override
-  String get gifFavEditTitle => 'Favoritmu';
+  String get gifFavEditTitle => '*Favorit*mu';
 
   @override
   String get gifFavEditHint =>

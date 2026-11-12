@@ -12451,7 +12451,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gifFavEdit => 'Favoriten bearbeiten';
 
   @override
-  String get gifFavEditTitle => 'Deine Favoriten';
+  String get gifFavEditTitle => 'Deine *Favoriten*';
 
   @override
   String get gifFavEditHint =>

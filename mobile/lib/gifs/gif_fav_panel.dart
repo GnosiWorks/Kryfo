@@ -10,6 +10,7 @@ import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
+import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
@@ -165,33 +166,64 @@ class GifFavPanelState extends State<GifFavPanel> {
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
+    final Widget body;
+    if (_order.isEmpty) {
+      body = _empty();
+    } else if (!_editing) {
+      // lazy: only the tiles near the view are built and play
+      body = CustomScrollView(
+        controller: widget.controller,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(_side, 6, _side, 16),
+            sliver: SliverGrid.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: _gap,
+                crossAxisSpacing: _gap,
+                childAspectRatio: 1 / _shape,
+              ),
+              itemCount: _order.length,
+              itemBuilder: (_, i) => KeyedSubtree(
+                key: ValueKey(_order[i].id),
+                child: _slot(i, _order[i], 0, 0),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // editing: every tile placed by hand, so a move slides them
+      body = ListView(
+        controller: widget.controller,
+        padding: const EdgeInsets.only(top: 6, bottom: 16),
+        children: [
+          if (still)
+            _editHead()
+          else
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              builder: (_, t, child) => Opacity(
+                opacity: t,
+                child: Transform.translate(
+                  offset: Offset(0, -8 * (1 - t)),
+                  child: child,
+                ),
+              ),
+              child: _editHead(),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _side),
+            child: LayoutBuilder(builder: (_, c) => _grid(c.maxWidth)),
+          ),
+        ],
+      );
+    }
     return Column(
       children: [
-        Expanded(
-          child: _order.isEmpty
-              ? _empty()
-              : ListView(
-                  controller: widget.controller,
-                  padding: const EdgeInsets.only(top: 6, bottom: 16),
-                  children: [
-                    if (still)
-                      _editing ? _editHead() : const SizedBox.shrink()
-                    else
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: _editing ? _editHead() : const SizedBox.shrink(),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: _side),
-                      child: LayoutBuilder(
-                        builder: (_, c) => _grid(c.maxWidth),
-                      ),
-                    ),
-                  ],
-                ),
-        ),
+        Expanded(child: body),
         _footer(),
       ],
     );
@@ -199,34 +231,49 @@ class GifFavPanelState extends State<GifFavPanel> {
 
   Widget _editHead() {
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(_side + 2, 0, 6, 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(_side + 2, 0, _side, 10),
       child: Row(
         children: [
           Expanded(
             child: Semantics(
               header: true,
-              child: Text(
-                l10n.gifFavEditTitle,
-                style: HaloType.sans(
-                  size: 15,
-                  weight: FontWeight.w600,
-                  color: HaloColors.text,
+              child: Text.rich(
+                TextSpan(
+                  style: HaloType.serif(size: 22, color: HaloColors.text),
+                  children: markedSpans(
+                    l10n.gifFavEditTitle,
+                    HaloType.serif(
+                      size: 22,
+                      italic: true,
+                      color: HaloColors.amberText,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          TextButton(
-            onPressed: _done,
-            style: TextButton.styleFrom(
-              foregroundColor: HaloColors.amberText,
-              minimumSize: const Size(48, 44),
-            ),
-            child: Text(
-              l10n.commonDone,
-              style: HaloType.sans(
-                size: 14,
-                weight: FontWeight.w600,
-                color: HaloColors.amberText,
+          const SizedBox(width: 12),
+          PressScale(
+            label: l10n.commonDone,
+            onTap: _done,
+            haptic: false,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 38, minWidth: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: HaloColors.amber,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: ExcludeSemantics(
+                child: Text(
+                  l10n.commonDone,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: HaloColors.onAmber,
+                  ),
+                ),
               ),
             ),
           ),
@@ -307,30 +354,52 @@ class GifFavPanelState extends State<GifFavPanel> {
         delay: const Duration(milliseconds: 160),
         hapticFeedbackOnStart: true,
         onDragEnd: (_) => _keepOrder(),
+        // lifted: a little larger, tilted, ringed in amber
         feedback: Material(
           type: MaterialType.transparency,
           child: SizedBox(
             width: w,
             height: h,
-            child: Transform.scale(
-              scale: motionStill(context) ? 1 : 1.05,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+            child: Transform.rotate(
+              angle: motionStill(context) ? 0 : -4 * 3.14159265 / 180,
+              child: Transform.scale(
+                scale: motionStill(context) ? 1 : 1.05,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 40,
+                        offset: const Offset(0, 20),
+                      ),
+                    ],
+                  ),
+                  position: DecorationPosition.background,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _FavTile(fav: f, editing: false),
+                      IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: HaloColors.amber,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: _FavTile(fav: f, editing: false),
               ),
             ),
           ),
         ),
-        childWhenDragging: Opacity(opacity: 0.25, child: tile),
+        // where it will land: a dashed amber slot
+        childWhenDragging: const _DropSlot(),
         child: shown,
       ),
     );
@@ -373,50 +442,113 @@ class GifFavPanelState extends State<GifFavPanel> {
     );
   }
 
-  // the line under the grid: where they are kept, or how to edit
+  // under the grid: where they are kept, in a card, or how to edit
   Widget _footer() {
     final still = motionStill(context);
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: HaloColors.line)),
-      ),
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         _side,
-        9,
+        6,
         _side,
-        9 + MediaQuery.paddingOf(context).bottom,
+        10 + MediaQuery.paddingOf(context).bottom,
       ),
       child: AnimatedSwitcher(
         duration: still ? Duration.zero : const Duration(milliseconds: 180),
         child: _editing
-            ? Text(
-                l10n.gifFavEditHint,
+            ? SizedBox(
                 key: const ValueKey('hint'),
-                style: HaloType.sans(size: 12, color: HaloColors.text),
+                width: double.infinity,
+                child: Text(
+                  l10n.gifFavEditHint,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(size: 12.5, color: HaloColors.text),
+                ),
               )
-            : MergeSemantics(
+            : Container(
                 key: const ValueKey('kept'),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.lock_outline_rounded,
-                      size: 15,
-                      color: HaloColors.green,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.gifFavKeptShown,
-                        style: HaloType.sans(size: 12, color: HaloColors.text),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: HaloColors.surface2,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: MergeSemantics(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 1),
+                        child: Icon(
+                          Icons.lock_outline_rounded,
+                          size: 15,
+                          color: HaloColors.green,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.gifFavKeptShown,
+                          style: HaloType.sans(
+                            size: 12.5,
+                            height: 1.4,
+                            color: HaloColors.text,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
       ),
     );
   }
+}
+
+/// the place a dragged favourite will land
+class _DropSlot extends StatelessWidget {
+  const _DropSlot();
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _Dashes(HaloColors.amber),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: HaloColors.amber.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  );
+}
+
+class _Dashes extends CustomPainter {
+  _Dashes(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          (Offset.zero & size).deflate(1),
+          const Radius.circular(12),
+        ),
+      );
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    for (final m in path.computeMetrics()) {
+      for (var d = 0.0; d < m.length; d += 10) {
+        canvas.drawPath(m.extractPath(d, d + 6), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Dashes old) => old.color != color;
 }
 
 class _FavTile extends StatelessWidget {
@@ -523,8 +655,8 @@ class _FavTile extends StatelessWidget {
             ),
           ),
           PositionedDirectional(
-            end: -6,
-            top: -6,
+            start: -14,
+            top: -14,
             child: AnimatedScale(
               scale: editing ? 1 : 0,
               duration: still
@@ -540,18 +672,21 @@ class _FavTile extends StatelessWidget {
                     dimension: 44,
                     child: Center(
                       child: Container(
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
-                          color: HaloColors.surface,
+                          color: HaloColors.roseFill,
                           shape: BoxShape.circle,
-                          border: Border.all(color: HaloColors.line2),
+                          border: Border.all(
+                            color: HaloColors.surface,
+                            width: 2,
+                          ),
                         ),
                         alignment: Alignment.center,
                         child: Icon(
                           Icons.close_rounded,
-                          size: 15,
-                          color: HaloColors.text,
+                          size: 14,
+                          color: HaloColors.onRose,
                         ),
                       ),
                     ),

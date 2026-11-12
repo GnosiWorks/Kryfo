@@ -12541,7 +12541,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get gifFavEdit => 'Edytuj ulubione';
 
   @override
-  String get gifFavEditTitle => 'Twoje ulubione';
+  String get gifFavEditTitle => 'Twoje *ulubione*';
 
   @override
   String get gifFavEditHint =>

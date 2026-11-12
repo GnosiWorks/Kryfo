@@ -11627,7 +11627,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifFavEdit => '编辑收藏';
 
   @override
-  String get gifFavEditTitle => '你的收藏';
+  String get gifFavEditTitle => '你的*收藏*';
 
   @override
   String get gifFavEditHint => '长按并拖动可调整顺序，点叉号可移除。';
@@ -23159,7 +23159,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gifFavEdit => '編輯收藏';
 
   @override
-  String get gifFavEditTitle => '你的收藏';
+  String get gifFavEditTitle => '你的*收藏*';
 
   @override
   String get gifFavEditHint => '長按並拖曳可調整順序，點叉號可移除。';
