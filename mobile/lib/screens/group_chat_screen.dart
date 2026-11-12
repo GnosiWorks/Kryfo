@@ -560,7 +560,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   _GMsg? _farQuote(String uid) {
     if (_farGone.contains(uid)) return null;
-    if (_farQuotes.containsKey(uid)) return _farQuotes[uid];
+    if (_farQuotes.containsKey(uid)) {
+      final far = _farQuotes[uid];
+      // one past its time is gone, read or not
+      final burn = far?.burnAt;
+      if (burn != null && burn <= DateTime.now().millisecondsSinceEpoch) {
+        _farQuotes.remove(uid);
+        _farGone.add(uid);
+        return null;
+      }
+      return far;
+    }
     _farQuotes[uid] = null;
     // after this frame: it is asked from a build
     Future.microtask(() async {
@@ -712,6 +722,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   late final _slow = SlowLine((on) {
     if (mounted) setState(() => _finding = on);
   });
+  // where a jump loads the thread from, while it does
+  ChatHit? _reachFrom;
+  // the last row held while the rows stop short of the newest: a window
+  // around a message far up. null when the newest is held
+  ChatHit? _windowEnd;
+  bool _loadingNewer = false;
+  // the next load is the newest page alone
+  bool _freshPage = false;
+  // theirs that came while the window was away, and the newest row then
+  final Set<String> _windowNew = {};
+  int _windowFloor = 0;
+  Timer? _queryWait;
   // what this group shows behind it (wallpaper.dart)
   ChatWall _wall = ChatWall.none;
   static const _pageSize = 60;
@@ -1047,6 +1069,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           count: _unseenNew,
           label: l10n.groupChatJumpToTheNewest,
           onTap: () {
+            if (_windowEnd != null) {
+              unawaited(_toNewest());
+              return;
+            }
             setState(() => _unseenNew = 0);
             _scrollToEnd();
           },
@@ -1057,7 +1083,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   void _onGroupScroll() {
     if (!_scrollReady) return;
-    final show = !_nearNewest;
+    final show = !_nearNewest || _windowEnd != null;
     if (!show) _unseenNew = 0;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
@@ -1066,6 +1092,45 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // from loading older and anchoring the view at the top.
     if (_suppressSticky) return;
     if (_pixels < 400) _loadOlder();
+    // a window's next page down, near its bottom
+    if (_windowEnd != null && _maxScroll - _pixels < 600) _loadNewer();
+  }
+
+  // the window's end moved a page down and the window read again; the
+  // newest reached ends it
+  Future<void> _loadNewer() async {
+    final end = _windowEnd;
+    if (end == null || _loadingNewer || _loading) return;
+    _loadingNewer = true;
+    try {
+      final rows = await session.groupMessagesAfterAt(
+        widget.groupId,
+        end,
+        limit: _pageSize + 1,
+      );
+      if (!mounted || !identical(_windowEnd, end)) return;
+      if (rows.length <= _pageSize) {
+        _windowEnd = null;
+        _windowNew.clear();
+        _unseenNew = 0;
+      } else {
+        final last = rows[_pageSize - 1];
+        _windowEnd = (id: (last['rowid'] as int?) ?? 0, at: rowWrittenAt(last));
+      }
+      await _load();
+    } catch (e) {
+      dlog('window: next page not read (${e.runtimeType})');
+    } finally {
+      _loadingNewer = false;
+    }
+  }
+
+  // back to the newest page: the window is let go
+  Future<void> _toNewest() async {
+    // the window ends inside that load, never before it
+    _freshPage = true;
+    await _load();
+    if (mounted) _scrollToEnd(instant: true);
   }
 
   // who is blocked, refreshed with every load. appState.contacts is
@@ -1101,7 +1166,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (_hasMore && rows.isNotEmpty && rows.length == rows0.length) {
         rows.removeAt(0);
       }
-      if (!_hasMore) _pagedOut = true;
+      if (!_hasMore && _windowEnd == null) _pagedOut = true;
       if (rows.isEmpty) return;
       final uids = rows
           .map((r) => r['msg_uid'] as String?)
@@ -1229,20 +1294,46 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       final members = await session.getGroupMembers(widget.groupId);
       _me = await appState.meIn(widget.groupId);
-      // keep whatever window the user has expanded to, so a mid-scroll
-      // reaction does not collapse the list back to one page
-      final wantAll = _pagedOut || _messages.length > _pageSize;
+      // keep the pages the user has scrolled in from their oldest, so a
+      // mid-scroll reaction does not collapse the list back to one page; a
+      // window around a far one keeps its ends
+      _farQuotes.clear();
+      _farGone.clear();
+      final wantAll = _pagedOut && _windowEnd == null && !_freshPage;
+      final fresh = _freshPage;
+      _freshPage = false;
+      if (fresh) {
+        _windowEnd = null;
+        _windowNew.clear();
+        _unseenNew = 0;
+        _pagedOut = false;
+      }
+      final held = !_loaded || wantAll || fresh ? null : _oldestHeld();
+      final windowEnd = _windowEnd;
+      final keepFrom =
+          _reachFrom ??
+          (held == null
+              ? null
+              : (id: held.rowid, at: held.when.millisecondsSinceEpoch));
       // opened on a message: the newest page, and the whole thread only
       // when it is further up than that
       final jumpTo = _didJump ? null : widget.jumpToUid;
       _blocked = await session.blockedIds();
       var rows0 = wantAll
           ? await session.loadGroupMessages(widget.groupId)
+          : keepFrom != null
+          ? windowEnd != null
+                ? await session.groupMessagesBetween(
+                    widget.groupId,
+                    keepFrom,
+                    windowEnd,
+                  )
+                : await session.groupMessagesFrom(widget.groupId, keepFrom)
           : await session.groupMessagesPage(
               widget.groupId,
               limit: _pageSize + 1,
             );
-      if (!wantAll) {
+      if (!wantAll && keepFrom == null) {
         _hasMore = rows0.length > _pageSize;
         if (_hasMore) rows0.removeAt(0);
         if (!_hasMore) _pagedOut = true;
@@ -1370,7 +1461,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (widget.jumpToUid != null) _didJump = true;
       if (target >= 0) {
         _jumpWhenReady(target, 0);
-      } else if (!_loaded || (nearEnd && _jumpUid == null)) {
+      } else if (!_loaded ||
+          (nearEnd && _jumpUid == null && _windowEnd == null)) {
         _scrollToEnd(instant: true);
       }
       final after = _lastRowPerGroup[_memo];
@@ -1387,6 +1479,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
+      // the search asked again over the fresh rows, staying where it is
+      if (_searching && _query.isNotEmpty) {
+        unawaited(_onQueryChanged(_query, land: false));
+      }
       // a block turned on goes at once, one turned off five seconds after
       // the last change, so a fast flipper cannot flash the window
       if (!_left) _shotsHold.want(_isRoom || _shots.blocking);
@@ -1565,6 +1661,24 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _appendNewInner() async {
+    // the window is away from the newest: what came is counted on the
+    // jump button, the rows held are read again for edits and receipts
+    if (_windowEnd != null) {
+      try {
+        for (final r in _withoutBlocked(
+          await session.groupMessagesAfter(widget.groupId, _windowFloor),
+        )) {
+          final uid = r['msg_uid'] as String?;
+          if (uid != null && r['direction'] != 'out') _windowNew.add(uid);
+        }
+      } catch (e) {
+        dlog('window: new not counted (${e.runtimeType})');
+      }
+      if (!mounted) return;
+      setState(() => _unseenNew = _windowNew.length);
+      await _load();
+      return;
+    }
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -2187,6 +2301,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   void _scrollToEnd({bool instant = false}) {
+    // something of ours went: to the newest, the window let go
+    if (_windowEnd != null) {
+      unawaited(_toNewest());
+      return;
+    }
     // on first open the list isn't laid out yet, so maxScrollExtent is 0 and a
     // plain animateTo leaves us pinned at the top. jump after the frame, and if
     // extent is still growing (images sizing in), snap once more.
@@ -3964,7 +4083,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // a gif, anyone's, can be kept in the favourites, never one under the
     // group's rules
     final gifPath = shareOn?.mediaPath;
-    final gifOn = !kept && gifPath != null && knownGifFile(gifPath) == true;
+    // a timed one goes with its time: never kept past it
+    final gifOn =
+        !kept &&
+        shareOn?.burnSecs == null &&
+        gifPath != null &&
+        knownGifFile(gifPath) == true;
     return [
       if (gifOn)
         MenuAction(
@@ -4233,6 +4357,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _openSearch() => setState(() => _searching = true);
 
   void _closeSearch() {
+    _queryWait?.cancel();
     setState(() {
       _searching = false;
       _searchCtrl.clear();
@@ -4244,7 +4369,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // the whole group is looked in through its index; the newest hit first
-  Future<void> _onQueryChanged(String q) async {
+  // typing settles first: one question per pause, not per letter
+  void _typedQuery(String q) {
+    _queryWait?.cancel();
+    _queryWait = Timer(
+      const Duration(milliseconds: 150),
+      () => _onQueryChanged(q),
+    );
+  }
+
+  Future<void> _onQueryChanged(String q, {bool land = true}) async {
     final fresh = await _hits.look(
       q,
       (match) => session.chatHits(match, groupId: widget.groupId),
@@ -4254,13 +4388,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           if (m.sticker == null)
             (id: m.rowid, at: m.when.millisecondsSinceEpoch, text: m.text),
       ],
+      stay: !land,
     );
     if (!fresh || !mounted || !_searching) return;
     setState(() {
       _query = _hits.query;
       _relight();
     });
-    unawaited(_toHit());
+    if (land) unawaited(_toHit());
   }
 
   // the hits' row ids for the rows' test, after the hits changed
@@ -4299,8 +4434,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   // row [id] among the rows held: the group's thread comes in whole once
-  // it is paged past the first page, so a far one brings it all. false
-  // when it is gone, null when it could not be brought in now
+  // it is not: from a little above it to a page below it, or to the newest
+  // when that is nearer. false when it is gone, null when it could not be
+  // brought in now
   Future<bool?> _bringIn(int id) async {
     if (_messages.any((m) => m.rowid == id)) return true;
     if (!_loaded) return null;
@@ -4314,8 +4450,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       }
       if (!mounted) return null;
       if (there == null) return false;
-      _pagedOut = true;
-      await _load();
+      ChatHit? end;
+      try {
+        end = await session.chatEndBelow(id, groupId: widget.groupId);
+      } catch (e) {
+        end = null;
+      }
+      if (!mounted) return null;
+      _reachFrom = there;
+      if (end != null) {
+        if (_windowEnd == null) {
+          _windowFloor = _messages.fold(0, (a, m) => m.rowid > a ? m.rowid : a);
+          _windowNew.clear();
+        }
+        _windowEnd = end;
+        _showScrollDown = true;
+      }
+      try {
+        await _load();
+      } finally {
+        _reachFrom = null;
+      }
       if (!mounted) return null;
       return _messages.any((m) => m.rowid == id) ? true : null;
     });
@@ -4918,6 +5073,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   @override
   void dispose() {
     _slow.dispose();
+    _queryWait?.cancel();
     // a sound of this group stops with it
     final playing = SoundPlayer.instance.item?.path;
     if (playing != null && _messages.any((m) => m.filePath == playing)) {
@@ -5095,7 +5251,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       matchCount: _hits.count,
                       matchPos: _hits.shown,
                       finding: _finding,
-                      onChanged: _onQueryChanged,
+                      onChanged: _typedQuery,
                       onPrev: () => _gotoMatch(-1),
                       onNext: () => _gotoMatch(1),
                       onClose: _closeSearch,

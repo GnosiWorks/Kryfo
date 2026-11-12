@@ -74,6 +74,20 @@ mixin _SearchRows {
     wordsOnly: wordsOnly,
   );
 
+  /// where a window around row [id] ends (chat_find.dart)
+  Future<ChatHit?> chatEndBelow(
+    int id, {
+    String? peerId,
+    String? groupId,
+    int after = 60,
+  }) async => chatEndIn(
+    await open(),
+    id,
+    peerId: peerId,
+    groupId: groupId,
+    after: after,
+  );
+
   /// where to load one chat from so row [id] comes in with rows above it
   Future<ChatHit?> chatStartAbove(
     int id, {
@@ -228,5 +242,34 @@ Future<ChatHit?> chatStartIn(
     [key, at, at, id, before],
   );
   final r = up.isEmpty ? t.first : up.last;
+  return (id: (r['id'] as num).toInt(), at: rowWrittenAt(r));
+}
+
+/// the last row of a window [after] rows below row [id], or null when the
+/// newest is closer than that: the window then reaches the newest
+Future<ChatHit?> chatEndIn(
+  DatabaseExecutor db,
+  int id, {
+  String? peerId,
+  String? groupId,
+  int after = 60,
+}) async {
+  final (scope, key) = _chatScope(peerId, groupId);
+  final t = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE m.id = ? '
+    'AND $scope LIMIT 1',
+    [id, key],
+  );
+  if (t.isEmpty) return null;
+  final at = rowWrittenAt(t.first);
+  final down = await db.rawQuery(
+    'SELECT m.id, m.written_at, m.sent_at FROM messages m WHERE $scope AND '
+    '(COALESCE(m.written_at, m.sent_at) > ? OR '
+    '(COALESCE(m.written_at, m.sent_at) = ? AND m.id > ?)) '
+    'ORDER BY COALESCE(m.written_at, m.sent_at) ASC, m.id ASC LIMIT ?',
+    [key, at, at, id, after + 1],
+  );
+  if (down.length <= after) return null;
+  final r = down[after - 1];
   return (id: (r['id'] as num).toInt(), at: rowWrittenAt(r));
 }

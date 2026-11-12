@@ -4,7 +4,7 @@
 // message that is gone is said to be gone. and the hits a screen walks
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_find.dart';
-import 'package:kryfo/main.dart' show chatHitsIn, chatStartIn;
+import 'package:kryfo/main.dart' show chatEndIn, chatHitsIn, chatStartIn;
 
 import 'sqlite_ffi.dart';
 
@@ -142,6 +142,20 @@ void main() {
       expect(from?.at, _now + 20);
       // near the top, it starts at the first
       expect((await chatStartIn(db, ids[3], peerId: 'ana'))?.id, ids[0]);
+    }, skip: skip);
+
+    test('a window ends sixty rows below it, or reaches the newest', () async {
+      final db = await _rows();
+      final ids = <int>[];
+      for (var i = 0; i < 200; i++) {
+        ids.add(await _add(db, at: _now + i));
+        await _add(db, peer: 'bo', at: _now + i);
+      }
+      expect((await chatEndIn(db, ids[50], peerId: 'ana'))?.id, ids[110]);
+      // the newest is nearer than sixty: the window reaches it
+      expect(await chatEndIn(db, ids[150], peerId: 'ana'), isNull);
+      expect(await chatEndIn(db, ids[139], peerId: 'ana'), isNull);
+      expect((await chatEndIn(db, ids[138], peerId: 'ana'))?.id, ids[198]);
     }, skip: skip);
 
     test('gone, burned or not this chat: nothing to load', () async {

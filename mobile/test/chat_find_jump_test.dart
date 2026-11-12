@@ -30,18 +30,49 @@ import 'mem_db.dart';
 
 const _peer = 'amber-slow-river';
 const _base = 1700000000000;
+const _count = 100000;
+const _mid = 50000;
+const _late = 99990;
 
 class _Db extends DevTestDb {
   _Db(super.mem);
 
-  // what a load asked for: the whole thread, or from a row
+  // what each load asked for, and the most rows one load handed back
   final asks = <String>[];
+  int most = 0;
 
-  List<Map<String, Object?>> get _thread => [
-    for (final r in mem.rows('messages'))
-      if (r['peer_id'] == _peer && r['group_id'] == null)
-        {...r, 'rowid': r['id'], 'written_at': r['sent_at']},
-  ]..sort((a, b) => (a['id'] as int).compareTo(b['id'] as int));
+  // a long chat, made once: row i is at index i - 1
+  static final _rows = [
+    for (var i = 1; i <= _count; i++)
+      {
+        'id': i,
+        'rowid': i,
+        'peer_id': _peer,
+        'direction': i.isEven ? 'out' : 'in',
+        'plaintext': switch (i) {
+          5 => 'the old pelican story',
+          _mid => 'a pelican again',
+          _late => 'pelican, last one',
+          _ => 'line $i',
+        },
+        'msg_uid': 'u$i',
+        'sent': 1,
+        'sent_at': _base + i,
+        'written_at': _base + i,
+        if (i == _count - 5) 'reply_to': 'u5',
+        if (i == _count - 4) 'reply_to': 'gone',
+      },
+  ];
+
+  List<Map<String, Object?>> _slice(String ask, int from, int to) {
+    final a = from.clamp(0, _count);
+    final b = to.clamp(a, _count);
+    asks.add(ask);
+    if (b - a > most) most = b - a;
+    return _rows.sublist(a, b);
+  }
+
+  List<Map<String, Object?>> get _thread => _rows;
 
   Map<String, Object?>? _contact(String id) {
     for (final r in mem.rows('contacts')) {
@@ -85,10 +116,8 @@ class _Db extends DevTestDb {
     Future<Set<String>> Function()? blocked,
   }) async {}
   @override
-  Future<List<Map<String, Object?>>> messagesFor(String peerId) async {
-    asks.add('all');
-    return _thread;
-  }
+  Future<List<Map<String, Object?>>> messagesFor(String peerId) async =>
+      _slice('all', 0, _count);
 
   @override
   Future<List<Map<String, Object?>>> messagesPage(
@@ -97,11 +126,8 @@ class _Db extends DevTestDb {
     int? beforeAt,
     int limit = 60,
   }) async {
-    final all = [
-      for (final r in _thread)
-        if (beforeRowid == null || (r['id'] as int) < beforeRowid) r,
-    ];
-    return all.sublist(all.length > limit ? all.length - limit : 0);
+    final end = (beforeRowid ?? _count + 1) - 1;
+    return _slice('page', end - limit, end);
   }
 
   @override
@@ -109,28 +135,35 @@ class _Db extends DevTestDb {
     String peerId, {
     required int rowid,
     int? at,
-  }) async {
-    asks.add('from $rowid');
-    return [
-      for (final r in _thread)
-        if ((r['id'] as int) >= rowid) r,
-    ];
-  }
+  }) async => _slice('from $rowid', rowid - 1, _count);
+
+  @override
+  Future<List<Map<String, Object?>>> messagesBetween(
+    String peerId, {
+    required int fromId,
+    required int fromAt,
+    required int toId,
+    required int toAt,
+  }) async => _slice('between $fromId $toId', fromId - 1, toId);
+
+  @override
+  Future<List<Map<String, Object?>>> messagesAfterAt(
+    String peerId, {
+    required int id,
+    required int at,
+    int limit = 60,
+  }) async => _slice('after $id', id, id + limit);
 
   @override
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
     int afterRowid,
-  ) async => [
-    for (final r in _thread)
-      if ((r['id'] as int) > afterRowid) r,
-  ];
+  ) async => _slice('since $afterRowid', afterRowid, _count);
+
   @override
   Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) async {
-    for (final r in _thread) {
-      if (r['msg_uid'] == msgUid) return r;
-    }
-    return null;
+    final i = int.tryParse(msgUid.substring(1));
+    return i == null || i < 1 || i > _count ? null : _rows[i - 1];
   }
 
   @override
@@ -155,11 +188,20 @@ class _Db extends DevTestDb {
     String? groupId,
     int before = 30,
   }) async {
-    final ids = [for (final r in _thread) r['id'] as int];
-    final at = ids.indexOf(id);
-    if (at < 0) return null;
-    final from = ids[at - before < 0 ? 0 : at - before];
+    if (id < 1 || id > _count) return null;
+    final from = id - before < 1 ? 1 : id - before;
     return (id: from, at: _base + from);
+  }
+
+  @override
+  Future<ChatHit?> chatEndBelow(
+    int id, {
+    String? peerId,
+    String? groupId,
+    int after = 60,
+  }) async {
+    if (id + after >= _count) return null;
+    return (id: id + after, at: _base + id + after);
   }
 
   @override
@@ -220,26 +262,6 @@ void main() {
       'accepted': 1,
       'back_paired': 1,
     });
-    // 300 lines; the word is in the 5th, the 150th and the 290th
-    for (var i = 1; i <= 300; i++) {
-      await mem.insert('messages', {
-        'id': i,
-        'peer_id': _peer,
-        'direction': i.isEven ? 'out' : 'in',
-        'plaintext': switch (i) {
-          5 => 'the old pelican story',
-          150 => 'a pelican again',
-          290 => 'pelican, last one',
-          9 => 'quoting nothing',
-          _ => 'line $i',
-        },
-        'msg_uid': 'u$i',
-        'sent': 1,
-        'sent_at': _base + i,
-        if (i == 295) 'reply_to': 'u5',
-        if (i == 296) 'reply_to': 'gone',
-      });
-    }
     db = _Db(mem);
     useDatabasesForTest(db, Session(db));
     await appState.refreshContacts();
@@ -265,7 +287,9 @@ void main() {
     }
   }
 
-  testWidgets('a word over the whole chat, the far one brought in', (t) async {
+  testWidgets('a word over a 100k-row chat, a window around each far one', (
+    t,
+  ) async {
     await t.pumpWidget(devApp(chat()));
     await frames(t);
     // row 5 is far above the page held
@@ -277,20 +301,29 @@ void main() {
     // all three, the page holds one
     expect(find.textContaining('3 of 3', findRichText: true), findsOneWidget);
     await t.tap(find.bySemanticsLabel(l10n.chatPreviousMatch));
-    await frames(t);
+    await frames(t, 80);
     expect(find.textContaining('2 of 3', findRichText: true), findsOneWidget);
-    // row 150 came in with thirty above it, and the thread down from there
-    expect(db.asks, contains('from 120'));
+    // row 50000 came in with thirty above it and sixty below, not the
+    // fifty thousand down to the newest
+    expect(db.asks, contains('between 49970 50060'));
+    expect(db.most, lessThanOrEqualTo(100));
     expect(db.asks, isNot(contains('all')));
     expect(
       find.textContaining('a pelican again', findRichText: true),
       findsOneWidget,
     );
     await t.tap(find.bySemanticsLabel(l10n.chatPreviousMatch));
-    await frames(t);
+    await frames(t, 80);
     expect(find.textContaining('1 of 3', findRichText: true), findsOneWidget);
-    expect(db.asks, contains('from 1'));
+    expect(db.asks, contains('between 1 65'));
     expect(find.text('line 6'), findsWidgets);
+    // no load handed back more than a window's worth
+    expect(db.most, lessThanOrEqualTo(100));
+    // the arrow down goes back to the newest page, the window let go
+    await t.tap(find.bySemanticsLabel(l10n.chatJumpToTheNewest));
+    await frames(t);
+    expect(find.text('line 99999'), findsOneWidget);
+    expect(db.most, lessThanOrEqualTo(100));
     expect(t.takeException(), isNull);
     await frames(t, 120);
   });
@@ -303,7 +336,8 @@ void main() {
     expect(quote, findsOneWidget);
     await t.tap(quote);
     await frames(t);
-    expect(db.asks, contains('from 1'));
+    expect(db.asks, contains('between 1 65'));
+    expect(db.most, lessThanOrEqualTo(100));
     // the quote reads the far one's words, and the thread is there now
     expect(find.textContaining('line 6', findRichText: true), findsWidgets);
     expect(t.takeException(), isNull);

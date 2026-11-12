@@ -7,6 +7,7 @@ import '../chat_find.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'home_screen.dart' show ContactPreview;
 import '../container.dart' show HaloContainer;
 import '../devices/own_answer.dart' show kAnswerBurns;
@@ -858,7 +859,8 @@ class _ChatScreenState extends State<ChatScreen>
       if (!mounted) return;
       _hasMore = rows.length > _pageSize;
       if (_hasMore) rows.removeAt(0);
-      if (!_hasMore) _pagedOut = true;
+      // the whole thread is in only when the newest is too
+      if (!_hasMore && _windowEnd == null) _pagedOut = true;
       final older = <_Msg>[];
       final uids = <String>[];
       for (final r in rows) {
@@ -930,9 +932,124 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _onScrollPage() {
-    if (!_hasMore || !_scrollCtrl.hasClients) return;
+    if (!_scrollCtrl.hasClients) return;
     final p = _scrollCtrl.position;
-    if (p.pixels > p.maxScrollExtent - 600) _loadOlder();
+    if (_hasMore && p.pixels > p.maxScrollExtent - 600) _loadOlder();
+    // a window's next page down, near its bottom
+    if (_windowEnd != null && p.pixels < 600) _loadNewer();
+  }
+
+  // one page of the rows after the window, the window's end moved down; the
+  // newest reached ends the window
+  Future<void> _loadNewer() async {
+    final end = _windowEnd;
+    if (end == null || _loadingNewer || _loading) return;
+    _loadingNewer = true;
+    try {
+      final rows = List.of(
+        await session.messagesAfterAt(
+          widget.peerHaloId,
+          end,
+          limit: _pageSize + 1,
+        ),
+      );
+      if (!mounted || !identical(_windowEnd, end)) return;
+      final reached = rows.length <= _pageSize;
+      if (!reached) rows.removeLast();
+      final have = {for (final m in _messages) m.msgUid};
+      final newer = [
+        for (final r in rows)
+          if (!have.contains(r['msg_uid'])) _msgOfRow(r),
+      ];
+      final reactions = await session.loadReactionsFor([
+        for (final m in newer)
+          if (m.msgUid != null) m.msgUid!,
+      ]);
+      if (!mounted || !identical(_windowEnd, end)) return;
+      for (final m in newer) {
+        for (final e in reactions[m.msgUid] ?? const []) {
+          m.reactions[e.key] = e.value;
+        }
+      }
+      // reversed: rows added below the view would push it up
+      holdRowsInView(
+        ctrl: _scrollCtrl,
+        anchors: _anchors,
+        alive: () => mounted,
+      );
+      setState(() {
+        _messages.addAll(newer);
+        _normaliseMessages();
+        if (reached) {
+          _windowEnd = null;
+          _windowNew.clear();
+          _unseenNew = 0;
+        } else {
+          final last = rows.last;
+          _windowEnd = (
+            id: (last['rowid'] as int?) ?? 0,
+            at: rowWrittenAt(last),
+          );
+        }
+        if (_searching && _query.isNotEmpty) _relight();
+      });
+    } catch (e) {
+      dlog('window: next page not read (${e.runtimeType})');
+    } finally {
+      _loadingNewer = false;
+    }
+  }
+
+  // back to the newest page: the window is let go
+  Future<void> _toNewest() async {
+    if (_windowEnd == null) return;
+    // the window ends inside that load, never before it: a reload between
+    // would read from the window's top to the newest
+    _freshPage = true;
+    _jumpActive = false;
+    await _loadMessages();
+    if (mounted) _safeJump(0);
+  }
+
+  // a row as the thread draws it, for the rows read outside a full load
+  _Msg _msgOfRow(Map<String, Object?> r) {
+    final m = _Msg(
+      r['direction'] as String,
+      (r['plaintext'] as String?) ?? '',
+      DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
+      sticker: StickerWire.parse(r['sticker']),
+      burnAt: r['burn_at'] as int?,
+      burnSecs: (r['burn_secs'] as num?)?.toInt(),
+      burnUnseen: r['burn_unseen'] == 1,
+      msgUid: r['msg_uid'] as String?,
+      replyTo: r['reply_to'] as String?,
+      secure: (r['secure'] as int? ?? 0) == 1,
+      edited: (r['edited'] as int? ?? 0) == 1,
+      pinned: (r['pinned'] as int? ?? 0) == 1,
+      mediaPath: r['media_path'] as String?,
+      filePath: r['file_path'] as String?,
+      fileName: r['file_name'] as String?,
+      voiceDisguised: (r['voice_disguised'] as int? ?? 0) == 1,
+      saved: (r['saved'] as int? ?? 0) == 1,
+      viaDev: r['via_dev'] == 1,
+      album: AlbumTag.ofRow(r),
+      delivered: (r['delivered'] as int? ?? 0) == 1,
+      sending:
+          (r['direction'] as String) == 'out' && (r['sent'] as int? ?? 1) == 0,
+    );
+    m.rowid = (r['rowid'] as int?) ?? 0;
+    m.cameAt = (r['sent_at'] as num?)?.toInt();
+    _readNotSent(m, r);
+    final pv = r['preview'] as String?;
+    if (pv != null && pv.isNotEmpty) {
+      try {
+        final d = jsonDecode(pv) as Map<String, dynamic>;
+        m.preview = d.map((k, v) => MapEntry(k, v.toString()));
+      } catch (_) {
+        // a preview that does not parse is not shown
+      }
+    }
+    return m;
   }
 
   // keyed by the message the divider sits above, not by the day, so two
@@ -993,8 +1110,17 @@ class _ChatScreenState extends State<ChatScreen>
 
   _Msg? _quoteOf(String uid) {
     final held = _byUid[uid];
-    if (held != null || _farQuotes.containsKey(uid)) {
-      return held ?? _farQuotes[uid];
+    if (held != null) return held;
+    if (_farQuotes.containsKey(uid)) {
+      final far = _farQuotes[uid];
+      // one past its time is gone, read or not
+      final burn = far?.burnAt;
+      if (burn != null && burn <= DateTime.now().millisecondsSinceEpoch) {
+        _farQuotes.remove(uid);
+        _farGone.add(uid);
+        return null;
+      }
+      return far;
     }
     _farQuotes[uid] = null;
     // after this frame: it is asked from a build
@@ -1121,6 +1247,16 @@ class _ChatScreenState extends State<ChatScreen>
   });
   // where a jump loads the thread from, while it does
   ChatHit? _reachFrom;
+  // the last row held while the rows stop short of the newest: a window
+  // around a message far up. null when the newest is held
+  ChatHit? _windowEnd;
+  bool _loadingNewer = false;
+  // the next load is the newest page alone
+  bool _freshPage = false;
+  // theirs that came while the window was away from the newest, and the
+  // newest row there was then
+  final Set<String> _windowNew = {};
+  int _windowFloor = 0;
   late String? _nickname = widget.nickname;
   late int? _peerFace = widget.avatarChoice;
   bool _blocked = false;
@@ -2189,6 +2325,26 @@ class _ChatScreenState extends State<ChatScreen>
       _loadMessages();
       return;
     }
+    // the window is away from the newest: what came is counted on the
+    // jump button, the rows held are reloaded for edits and receipts
+    if (_windowEnd != null) {
+      try {
+        final rows = await session.messagesAfter(
+          widget.peerHaloId,
+          _windowFloor,
+        );
+        for (final r in rows) {
+          final uid = r['msg_uid'] as String?;
+          if (uid != null && r['direction'] != 'out') _windowNew.add(uid);
+        }
+      } catch (e) {
+        dlog('window: new not counted (${e.runtimeType})');
+      }
+      if (!mounted) return;
+      setState(() => _unseenNew = _windowNew.length);
+      _loadMessages();
+      return;
+    }
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -2346,6 +2502,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _openSearch() => setState(() => _searching = true);
 
   void _closeSearch() {
+    _queryWait?.cancel();
     setState(() {
       _searching = false;
       _query = '';
@@ -2357,7 +2514,17 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // the whole chat is looked in through its index; the newest hit first
-  Future<void> _onQueryChanged(String q) async {
+  // typing settles first: one question per pause, not per letter
+  Timer? _queryWait;
+  void _typedQuery(String q) {
+    _queryWait?.cancel();
+    _queryWait = Timer(
+      const Duration(milliseconds: 150),
+      () => _onQueryChanged(q),
+    );
+  }
+
+  Future<void> _onQueryChanged(String q, {bool land = true}) async {
     final fresh = await _hits.look(
       q,
       (match) => session.chatHits(
@@ -2372,13 +2539,14 @@ class _ChatScreenState extends State<ChatScreen>
           if (m.sticker == null && !m.welcome && !_heldBack(m))
             (id: m.rowid, at: m.when.millisecondsSinceEpoch, text: m.text),
       ],
+      stay: !land,
     );
     if (!fresh || !mounted || !_searching) return;
     setState(() {
       _query = _hits.query;
       _relight();
     });
-    unawaited(_toHit());
+    if (land) unawaited(_toHit());
   }
 
   // the hits' row ids for the rows' test, after the hits changed
@@ -2432,6 +2600,12 @@ class _ChatScreenState extends State<ChatScreen>
         return null;
       }
       if (from == null) return false;
+      ChatHit? end;
+      try {
+        end = await session.chatEndBelow(id, peerId: widget.peerHaloId);
+      } catch (e) {
+        end = null;
+      }
       // a reload under way would take this one as a later pass, without
       // its start: wait for it
       for (var i = 0; mounted && _loading && i < 200; i++) {
@@ -2439,6 +2613,14 @@ class _ChatScreenState extends State<ChatScreen>
       }
       if (!mounted || _loading) return null;
       _reachFrom = from;
+      if (end != null) {
+        if (_windowEnd == null) {
+          _windowFloor = _messages.fold(0, (a, m) => m.rowid > a ? m.rowid : a);
+          _windowNew.clear();
+        }
+        _windowEnd = end;
+        _showScrollDown = true;
+      }
       _jumpActive = true;
       try {
         await _loadMessages();
@@ -2607,6 +2789,8 @@ class _ChatScreenState extends State<ChatScreen>
     final gifOn =
         !welcome &&
         !kept &&
+        // a timed one goes with its time: never kept past it
+        shareOn?.burnSecs == null &&
         gifPath != null &&
         !_keptHere(shareOn!) &&
         knownGifFile(gifPath) == true;
@@ -3277,7 +3461,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scrollToMessage(_Msg m) => _landOn(_rowKey(m));
 
-  void _landOn(String rowKey) {
+  // [again]: a lazy list's guessed heights settle after a far landing and
+  // can carry the row out of view; it is looked for and landed on again
+  void _landOn(String rowKey, {bool ring = true, int again = 2}) {
     final at = _messages.lastIndexWhere((m) => _rowKey(m) == rowKey);
     if (at < 0) return;
     final uid = _messages[at].msgUid;
@@ -3300,13 +3486,36 @@ class _ChatScreenState extends State<ChatScreen>
       },
       done: (landed) {
         _jumpActive = false;
-        if (!mounted || !landed || uid == null) return;
+        if (!mounted || !landed) return;
+        if (again > 0) {
+          for (final wait in const [250, 1500]) {
+            Future.delayed(Duration(milliseconds: wait), () {
+              if (!mounted || _jumpActive || _rowInView(rowKey)) return;
+              _landOn(rowKey, ring: false, again: again - 1);
+            });
+          }
+        }
+        if (!ring || uid == null) return;
         setState(() => _rippleUid = uid);
         Future.delayed(const Duration(milliseconds: 1300), () {
           if (mounted && _rippleUid == uid) setState(() => _rippleUid = null);
         });
       },
     );
+  }
+
+  // whether row [key] is built and inside the viewport
+  bool _rowInView(String key) {
+    final ctx = _anchors.of(key);
+    final ro = ctx == null || !ctx.mounted ? null : ctx.findRenderObject();
+    if (ro is! RenderBox || !ro.attached || !_scrollReady) return false;
+    try {
+      final reveal = RenderAbstractViewport.of(ro).getOffsetToReveal(ro, 0.5);
+      final p = _scrollCtrl.positions.first;
+      return (reveal.offset - p.pixels).abs() < p.viewportDimension * 0.5;
+    } catch (_) {
+      return false;
+    }
   }
 
   // open an edit sheet for own message m. saves locally + tells the peer.
@@ -3419,11 +3628,23 @@ class _ChatScreenState extends State<ChatScreen>
     session.isMuted(widget.peerHaloId).then((v) {
       if (mounted) setState(() => _muted = v);
     });
-    final wantAll = _pagedOut;
     // a reload keeps the pages already scrolled in: a receipt, a reaction
     // or an edit must not drop what is being read. a jump to a far message
     // starts a little above it
-    final held = wantAll || !_loaded ? null : _oldestHeld();
+    // quotes far up are read again: one unsent or burned since is gone
+    _farQuotes.clear();
+    _farGone.clear();
+    final fresh = _freshPage;
+    _freshPage = false;
+    if (fresh) {
+      _windowEnd = null;
+      _windowNew.clear();
+      _unseenNew = 0;
+      _pagedOut = false;
+    }
+    final wantAll = _pagedOut && _windowEnd == null;
+    final held = wantAll || !_loaded || fresh ? null : _oldestHeld();
+    final windowEnd = _windowEnd;
     final keepFrom =
         _reachFrom ??
         (held == null
@@ -3438,11 +3659,17 @@ class _ChatScreenState extends State<ChatScreen>
       _hasMore = false;
     } else if (keepFrom != null) {
       rows = List.of(
-        await session.messagesFrom(
-          widget.peerHaloId,
-          rowid: keepFrom.id,
-          at: keepFrom.at,
-        ),
+        windowEnd != null
+            ? await session.messagesBetween(
+                widget.peerHaloId,
+                keepFrom,
+                windowEnd,
+              )
+            : await session.messagesFrom(
+                widget.peerHaloId,
+                rowid: keepFrom.id,
+                at: keepFrom.at,
+              ),
       );
     } else {
       rows = List.of(
@@ -3631,13 +3858,13 @@ class _ChatScreenState extends State<ChatScreen>
     // a stored draft that would not read is tried again
     final kept = _draftRows;
     if (_rowUnread && kept != null) unawaited(_readDraft(kept));
-    // the hits lit again over the fresh rows
+    // the search asked again over the fresh rows, staying where it is
     if (_searching && _query.isNotEmpty) {
-      setState(_relight);
+      unawaited(_onQueryChanged(_query, land: false));
     } else if (!_didJump && widget.jumpToUid != null) {
       _didJump = true;
       _jumpToUid(widget.jumpToUid!);
-    } else if (snap) {
+    } else if ((snap || fresh) && _windowEnd == null) {
       _scrollToEnd(instant: true);
     }
     // a file still going from a screen left since is followed to its end
@@ -3780,6 +4007,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scrollToEnd({bool instant = false}) {
     if (_jumpActive) return;
+    // something of ours went: to the newest, the window let go
+    if (_windowEnd != null) {
+      unawaited(_toNewest());
+      return;
+    }
     // reversed list: the newest message lives at offset 0
     if (!_scrollCtrl.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3806,6 +4038,20 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_loaded || _searching) return;
     // cheap tick: only rows newer than our newest. never a full reload here,
     // once a second that blinks the list and snaps the scroll.
+    // a window away from the newest asks only what came since it opened
+    if (_windowEnd != null) {
+      final rows = await session.messagesAfter(widget.peerHaloId, _windowFloor);
+      if (!mounted) return;
+      if (rows.any(
+        (r) =>
+            r['direction'] != 'out' &&
+            r['msg_uid'] != null &&
+            !_windowNew.contains(r['msg_uid']),
+      )) {
+        await _tryAppendNew();
+      }
+      return;
+    }
     final lastRowid = _messages.isEmpty
         ? 0
         : _messages.map((m) => m.rowid).reduce((a, b) => a > b ? a : b);
@@ -6238,6 +6484,7 @@ class _ChatScreenState extends State<ChatScreen>
     _composerFocus.dispose();
     _searchCtrl.dispose();
     _slow.dispose();
+    _queryWait?.cancel();
     _stickyHideTimer?.cancel();
     _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.removeListener(_updateSticky);
@@ -7022,7 +7269,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_scrollCtrl.hasClients) return;
     final pos = _scrollCtrl.position;
     // reversed list: bottom is offset 0
-    final show = pos.pixels > _jumpButtonAt;
+    final show = pos.pixels > _jumpButtonAt || _windowEnd != null;
     if (!show) _unseenNew = 0;
     if (show != _showScrollDown && mounted) {
       setState(() => _showScrollDown = show);
@@ -7030,6 +7277,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _scrollToBottom() {
+    if (_windowEnd != null) {
+      unawaited(_toNewest());
+      return;
+    }
     if (!_scrollReady) return;
     setState(() => _unseenNew = 0);
     // reversed list: newest sits at offset 0.
@@ -7431,7 +7682,7 @@ class _ChatScreenState extends State<ChatScreen>
                       matchCount: _hits.count,
                       matchPos: _hits.shown,
                       finding: _finding,
-                      onChanged: _onQueryChanged,
+                      onChanged: _typedQuery,
                       onPrev: () => _gotoMatch(-1),
                       onNext: () => _gotoMatch(1),
                       onClose: _closeSearch,

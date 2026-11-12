@@ -535,6 +535,52 @@ class Session {
     groupId: groupId,
     wordsOnly: wordsOnly,
   );
+  Future<ChatHit?> chatEndBelow(int id, {String? peerId, String? groupId}) =>
+      (groupId != null ? _ofGroup(groupId) : _ofPeer(peerId ?? ''))
+          .chatEndBelow(id, peerId: peerId, groupId: groupId);
+  // a window's rows, and its next page down (chat_find.dart)
+  Future<List<Map<String, Object?>>> messagesBetween(
+    String peerId,
+    ChatHit from,
+    ChatHit to,
+  ) => _ofPeer(peerId).messagesBetween(
+    peerId,
+    fromId: from.id,
+    fromAt: from.at,
+    toId: to.id,
+    toAt: to.at,
+  );
+  Future<List<Map<String, Object?>>> messagesAfterAt(
+    String peerId,
+    ChatHit after, {
+    int limit = 60,
+  }) => _ofPeer(
+    peerId,
+  ).messagesAfterAt(peerId, id: after.id, at: after.at, limit: limit);
+  Future<List<Map<String, Object?>>> groupMessagesFrom(
+    String groupId,
+    ChatHit from,
+  ) => _ofGroup(
+    groupId,
+  ).groupMessagesFrom(groupId, fromId: from.id, fromAt: from.at);
+  Future<List<Map<String, Object?>>> groupMessagesBetween(
+    String groupId,
+    ChatHit from,
+    ChatHit to,
+  ) => _ofGroup(groupId).groupMessagesBetween(
+    groupId,
+    fromId: from.id,
+    fromAt: from.at,
+    toId: to.id,
+    toAt: to.at,
+  );
+  Future<List<Map<String, Object?>>> groupMessagesAfterAt(
+    String groupId,
+    ChatHit after, {
+    int limit = 60,
+  }) => _ofGroup(
+    groupId,
+  ).groupMessagesAfterAt(groupId, id: after.id, at: after.at, limit: limit);
   Future<ChatHit?> chatStartAbove(int id, {String? peerId, String? groupId}) =>
       (groupId != null ? _ofGroup(groupId) : _ofPeer(peerId ?? ''))
           .chatStartAbove(id, peerId: peerId, groupId: groupId);

@@ -32,12 +32,15 @@ class ChatFind {
   bool get active => query.isNotEmpty;
 
   /// looks for [raw]: false when a newer look overtook this one. [index]
-  /// asks the chat's index; a failure there leaves the rows in [held]
+  /// asks the chat's index; a failure there leaves the rows in [held].
+  /// [stay]: the same question again, the hit in view kept when it still is
   Future<bool> look(
     String raw,
     Future<List<ChatHit>> Function(String match) index,
-    Iterable<HeldRow> held,
-  ) async {
+    Iterable<HeldRow> held, {
+    bool stay = false,
+  }) async {
+    final was = current;
     final ask = ++_ask;
     final q = raw.trim();
     final match = q.isEmpty ? null : ftsMatch(q);
@@ -59,10 +62,12 @@ class ChatFind {
       found.sort((a, b) => byWritten(a.at, a.id, b.at, b.id));
     }
     if (ask != _ask) return false;
+    final same = q == query;
     query = q;
     _hits = found;
     // the newest first, as the list opens at the bottom
-    _pos = found.isEmpty ? 0 : found.length - 1;
+    final kept = stay && same ? found.indexWhere((h) => h.id == was) : -1;
+    _pos = kept >= 0 ? kept : (found.isEmpty ? 0 : found.length - 1);
     return true;
   }
 
