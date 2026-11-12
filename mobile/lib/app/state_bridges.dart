@@ -503,6 +503,7 @@ extension AppStateBridges on AppState {
     if (s == _bridgeStatus) return;
     final was = _bridgeStatus;
     _bridgeStatus = s;
+    connTrail.noteBridge(was, s);
     _typingBridgesMoved();
     if (s.phase == 'connected' || s.canSend) {
       _askDue = false;

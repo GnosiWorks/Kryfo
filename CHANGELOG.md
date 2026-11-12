@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.6.1] - unreleased
+
+### Added
+- see a voice note as text: tap "See transcription" under it. the words are worked out on your phone, never on a server, and the speech model downloads once, over tor.
+- voice notes you receive play at 1x, 1.5x or 2x, you can drag or tap the wave to jump, and the next voice note in the chat plays on.
+- files open inside Kryfo: pdfs with their pages, text and code, sound and video. a pdf shows its first page in the bubble. "Open with…" is still in the menu.
+- a shared page in each chat with its photos, files, voice notes and links.
+- send photos and files from one sheet.
+- share photos, videos and files from other apps straight into a chat.
+- your latest chats in the share menu of other apps, if you want them there: settings, privacy (android 13 and newer, off unless you turn it on).
+- double tap a message to react.
+- hold send to send without sound.
+- drafts show in the chat list, and a chat with a draft moves up.
+- a banner drops in when a message arrives in another chat while you're in one.
+- swipe back and see the screen below before you let go.
+- dim the chat wallpaper with a slider.
+- "My network is watched" under bridges: tor never starts without a bridge.
+- inside a tor vpn like orbot, Kryfo starts on a bridge.
+- when automatic can't connect, Kryfo shows where to get a private bridge from the tor project.
+- check my connection: a short report of how tor gets out where you are. no ip address, no location, no bridge lines. you see all of it and decide whether to send it to Marios.
+- share your story, under settings, about: it opens the chat with Marios with a short template you can change or write anonymously. nothing goes until you send it.
+- a taken @name comes with a free one to try.
+- a switch for message request pop-ups, under settings, notifications. it is on for phones updating and off on new installs.
+- the flame opens the timer picker, with Off on top while a timer is on.
+- linux: notifications stay quiet while the screen is locked.
+- windows and linux: camera raw and tiff pictures are sent as clean jpegs.
+- [batch3] files never download on their own: a tap gets them.
+- [batch3] several files sent together arrive as one message, each with its own preview.
+- [batch3] a tray when you send files: rename them, see the total size and roughly how long it takes over tor.
+- [batch3] the files tab: search by name, filter by type or sender, sort by date or size.
+- [batch3] the photo viewer can save, forward and unsend, and you swipe through every photo and video in the chat.
+- [batch3] select several messages to copy, forward or delete them.
+- [batch3] photo spoilers: a blurred photo opens with a tap.
+- [batch3] a disappearing timer for each chat, with its time next to the flame.
+- [batch3] on a computer, drop files on a chat in the list to send them there.
+- [batch4] search a whole chat, and jump to an older message from a reply.
+- [batch4] favourite gifs: star the ones you like and they wait on their own tab.
+
+### Changed
+- offline translation handles several languages at once, closes what you don't use after two minutes, and a download that stops picks up where it left off.
+- the offer to translate shows once per language, and an x stops it for that language.
+- short messages in similar languages are told apart better.
+- the time and tick sit on the last line of a message when they fit, and the tick is drawn instead of a glyph.
+- group rows in the chat list say who wrote last and when, with an @ when you're mentioned.
+- tor finds its feet by itself after a network drop or when the same wi-fi comes back, and reconnects when a message is waiting on it.
+- the chat you have open gets its messages first when Kryfo reconnects.
+- google push on fast registers over the direct connection. our servers see your ip while they wake your phone, but we never keep it.
+- adding someone on fast says first contacts wait for tor.
+- a phone links up to two computers. computers linked before stay linked.
+- "Bridge from a friend" is now "Paste a bridge".
+- the @name page says when tor or the name registry is busy, and tries again.
+- chinese text gets the right font and full stop, and transcripts for traditional chinese readers come in traditional characters.
+- pictures use less memory, and avatars and wallpapers show only a blur while Kryfo is locked.
+- voice transcripts check for free memory first and leave room for the rest of the app.
+- tips stay on the phone: the support page is hidden on linked computers.
+
+### Fixed
+- a second language can be translated without restarting Kryfo.
+- pdf pages showing blank on some phones.
+- unlocking could hang after a video showed its thumbnail.
+
+### Security
+- each link preview gets its own tor circuit, and on windows the engine's keys are kept in memory and sealed between runs.
+- stability and privacy improvements throughout. update when you can.
+
 ## [0.6.0] - 2026-11-08
 
 ### Added

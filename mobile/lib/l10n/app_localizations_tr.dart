@@ -12302,6 +12302,38 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır.';
 
   @override
+  String get connCheckTitle => 'Bağlantımı kontrol et';
+
+  @override
+  String get connCheckLine =>
+      'Paylaşılacak olan yalnızca bu: Tor buradan nasıl çıkıyor, ne kadar sürdü ve neyin geçemediği. IP adresi yok, konum yok, köprü satırı yok, cihaz kimliği yok. Sen kopyalayana ya da gönderene kadar hiçbir şey çıkmaz.';
+
+  @override
+  String get connCheckEnglish =>
+      'Kontrol İngilizce, böylece her yerde aynı okunur.';
+
+  @override
+  String get connCheckAgain => 'Tekrar kontrol et';
+
+  @override
+  String get connCheckSend => 'Marios’a gönder';
+
+  @override
+  String get storyRow => 'Hikâyeni paylaş';
+
+  @override
+  String get storyHint =>
+      'Kryfo’yu neden kullandığını kendi sözlerinle anlat. Hikâyeler yalnızca senin onayınla paylaşılır.';
+
+  @override
+  String get storyHintAnon =>
+      'Kryfo’yu neden kullandığını kendi sözlerinle anlat. Anonim yazabilirsin, hikâyeler yalnızca senin onayınla paylaşılır.';
+
+  @override
+  String get storyTemplate =>
+      'Kryfo’yu neden kullanıyorum:\n\nYaşadığım yerde neler engelli:\n\nBölge (isteğe bağlı):\n';
+
+  @override
   String get chatFindingMessage => 'Mesaj aranıyor';
 
   @override

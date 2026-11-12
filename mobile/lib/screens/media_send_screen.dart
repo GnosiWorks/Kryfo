@@ -26,6 +26,7 @@ import '../widgets/shift_tap_guard.dart';
 import '../widgets/enter_sends.dart';
 import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
+import '../widgets/pictures_gate.dart' show PicturesGate;
 
 class MediaSendScreen extends StatefulWidget {
   final List<PickedMedia> items;
@@ -486,11 +487,13 @@ class _Large extends StatelessWidget {
         child: Semantics(
           image: true,
           label: l10n.appPhoto,
-          child: Image.memory(
-            photo,
-            fit: BoxFit.contain,
-            gaplessPlayback: true,
-            cacheWidth: screenPx(context),
+          child: PicturesGate(
+            child: Image.memory(
+              photo,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              cacheWidth: screenPx(context),
+            ),
           ),
         ),
       ),
@@ -525,7 +528,9 @@ class _VideoStillState extends State<_VideoStill> {
     const mark = 22.0;
     final face = jpeg == null
         ? ColoredBox(color: HaloColors.surface3)
-        : Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true);
+        : PicturesGate(
+            child: Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true),
+          );
     return Semantics(
       image: true,
       label: l10n.videoBubbleVideo,
@@ -580,11 +585,13 @@ class _Thumb extends StatelessWidget {
     final still = motionStill(context);
     final media = entry.media;
     final Widget face = media.photo != null
-        ? Image.memory(
-            media.photo!,
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            cacheWidth: decodePx(context, size),
+        ? PicturesGate(
+            child: Image.memory(
+              media.photo!,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              cacheWidth: decodePx(context, size),
+            ),
           )
         : _VideoStill(path: media.video!.path);
     final what = media.isVideo ? l10n.videoBubbleVideo : l10n.appPhoto;

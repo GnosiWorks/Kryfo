@@ -210,8 +210,10 @@ extension AppStateRoute on AppState {
     if (torReady) {
       _torTryingSince = null;
       _pctBest = -1;
+      connTrail.ready(now);
     } else {
       _torTryingSince ??= now;
+      connTrail.tryStarted(now);
     }
   }
 

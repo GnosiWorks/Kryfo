@@ -458,8 +458,7 @@ func herdLine(t *testing.T, name string, o *onionTor, h herd, r herdResult) (ope
 	return openAt, onlineOK
 }
 
-// the redmi's shape (271 listened addresses on the developer identity, the
-// most recent count read off its transport page) against tor's pending
+// a busy identity's shape (271 listened addresses) against tor's pending
 // circuit cap. KRYFO_DOOR_N sets another count.
 func TestMeasureDoorHerd(t *testing.T) {
 	if os.Getenv("HALO_DOOR_MEASURE") == "" {

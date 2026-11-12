@@ -12283,6 +12283,38 @@ class AppLocalizationsHi extends AppLocalizations {
       'जब तक Kryfo दूसरा आइकन पहने है, आपकी चैट शेयर मेन्यू से बाहर रहती हैं।';
 
   @override
+  String get connCheckTitle => 'मेरा कनेक्शन जांचें';
+
+  @override
+  String get connCheckLine =>
+      'बस यही साझा होगा: Tor यहां से कैसे बाहर निकलता है, इसमें कितना समय लगा और क्या नहीं हो पाया। कोई IP पता नहीं, कोई लोकेशन नहीं, कोई ब्रिज लाइन नहीं, डिवाइस की कोई पहचान नहीं। जब तक आप इसे कॉपी या भेजते नहीं, कुछ भी बाहर नहीं जाता।';
+
+  @override
+  String get connCheckEnglish =>
+      'यह जांच अंग्रेज़ी में है, ताकि हर जगह एक जैसी पढ़ी जाए।';
+
+  @override
+  String get connCheckAgain => 'फिर से जांचें';
+
+  @override
+  String get connCheckSend => 'Marios को भेजें';
+
+  @override
+  String get storyRow => 'अपनी कहानी बताएं';
+
+  @override
+  String get storyHint =>
+      'आप Kryfo क्यों इस्तेमाल करते हैं, अपने शब्दों में। कहानियां सिर्फ़ आपकी सहमति से साझा होती हैं।';
+
+  @override
+  String get storyHintAnon =>
+      'आप Kryfo क्यों इस्तेमाल करते हैं, अपने शब्दों में। आप गुमनाम रहकर लिख सकते हैं, और कहानियां सिर्फ़ आपकी सहमति से साझा होती हैं।';
+
+  @override
+  String get storyTemplate =>
+      'मैं Kryfo क्यों इस्तेमाल करता/करती हूं:\n\nजहां मैं रहता/रहती हूं, वहां क्या ब्लॉक है:\n\nक्षेत्र (वैकल्पिक):\n';
+
+  @override
   String get chatFindingMessage => 'मैसेज ढूँढ रहे हैं';
 
   @override

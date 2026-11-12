@@ -374,7 +374,6 @@ func TestNewDialsArePaced(t *testing.T) {
 
 // a receipt to x waits for a slot; x's chat opens and a reply goes: the
 // reply joins the receipt's dial and takes it to the open chat's place
-// (review F1)
 func TestOpenChatReplyIsNotBehindAReceipt(t *testing.T) {
 	doorqVar(t, &doorDialsMost, 2)
 	doorqVar(t, &doorOpenMost, 3)
@@ -426,7 +425,7 @@ func TestOpenChatReplyIsNotBehindAReceipt(t *testing.T) {
 }
 
 // with no onion dial working on this tor lately, a failed dial rests
-// nobody: in fast mode routeOK is true whatever tor does (review F2)
+// nobody: in fast mode routeOK is true whatever tor does
 func TestNoRestUntilAnotherOnionAnswers(t *testing.T) {
 	doorqVar(t, &doorDialMost, time.Second)
 	o, tn := doorqSetup(t, 32)
@@ -453,7 +452,7 @@ func TestNoRestUntilAnotherOnionAnswers(t *testing.T) {
 	}
 }
 
-// the open chat's onion collects no rest while it is open (review F4)
+// the open chat's onion collects no rest while it is open
 func TestOpenChatNeverRests(t *testing.T) {
 	o, tn := doorqSetup(t, 32)
 	proveDoors(t, o, tn)
@@ -470,7 +469,7 @@ func TestOpenChatNeverRests(t *testing.T) {
 }
 
 // a contact who wrote still waits for the pace: only a dial that worked
-// skips it (review F5)
+// skips it
 func TestAWordFromThemDoesNotSkipThePace(t *testing.T) {
 	doorqVar(t, &doorPaceGap, time.Second)
 	doorqSetup(t, 32)

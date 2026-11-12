@@ -2,9 +2,9 @@
 //go:build torconf
 
 // a wifi that passes no tcp for minutes and then works again, with android
-// saying nothing either way (redmi and samsung, 2026-11-08). what was open
-// stays dead for good and connects made meanwhile never hear back. the
-// engine has to find its way back alone, no reconnect by hand:
+// saying nothing either way. what was open stays dead for good and connects
+// made meanwhile never hear back. the engine finds its way back alone, no
+// reconnect by hand:
 //
 //	go test -tags torconf -run TestSilentDropRecovers -v .
 package main

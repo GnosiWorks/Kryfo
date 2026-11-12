@@ -14,6 +14,7 @@ import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, motionStill;
+import 'pictures_gate.dart' show PicturesGate;
 import 'sealed_picture.dart';
 import 'text_ground.dart';
 
@@ -282,7 +283,9 @@ class _PhotoViewerState extends State<PhotoViewer>
           fit: BoxFit.contain,
           ground: Colors.transparent,
         ),
-        null => Image(image: widget.image, gaplessPlayback: true),
+        null => PicturesGate(
+          child: Image(image: widget.image, gaplessPlayback: true),
+        ),
       },
     );
     final tag = widget.tag;
@@ -347,6 +350,8 @@ Widget photoFlight(Animation<double> a, ImageProvider image, double radius) =>
       animation: a,
       builder: (_, _) => ClipRRect(
         borderRadius: BorderRadius.circular(lerpDouble(radius, 0, a.value)!),
-        child: Image(image: image, fit: BoxFit.cover, gaplessPlayback: true),
+        child: PicturesGate(
+          child: Image(image: image, fit: BoxFit.cover, gaplessPlayback: true),
+        ),
       ),
     );

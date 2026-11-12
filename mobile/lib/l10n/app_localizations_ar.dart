@@ -12416,6 +12416,38 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى.';
 
   @override
+  String get connCheckTitle => 'فحص اتصالي';
+
+  @override
+  String get connCheckLine =>
+      'هذا كل ما ستتم مشاركته: كيف يخرج Tor من هنا، وكم استغرق، وما الذي لم ينجح. لا عنوان IP، ولا موقع، ولا أسطر جسور، ولا معرّفات أجهزة. لا يخرج شيء حتى تنسخه أو ترسله بنفسك.';
+
+  @override
+  String get connCheckEnglish =>
+      'الفحص باللغة الإنجليزية، ليُقرأ بالطريقة نفسها في كل مكان.';
+
+  @override
+  String get connCheckAgain => 'افحص مجددًا';
+
+  @override
+  String get connCheckSend => 'أرسل إلى Marios';
+
+  @override
+  String get storyRow => 'شارك قصتك';
+
+  @override
+  String get storyHint =>
+      'لماذا تستخدم Kryfo، بكلماتك أنت. لا تُشارَك القصص إلا بموافقتك.';
+
+  @override
+  String get storyHintAnon =>
+      'لماذا تستخدم Kryfo، بكلماتك أنت. يمكنك الكتابة دون الكشف عن هويتك، ولا تُشارَك القصص إلا بموافقتك.';
+
+  @override
+  String get storyTemplate =>
+      'لماذا أستخدم Kryfo:\n\nما المحجوب حيث أعيش:\n\nالمنطقة (اختياري):\n';
+
+  @override
   String get chatFindingMessage => 'جارٍ البحث عن الرسالة';
 
   @override

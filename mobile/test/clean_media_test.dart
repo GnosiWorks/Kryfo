@@ -304,7 +304,8 @@ void main() {
     test(
       'a picture the disk has no room to clean never goes as it is',
       () async {
-        onDesktop = true;
+        // nothing draws it either
+        drawn = null;
         final src = put('g.jpg', photo);
         // the clean copy cannot even be begun: a file where its folder goes
         final full = File('${tmp.path}/full')..writeAsStringSync('x');
@@ -319,6 +320,24 @@ void main() {
       },
     );
 
+    test('a computer draws it again instead, clean', () async {
+      onDesktop = true;
+      final src = put('g.jpg', photo);
+      final full = File('${tmp.path}/full')..writeAsStringSync('x');
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_9.jpg',
+        name: 'g.jpg',
+        cache: Directory(full.path),
+      );
+      expect(asked, 0);
+      final out = File(r.path!).readAsBytesSync();
+      expect(out, isNot(photo));
+      expect(pictureKind(out), PictureKind.jpeg);
+      expect(jpegHasExif(out), isFalse);
+      expect(readFile(r.path!).status, MetaStatus.nothing);
+    });
+
     test('a picture it cleans is never drawn', () async {
       drawn = photo;
       final src = put('b.jpg', jpeg(tiff: cameraTiff(), xmp: xmpGps));
@@ -332,7 +351,8 @@ void main() {
       expect(asked, 0);
     });
 
-    test('a computer has nothing to draw with: it goes as it is', () async {
+    test('a computer asks no platform, and one it cannot draw goes as it '
+        'is', () async {
       onDesktop = true;
       drawn = photo;
       final src = put('IMG_7.dng', rawBytes);

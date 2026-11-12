@@ -19,6 +19,7 @@ import 'gif_fav_panel.dart' show StarPop;
 import 'gif_picture.dart';
 import 'gif_source.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/pictures_gate.dart' show PicturesGate;
 
 /// how the phone reaches our server, as the transport screen names it
 enum GifRoute { onion, fast }
@@ -806,12 +807,15 @@ class _GifTileState extends State<_GifTile> {
     if (b != null && still) {
       picture = StillFrame(id: widget.item.id, load: () async => b, width: px);
     } else if (b != null) {
-      picture = Image.memory(
-        b,
-        fit: BoxFit.cover,
-        gaplessPlayback: true,
-        cacheWidth: px,
-        errorBuilder: (_, _, _) => _broken(),
+      // a gif's frames are let go under the lock, as every picture's
+      picture = PicturesGate(
+        child: Image.memory(
+          b,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          cacheWidth: px,
+          errorBuilder: (_, _, _) => _broken(),
+        ),
       );
     } else if (_failed) {
       picture = _broken();

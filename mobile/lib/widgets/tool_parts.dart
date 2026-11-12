@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'motion.dart' show motionStill;
+import 'pictures_gate.dart' show PicturesGate;
 import 'press_scale.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
@@ -112,12 +113,15 @@ class ToolThumb extends StatelessWidget {
         height: size,
         child: video
             ? fallback
-            : Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                cacheWidth: (size * 3).round(),
-                gaplessPlayback: true,
-                errorBuilder: (_, _, _) => fallback,
+            : PicturesGate(
+                shut: fallback,
+                child: Image.file(
+                  File(path),
+                  fit: BoxFit.cover,
+                  cacheWidth: (size * 3).round(),
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => fallback,
+                ),
               ),
       ),
     );

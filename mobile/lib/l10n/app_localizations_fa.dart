@@ -12294,6 +12294,38 @@ class AppLocalizationsFa extends AppLocalizations {
       'تا وقتی Kryfo نماد دیگری دارد، گفتگوهایتان بیرون از منوی اشتراک‌گذاری می‌مانند.';
 
   @override
+  String get connCheckTitle => 'بررسی اتصال من';
+
+  @override
+  String get connCheckLine =>
+      'این همه چیزی است که به اشتراک گذاشته می‌شود: Tor از اینجا چطور بیرون می‌رود، چقدر طول کشید و چه چیزی رد نشد. بدون نشانی IP، بدون مکان، بدون خطوط پل، بدون شناسه دستگاه. تا وقتی خودتان کپی یا ارسالش نکنید، چیزی بیرون نمی‌رود.';
+
+  @override
+  String get connCheckEnglish =>
+      'این گزارش به انگلیسی است تا همه‌جا یکسان خوانده شود.';
+
+  @override
+  String get connCheckAgain => 'بررسی دوباره';
+
+  @override
+  String get connCheckSend => 'ارسال برای Marios';
+
+  @override
+  String get storyRow => 'داستانت را بگو';
+
+  @override
+  String get storyHint =>
+      'چرا از Kryfo استفاده می‌کنید، با کلمات خودتان. داستان‌ها فقط با رضایت شما به اشتراک گذاشته می‌شوند.';
+
+  @override
+  String get storyHintAnon =>
+      'چرا از Kryfo استفاده می‌کنید، با کلمات خودتان. می‌توانید ناشناس بنویسید و داستان‌ها فقط با رضایت شما به اشتراک گذاشته می‌شوند.';
+
+  @override
+  String get storyTemplate =>
+      'چرا از Kryfo استفاده می‌کنم:\n\nچه چیزهایی جایی که زندگی می‌کنم مسدود است:\n\nمنطقه (اختیاری):\n';
+
+  @override
   String get chatFindingMessage => 'در حال یافتن پیام';
 
   @override

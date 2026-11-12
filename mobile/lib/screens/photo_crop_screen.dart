@@ -12,6 +12,7 @@ import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/press_scale.dart';
+import '../widgets/pictures_gate.dart' show PicturesGate;
 
 /// the square a crop chose, in the picture's pixels
 typedef PhotoSquare = ({int left, int top, int side});
@@ -287,11 +288,13 @@ class _PhotoCropScreenState extends State<PhotoCropScreen>
                     top: centre.dy + _offset.dy - s.height * px / 2,
                     width: s.width * px,
                     height: s.height * px,
-                    child: Image.memory(
-                      widget.bytes,
-                      fit: BoxFit.fill,
-                      gaplessPlayback: true,
-                      filterQuality: FilterQuality.medium,
+                    child: PicturesGate(
+                      child: Image.memory(
+                        widget.bytes,
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                        filterQuality: FilterQuality.medium,
+                      ),
                     ),
                   ),
                   Positioned.fill(
