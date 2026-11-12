@@ -475,4 +475,8 @@ void resetPdfGlancesForTest() {
 /// [path] is going: its first page goes with it
 void forgetPdfGlance(String path) {
   _glances.remove(path)?.image.dispose();
+  for (final x in _thumbs.remove(path)?.values ?? const <ui.Image>[]) {
+    x.dispose();
+  }
+  _thumbsAhead.remove(path);
 }

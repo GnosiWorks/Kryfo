@@ -167,6 +167,9 @@ Future<ZipGlance?> zipGlanceKept(String path) async {
 /// the lock lets go of every zip's glance
 void forgetZipGlances() => _kept.clear();
 
+/// [path] is going: its glance with it
+void forgetZipGlanceOf(String path) => _kept.remove(path);
+
 /// a zip on this phone, its glance read from its own directory
 class ArchiveGlanceOf extends StatefulWidget {
   final String path;

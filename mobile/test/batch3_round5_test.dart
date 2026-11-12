@@ -81,7 +81,20 @@ void main() {
     expect(pdfThumbNow('/m/a.pdf', 1), isNull);
     forgetPdfPreviews();
     expect(pdfThumbNow('/m/a.pdf', 2), isNull);
+    // and with their file when it is shredded
+    keepPdfThumb('/m/a.pdf', 2, img);
+    forgetPdfGlance('/m/a.pdf');
+    expect(pdfThumbNow('/m/a.pdf', 2), isNull);
     img.dispose();
+  });
+
+  test('the lock and the shredder let go of zip and document glances', () {
+    final lock = sourceOf('lib/picture_lock.dart');
+    expect(lock, contains("lockStep('doc lines', forgetDocLines);"));
+    expect(lock, contains("lockStep('zip glances', forgetZipGlances);"));
+    final shred = sourceOf('lib/shred.dart');
+    expect(shred, contains('forgetDocLinesOf(path);'));
+    expect(shred, contains('forgetZipGlanceOf(path);'));
   });
 
   test('a turn draws the next page beside this one; the close shows the '
