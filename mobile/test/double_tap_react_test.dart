@@ -170,10 +170,13 @@ void main() {
     expect(data.customSemanticsActionIds, hasLength(1));
     final id = data.customSemanticsActionIds!.single;
     expect(CustomSemanticsAction.getAction(id)?.label, l10n.chatReactHeart);
-    t.binding.pipelineOwner.semanticsOwner!.performAction(
-      t.getSemantics(find.byType(ReactTaps)).id,
-      SemanticsAction.customAction,
-      id,
+    t.binding.performSemanticsAction(
+      SemanticsActionEvent(
+        type: SemanticsAction.customAction,
+        viewId: t.view.viewId,
+        nodeId: t.getSemantics(find.byType(ReactTaps)).id,
+        arguments: id,
+      ),
     );
     expect(reacts, 1);
     sem.dispose();

@@ -4,7 +4,6 @@
 // the model wrote them; anyone else, and any other language, as heard
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' show Locale;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

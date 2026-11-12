@@ -46,8 +46,10 @@ object ShareTargets {
         }
     }
 
+    // shortcuts came with android 7.1: on 7.0 the class is not there
     private fun manager(context: Context): ShortcutManager? =
-        context.getSystemService(ShortcutManager::class.java)
+        if (Build.VERSION.SDK_INT < 25) null
+        else context.getSystemService(ShortcutManager::class.java)
 
     // every one there was is replaced by these
     private fun publish(context: Context, list: List<Map<String, Any?>>, bg: Int, fg: Int): Boolean {
@@ -82,7 +84,9 @@ object ShareTargets {
         }
     }
 
+    // true when none are left, also on an android without any
     fun clear(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < 25) return true
         val sm = manager(context) ?: return false
         return try {
             val ids = sm.dynamicShortcuts.map { it.id }
@@ -90,7 +94,7 @@ object ShareTargets {
             // a cached copy, should the system have made one, goes too
             if (ids.isNotEmpty() && Build.VERSION.SDK_INT >= 30) sm.removeLongLivedShortcuts(ids)
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             false
         }
     }

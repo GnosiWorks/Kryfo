@@ -677,8 +677,12 @@ open class MainActivity : FlutterFragmentActivity() {
                     // and the process force-stopped. deletes from dart race
                     // the preference writes still queued for disk.
                     "wipe" -> {
-                        // the share menu's chats go first: the system keeps them
-                        ShareTargets.clear(this)
+                        // the share menu's chats go first: the system keeps them.
+                        // nothing there may stop the wipe
+                        try {
+                            ShareTargets.clear(this)
+                        } catch (e: Throwable) {
+                        }
                         // the pin key before anything: what it sealed never
                         // opens again, whatever the clear leaves. a keystore
                         // that hangs gets half a second, never the clear

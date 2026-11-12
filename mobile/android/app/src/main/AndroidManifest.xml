@@ -35,7 +35,8 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:enableOnBackInvokedCallback="true">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33">
         <!-- predictive back: dart says when it wants back (LockBack in
              lock_layer.dart), so a swipe while locked never reaches a page.
              one instance only: the engine attaches to one screen, and a

@@ -4,8 +4,6 @@
 // phone's first chinese, then, in a message, what its characters say. the
 // test font draws every glyph alike, so the check is the locale the text is
 // laid out in, which picks the phone's font
-import 'dart:ui' show Locale;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';

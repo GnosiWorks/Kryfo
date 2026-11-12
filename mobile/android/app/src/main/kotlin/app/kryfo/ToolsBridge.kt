@@ -197,7 +197,8 @@ class ToolsBridge(private val activity: Activity) {
 
     // the chat picked in the share menu (ShareTargets.kt), if one was: dart
     // checks it is still one it may go to
-    private fun picked(intent: Intent): String? = try {
+    // android 10 and later name it
+    private fun picked(intent: Intent): String? = if (Build.VERSION.SDK_INT < 29) null else try {
         intent.getStringExtra(Intent.EXTRA_SHORTCUT_ID)?.takeIf { it.length in 1..64 }
     } catch (e: Exception) {
         null

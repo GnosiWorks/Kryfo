@@ -74,10 +74,11 @@ mkdir -p "$SD" && touch "$SD/kryfo_signal.dll"
 
 # a stand-in expert bundle, pinned in a stand-in pin file
 B="$tmp/bundle"
-mkdir -p "$B/tor/pluggable_transports" "$B/data"
+mkdir -p "$B/tor/pluggable_transports" "$B/data" "$B/docs"
 printf 'stand-in tor.exe\n' > "$B/tor/tor.exe"
 touch "$B/tor/tor-gencert.exe" "$B/tor/pluggable_transports/lyrebird.exe" "$B/data/geoip"
-tar -czf "$tmp/bundle.tar.gz" -C "$B" tor data
+for l in tor openssl libevent zlib; do printf 'stand-in %s licence\n' "$l" > "$B/docs/$l.txt"; done
+tar -czf "$tmp/bundle.tar.gz" -C "$B" tor data docs
 exe_sum="$(sha256sum "$B/tor/tor.exe" | cut -d' ' -f1)"
 fake_pin="$tmp/pin.txt"
 { echo "TOR_BUNDLE_VERSION=$v"
@@ -89,6 +90,7 @@ if stage "$fake_pin" "$tmp/bundle.tar.gz" >/dev/null; then
   ok "stage-tor.sh takes the pinned bundle"
   S="$R/packaging/build/windows/tor"
   [ -f "$S/tor.exe" ] && [ -f "$S/licenses/tor.txt" ] && [ -f "$S/licenses/libevent.txt" ] \
+    && [ -f "$S/licenses/openssl.txt" ] && [ -f "$S/licenses/zlib.txt" ] \
     || no "staged tor lacks tor.exe or its licenses"
   [ -e "$S/pluggable_transports" ] && no "pluggable_transports were staged"
 else
