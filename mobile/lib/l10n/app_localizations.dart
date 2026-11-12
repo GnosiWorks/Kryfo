@@ -19621,13 +19621,13 @@ abstract class AppLocalizations {
   /// sending sheet tray: guess of upload time, under a minute
   ///
   /// In en, this message translates to:
-  /// **'under a minute over Tor'**
+  /// **'Under a minute over Tor'**
   String get trayTimeSoon;
 
   /// sending sheet tray: honest guess of the upload time in whole minutes (n in the language's digits)
   ///
   /// In en, this message translates to:
-  /// **'about {n} min over Tor'**
+  /// **'About {n} min over Tor'**
   String trayTimeMinutes(String n);
 
   /// sending sheet tray: the most one file may be (e.g. 50 MB)
