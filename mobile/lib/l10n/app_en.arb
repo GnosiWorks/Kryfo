@@ -15460,7 +15460,7 @@
     "description": "settings, privacy: the line under settingsShareMenu, app lock off"
   },
   "@settingsShareMenuHintLocked": {
-    "description": "settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while kryfo is locked"
+    "description": "settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while Kryfo is locked"
   },
   "@settingsShareMenuDisguised": {
     "description": "settings, privacy: a note under settingsShareMenu while a disguise icon (Notes, Weather...) is on: nothing is published then"

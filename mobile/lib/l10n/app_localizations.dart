@@ -19633,7 +19633,7 @@ abstract class AppLocalizations {
   /// **'Your latest chats appear by name when you share from another app.'**
   String get settingsShareMenuHint;
 
-  /// settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while kryfo is locked
+  /// settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while Kryfo is locked
   ///
   /// In en, this message translates to:
   /// **'Your latest chats appear by name in other apps\' share menus only while Kryfo is unlocked.'**

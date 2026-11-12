@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the one video player every screen uses: the chat's viewer, an album's
 // video pages, a clip before it goes, and files. android's own player
-// draws into a texture (VideoPlayers.kt); this is what each screen used to
-// repeat: opening it, play and pause, where it is, the lock and the app
+// draws into a texture (VideoPlayers.kt); this keeps what every screen
+// shares: opening it, play and pause, where it is, the lock and the app
 // going behind. one player is alive at a time: one that opens puts the one
 // before to sleep (its native player closed, its place kept), and the
 // sleeper opens again where it was when it is played
