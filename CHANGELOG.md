@@ -35,8 +35,8 @@
 - [batch3] photo spoilers: a blurred photo opens with a tap.
 - [batch3] a disappearing timer for each chat, with its time next to the flame.
 - [batch3] on a computer, drop files on a chat in the list to send them there.
-- [batch4] search a whole chat, and jump to an older message from a reply.
-- [batch4] favourite gifs: star the ones you like and they wait on their own tab.
+- search a whole chat, and jump to an older message from a reply.
+- favourite gifs: star the ones you like and they wait on their own tab.
 
 ### Changed
 - offline translation handles several languages at once, closes what you don't use after two minutes, and a download that stops picks up where it left off.
