@@ -1146,8 +1146,9 @@ void main() {
       );
       installPhoneSeal(areas, ToyCrypto());
       addTearDown(uninstallPhoneSealForTest);
+      // only the everyday side open, as on a phone: the setup holds the
+      // new vault's own key for the hide
       containerOpened!(HaloContainer.everyday.id, '', 'e' * 64);
-      containerOpened!(HaloContainer.vault.id, '_k3', "x'${'f' * 64}'");
       final w = await _World.make(docs);
       final h1 = p.join(w.media, 'h1.jpg');
       Uint8List raw(String f) => rawFileAccess(() => File(f).readAsBytesSync());
@@ -1155,7 +1156,7 @@ void main() {
       // its blur lies next to it, and goes where it goes
       File('$h1.blur').writeAsBytesSync([1, 2, 3]);
       await w.app.createVault('246810');
-      await w.app.hideChats(people: [_h], groups: [_g2]);
+      expect(await w.app.hideChats(people: [_h], groups: [_g2]), 2);
       _whole(w, why: 'sealed');
       final moved = w.vault.msg('h1')!['media_path'] as String;
       expect(p.dirname(moved), w.mediaV);
@@ -1165,8 +1166,8 @@ void main() {
       expect(rawFileAccess(() => File('$h1.blur').existsSync()), isFalse);
       expect(isSealedHead(raw('$moved.blur')), isTrue);
       expect(File('$moved.blur').readAsBytesSync(), [1, 2, 3]);
-      // the hidden chats shut: the everyday key does not open it
-      containerClosed!(HaloContainer.vault.id);
+      // setup done: its key goes, and the everyday key does not open it
+      await w.app.vaultSetupDone();
       expect(
         () => File(moved).readAsStringSync(),
         throwsA(isA<SealedLocked>()),
@@ -1175,6 +1176,43 @@ void main() {
         () => File('$moved.blur').readAsBytesSync(),
         throwsA(isA<SealedLocked>()),
       );
+    });
+
+    test('files a hide left behind for want of the key go in at the next '
+        'open', () async {
+      final areas = SealedAreas(
+        docs: docs.path,
+        support: p.join(docs.path, 'support'),
+        runtime: p.join(docs.path, 'tmp'),
+        phone: true,
+      );
+      installPhoneSeal(areas, ToyCrypto());
+      addTearDown(uninstallPhoneSealForTest);
+      containerOpened!(HaloContainer.everyday.id, '', 'e' * 64);
+      final w = await _World.make(docs);
+      final h1 = p.join(w.media, 'h1.jpg');
+      await w.app.createVault('246813');
+      // as 0.6.0 left it: the made vault's folders shut during the hide
+      containerClosed!(HaloContainer.vault.id);
+      await expectLater(
+        w.app.hideChats(people: [_h]),
+        throwsA(isA<SealedLocked>()),
+      );
+      expect(w.router.hides(_h), isTrue);
+      expect(w.router.pending, isNotEmpty);
+      expect(rawFileAccess(() => File(h1).existsSync()), isTrue);
+      await w.app.vaultSetupDone();
+      // a start with the vault shut cannot do it, and leaves it waiting
+      await w.boot();
+      await expectLater(w.app.repairVaultMoves(), throwsA(isA<SealedLocked>()));
+      expect(w.router.pending, isNotEmpty);
+      // the pin typed: its folders open, and the files go in
+      containerOpened!(HaloContainer.vault.id, '_k3', "x'${'f' * 64}'");
+      await w.app.settleVault(w.vaultDb);
+      expect(w.router.pending, isEmpty);
+      final moved = w.vault.msg('h1')!['media_path'] as String;
+      expect(rawFileAccess(() => File(h1).existsSync()), isFalse);
+      expect(File(moved).readAsStringSync(), 'h1.jpg');
     });
 
     test('every row and file moves and the words follow', () async {

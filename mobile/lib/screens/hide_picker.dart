@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -104,7 +105,9 @@ class _HidePickerState extends State<HidePicker> {
             if (c.group) c.id,
         ],
       );
-    } catch (_) {
+    } catch (e) {
+      // the type only, in debug builds alone
+      dlog('hide: not done (${e.runtimeType})');
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       setState(() => _error = l10n.flowNotSet);

@@ -337,7 +337,9 @@ extension AppStateVault on AppState {
       final pub = await _host.makeVault(c, key);
       if (c == HaloContainer.vault) await _router.start(pub);
       if (await _host.putEntry(c, pin, key)) {
-        _madeVault = HaloDb.withKey(c, key);
+        // makeVault closed its file and its folders' key went with it: the
+        // first hide moves the chat's files under that key
+        _madeVault = HaloDb.withKey(c, key)..keyFolders();
         return true;
       }
     } catch (e) {
@@ -529,8 +531,18 @@ extension AppStateVault on AppState {
 
   // for a vault just opened, before its session is built: its side of a
   // move a crash cut short is put right
-  Future<void> settleVault(HaloDb vault) =>
-      _serial(() => _attached(vault, (m) => _settle(m, vault)));
+  Future<void> settleVault(HaloDb vault) => _serial(() async {
+    // a hide past its commit whose files the shut vault could not take:
+    // its key is here now, and they go into its folders
+    if (AppState._everyday(vault)) {
+      try {
+        await _repairMoves();
+      } catch (e) {
+        dlog('vault: repair left for the next open (${e.runtimeType})');
+      }
+    }
+    await _attached(vault, (m) => _settle(m, vault));
+  });
 
   // what receiving needs of the hidden chats, read again from the open
   // vault's rows

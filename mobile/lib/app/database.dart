@@ -146,6 +146,17 @@ class HaloDb
     ]);
   }
 
+  // a wrapped container's folders readable under its key without its file
+  // open: a vault just made, while chats move into it attached elsewhere.
+  // close() lets them go, as after an open
+  void keyFolders() {
+    final given = _given;
+    if (given == null) throw StateError('${container.dbFile} has no key here');
+    if (_keyed) return;
+    containerOpened?.call(container.id, container.folderSuffix, given);
+    _keyed = true;
+  }
+
   @override
   Future<Database> open() async {
     if (_retired) throw StateError('${container.dbFile} was replaced');
