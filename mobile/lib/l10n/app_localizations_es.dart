@@ -11370,11 +11370,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trayHint => 'Mantén pulsado un archivo para cambiarle el nombre. Cada archivo se limpia antes de enviarse.';
 
   @override
-  String get trayTimeSoon => 'menos de un minuto por Tor';
+  String get trayTimeSoon => 'Menos de un minuto por Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'unos $n min por Tor';
+    return 'Unos $n min por Tor';
   }
 
   @override

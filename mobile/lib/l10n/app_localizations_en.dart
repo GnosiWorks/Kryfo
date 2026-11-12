@@ -11364,11 +11364,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trayHint => 'Hold a file to rename it. Every file is cleaned before sending.';
 
   @override
-  String get trayTimeSoon => 'under a minute over Tor';
+  String get trayTimeSoon => 'Under a minute over Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'about $n min over Tor';
+    return 'About $n min over Tor';
   }
 
   @override

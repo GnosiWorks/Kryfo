@@ -11368,11 +11368,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trayHint => 'Maintiens un fichier pour le renommer. Chaque fichier est nettoyé avant l\'envoi.';
 
   @override
-  String get trayTimeSoon => 'moins d\'une minute via Tor';
+  String get trayTimeSoon => 'Moins d\'une minute via Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'environ $n min via Tor';
+    return 'Environ $n min via Tor';
   }
 
   @override

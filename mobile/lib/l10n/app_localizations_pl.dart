@@ -11536,11 +11536,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get trayHint => 'Przytrzymaj plik, aby zmienić nazwę. Każdy plik jest czyszczony przed wysłaniem.';
 
   @override
-  String get trayTimeSoon => 'poniżej minuty przez Tor';
+  String get trayTimeSoon => 'Poniżej minuty przez Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'około $n min przez Tor';
+    return 'Około $n min przez Tor';
   }
 
   @override

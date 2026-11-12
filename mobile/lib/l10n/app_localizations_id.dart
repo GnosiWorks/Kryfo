@@ -11301,11 +11301,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get trayHint => 'Tahan file untuk mengganti namanya. Setiap file dibersihkan sebelum dikirim.';
 
   @override
-  String get trayTimeSoon => 'kurang dari semenit lewat Tor';
+  String get trayTimeSoon => 'Kurang dari semenit lewat Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'sekitar $n menit lewat Tor';
+    return 'Sekitar $n menit lewat Tor';
   }
 
   @override

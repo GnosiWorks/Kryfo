@@ -11499,11 +11499,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get trayHint => 'Удерживайте файл, чтобы переименовать его. Каждый файл очищается перед отправкой.';
 
   @override
-  String get trayTimeSoon => 'меньше минуты через Tor';
+  String get trayTimeSoon => 'Меньше минуты через Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'около $n мин через Tor';
+    return 'Около $n мин через Tor';
   }
 
   @override

@@ -11301,11 +11301,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get trayHint => 'Nhấn giữ tệp để đổi tên. Mọi tệp đều được làm sạch trước khi gửi.';
 
   @override
-  String get trayTimeSoon => 'dưới một phút qua Tor';
+  String get trayTimeSoon => 'Dưới một phút qua Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'khoảng $n phút qua Tor';
+    return 'Khoảng $n phút qua Tor';
   }
 
   @override

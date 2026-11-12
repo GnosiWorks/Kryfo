@@ -11369,11 +11369,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get trayHint => 'Halte eine Datei gedrückt, um sie umzubenennen. Jede Datei wird vor dem Senden bereinigt.';
 
   @override
-  String get trayTimeSoon => 'unter einer Minute über Tor';
+  String get trayTimeSoon => 'Unter einer Minute über Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'etwa $n Min. über Tor';
+    return 'Etwa $n Min. über Tor';
   }
 
   @override

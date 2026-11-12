@@ -11496,11 +11496,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get trayHint => 'Утримуйте файл, щоб перейменувати його. Кожен файл очищується перед надсиланням.';
 
   @override
-  String get trayTimeSoon => 'менше хвилини через Tor';
+  String get trayTimeSoon => 'Менше хвилини через Tor';
 
   @override
   String trayTimeMinutes(String n) {
-    return 'близько $n хв через Tor';
+    return 'Близько $n хв через Tor';
   }
 
   @override

@@ -15455,11 +15455,11 @@
   "@trayHint": {
     "description": "sending sheet tray: line under the cards"
   },
-  "trayTimeSoon": "under a minute over Tor",
+  "trayTimeSoon": "Under a minute over Tor",
   "@trayTimeSoon": {
     "description": "sending sheet tray: guess of upload time, under a minute"
   },
-  "trayTimeMinutes": "about {n} min over Tor",
+  "trayTimeMinutes": "About {n} min over Tor",
   "@trayTimeMinutes": {
     "description": "sending sheet tray: honest guess of the upload time in whole minutes (n in the language's digits)",
     "placeholders": {
