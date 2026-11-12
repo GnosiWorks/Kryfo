@@ -27,6 +27,7 @@ import 'halo_sheet.dart';
 import 'halo_switch.dart';
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
+import 'pictures_gate.dart' show PicturesGate;
 import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
@@ -796,14 +797,17 @@ class _PickRow extends StatelessWidget {
               pick.media && !pick.video
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        File(pick.path),
-                        width: 40,
-                        height: 40,
-                        cacheWidth: 120,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            FileBadge(facts: facts, size: 40),
+                      child: PicturesGate(
+                        shut: FileBadge(facts: facts, size: 40),
+                        child: Image.file(
+                          File(pick.path),
+                          width: 40,
+                          height: 40,
+                          cacheWidth: 120,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              FileBadge(facts: facts, size: 40),
+                        ),
                       ),
                     )
                   : FileBadge(facts: facts, size: 40),

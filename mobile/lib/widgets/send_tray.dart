@@ -19,6 +19,7 @@ import 'file_badge.dart';
 import 'file_bubble.dart' show fileNameDir;
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show motionStill;
+import 'pictures_gate.dart' show PicturesGate;
 import 'press_scale.dart';
 
 /// a careful pace for a file going up over tor: slower than most circuits
@@ -360,12 +361,16 @@ class _Card extends StatelessWidget {
                     ),
                     child: img,
                   ),
-            child: Image.file(
-              File(c.path),
-              cacheWidth: 200,
-              fit: BoxFit.cover,
-              gaplessPlayback: true,
-              errorBuilder: (_, _, _) => ColoredBox(color: HaloColors.surface3),
+            child: PicturesGate(
+              shut: ColoredBox(color: HaloColors.surface3),
+              child: Image.file(
+                File(c.path),
+                cacheWidth: 200,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) =>
+                    ColoredBox(color: HaloColors.surface3),
+              ),
             ),
           ),
           if (c.spoiler)
