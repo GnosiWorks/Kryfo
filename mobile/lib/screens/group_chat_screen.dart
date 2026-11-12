@@ -4371,6 +4371,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // the whole group is looked in through its index; the newest hit first
   // typing settles first: one question per pause, not per letter
   void _typedQuery(String q) {
+    // the head shows its arrows row at once; the question waits
+    setState(() {});
     _queryWait?.cancel();
     _queryWait = Timer(
       const Duration(milliseconds: 150),

@@ -2517,6 +2517,8 @@ class _ChatScreenState extends State<ChatScreen>
   // typing settles first: one question per pause, not per letter
   Timer? _queryWait;
   void _typedQuery(String q) {
+    // the head shows its arrows row at once; the question waits
+    setState(() {});
     _queryWait?.cancel();
     _queryWait = Timer(
       const Duration(milliseconds: 150),
