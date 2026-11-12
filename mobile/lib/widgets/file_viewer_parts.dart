@@ -117,7 +117,9 @@ class GrowFromRect extends StatelessWidget {
     final show = CurvedAnimation(
       parent: animation,
       curve: const Interval(0, 0.45, curve: Curves.easeOut),
-      reverseCurve: const Interval(0, 0.5, curve: Curves.easeIn),
+      // on the way back the page stays until the window is all but the
+      // bubble, then gives way to it: no dark frame between
+      reverseCurve: const Interval(0, 0.25, curve: Curves.easeIn),
     );
     return LayoutBuilder(
       builder: (context, box) {
@@ -134,8 +136,7 @@ class GrowFromRect extends StatelessWidget {
                   rect: r,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(14 * (1 - t)),
-                    child: ColoredBox(
-                      color: HaloColors.ink,
+                    child: SizedBox.expand(
                       child: OverflowBox(
                         alignment: Alignment.topLeft,
                         minWidth: full.width,

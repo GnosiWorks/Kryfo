@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, =1{¿Descartar 1 archivo?} other{¿Descartar {n} archivos?}}",
   "sendSheetDiscardLine": "Todavía no se ha enviado nada.",
   "sendSheetDiscard": "Descartar",
-  "sendSheetKeep": "Conservarlos"
+  "sendSheetKeep": "Conservarlos",
+  "fileDocUnreadable": "Este documento no se puede mostrar aquí. Puedes guardarlo o abrirlo con otra app.",
+  "fileDocCut": "El resto de este documento es demasiado largo para mostrarlo aquí."
 }

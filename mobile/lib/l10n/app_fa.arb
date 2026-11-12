@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, other{{n} فایل کنار گذاشته شود؟}}",
   "sendSheetDiscardLine": "هنوز چیزی فرستاده نشده.",
   "sendSheetDiscard": "کنار گذاشتن",
-  "sendSheetKeep": "نگه دار"
+  "sendSheetKeep": "نگه دار",
+  "fileDocUnreadable": "این سند اینجا نمایش داده نمی‌شود. می‌توانی ذخیره‌اش کنی یا با برنامهٔ دیگری بازش کنی.",
+  "fileDocCut": "بقیهٔ این سند برای نمایش اینجا خیلی طولانی است."
 }

@@ -129,6 +129,26 @@ class SendSheetResult {
   }
 }
 
+const _photoExts = {'.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'};
+
+/// [p] as the photo it is, when it was picked as a file
+SendPick asPhotoPick(SendPick p) {
+  if (p.media) return p;
+  final n = p.name.toLowerCase();
+  final dot = n.lastIndexOf('.');
+  if (dot < 0 || !_photoExts.contains(n.substring(dot))) return p;
+  return SendPick(
+    path: p.path,
+    name: p.name,
+    size: p.size,
+    from: p.from,
+    when: p.when,
+    media: true,
+    release: p.release,
+    source: p.source,
+  );
+}
+
 /// a quick way in from the gallery tab: the camera, a gif
 class SendShortcut {
   final Widget Function(Color color) icon;
@@ -261,9 +281,12 @@ class SendSheetState extends State<SendSheet> {
     if (_picking) return;
     _picking = true;
     try {
-      final got = await (tab == SendTab.gallery
+      final picked = await (tab == SendTab.gallery
           ? widget.pickGallery()
           : widget.pickFiles());
+      // a photo picked as a file is a photo here too: its thumb, its spoiler
+      // and "Send as file" for it
+      final got = [for (final p in picked) asPhotoPick(p)];
       if (!mounted) {
         for (final p in got) {
           await p.release?.call();

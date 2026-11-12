@@ -91,6 +91,8 @@ Widget fileCard(
   bool glance = false,
   // one of several sent one after the other: an empty ring while it waits
   bool queued = false,
+  // the send did not go: its ring leaves with no fill and no tick
+  bool failed = false,
 }) {
   // a sound kryfo plays is a player of its own, once it is all here
   if (filePath != null && sendingUid == null) {
@@ -160,6 +162,7 @@ Widget fileCard(
     heroTag: heroTag,
     glance: glance || isOut,
     queued: queued,
+    failed: failed,
   );
 }
 

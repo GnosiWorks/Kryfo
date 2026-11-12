@@ -509,13 +509,24 @@ class _Progress extends StatelessWidget {
   const _Progress({required this.uid});
 
   @override
+  Widget build(BuildContext context) => MediaSendRing(uid: uid);
+}
+
+/// a photo or video of ours on its way: a ring over it that fills with the
+/// bytes sent, there from the start (empty while it waits its turn)
+class MediaSendRing extends StatelessWidget {
+  final String uid;
+  const MediaSendRing({super.key, required this.uid});
+
+  @override
   Widget build(BuildContext context) => ValueListenableBuilder<int>(
     valueListenable: mediaProgressTick,
     builder: (_, _, _) {
-      final v = mediaQuiet(uid) ? null : mediaSendProgress[uid];
+      final quiet = mediaQuiet(uid);
+      final v = quiet ? null : mediaSendProgress[uid];
       return IgnorePointer(
         child: AnimatedOpacity(
-          opacity: v == null ? 0 : 1,
+          opacity: quiet ? 0 : 1,
           duration: const Duration(milliseconds: 200),
           child: Center(
             child: Container(

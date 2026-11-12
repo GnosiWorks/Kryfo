@@ -12540,4 +12540,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'Conservarlos';
+
+  @override
+  String get fileDocUnreadable =>
+      'Este documento no se puede mostrar aquí. Puedes guardarlo o abrirlo con otra app.';
+
+  @override
+  String get fileDocCut =>
+      'El resto de este documento es demasiado largo para mostrarlo aquí.';
 }

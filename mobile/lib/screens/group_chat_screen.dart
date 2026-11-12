@@ -29,7 +29,7 @@ import '../viewer_rules.dart';
 import '../widgets/select_parts.dart';
 import '../share_files.dart' show SharedCopy;
 import 'share_files_sheet.dart' show landFiles;
-import '../widgets/file_bubble.dart' show kFilePreviewWidth;
+import '../widgets/file_bubble.dart' show kFilePreviewWidth, warmSentPreview;
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
@@ -2895,6 +2895,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return null;
     }
     makeBlurSoon(f.path);
+    // its glance ready before its bubble draws: no stand-in on our side
+    if (mounted) await warmSentPreview(context, f.path, null);
     return _GReady(made, f.path);
   }
 
@@ -3315,6 +3317,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       return null;
     }
     makeBlurSoon(at);
+    // its glance ready before its bubble draws: no stand-in on our side
+    if (mounted) await warmSentPreview(context, at, done.name);
     return _GReady(made, at, fileName: done.name);
   }
 
@@ -7131,6 +7135,7 @@ class _GroupBubble extends StatelessWidget {
                                                       upNext: soundsAfter,
                                                       kept: kept,
                                                       glance: known,
+                                                      failed: m.failed,
                                                     ),
                                                   ),
                                                 ),
@@ -7241,6 +7246,19 @@ class _GroupBubble extends StatelessWidget {
                                                                 ),
                                                               ),
                                                             ),
+                                                            // ours on its way: a
+                                                            // ring that fills with
+                                                            // the bytes, over it
+                                                            if (isOut &&
+                                                                m.sending &&
+                                                                m.msgUid !=
+                                                                    null)
+                                                              Positioned.fill(
+                                                                child: MediaSendRing(
+                                                                  uid:
+                                                                      m.msgUid!,
+                                                                ),
+                                                              ),
                                                             // caption-less photo: float the
                                                             // time in a pill on the corner,
                                                             // same as 1:1. captioned photos
@@ -7792,6 +7810,7 @@ class _GroupBubble extends StatelessWidget {
                 kept: kept,
                 glance: known,
                 queued: true,
+                failed: x.failed,
               ),
             ),
     );

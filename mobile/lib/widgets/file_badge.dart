@@ -152,7 +152,7 @@ class FileBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final tone = fileToneOf(facts);
     // a thin outline and the label in the kind's colour, nothing filled. on
-    // our own amber bubble both take the bubble's ink, a hairline
+    // our own amber bubble both take the bubble's dark ink
     final ink = onAccent ? HaloColors.onAmber : onFileTone(tone);
     final glyph = _glyphOf(tone, facts);
     final label = fileBadgeLabel(facts);
@@ -163,10 +163,8 @@ class FileBadge extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(size * 0.27),
-          border: Border.all(
-            color: onAccent ? ink.withValues(alpha: 0.45) : ink,
-            width: onAccent ? 1 : 1.4,
-          ),
+          // on our own bubble the bubble's dark ink, firm enough to read
+          border: Border.all(color: ink, width: onAccent ? 1.2 : 1.4),
         ),
         child: glyph != null
             ? Icon(glyph, size: size * 0.5, color: ink)

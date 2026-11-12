@@ -11,6 +11,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -225,15 +226,40 @@ String? _previewTitle(Object? raw, String url) {
   }
 }
 
+/// [rows] sorted as [sortShared] does, a long history on an isolate of its
+/// own so a big group never holds the ui still. the waits are read here
+Future<SharedLists> sortSharedSoon(
+  List<Map<String, Object?>> rows, {
+  Set<String> blocked = const {},
+}) async {
+  if (rows.length < kSortInlineMost) return sortShared(rows, blocked: blocked);
+  final waits = fileWaits.value.keys.toSet();
+  return compute(_sortApart, (rows, blocked, waits));
+}
+
+/// a history this long or longer is sorted off the ui isolate
+const kSortInlineMost = 400;
+
+SharedLists _sortApart(
+  (List<Map<String, Object?>>, Set<String>, Set<String>) a,
+) => sortShared(
+  a.$1,
+  blocked: a.$2,
+  waiting: (u) => u != null && a.$3.contains(u),
+);
+
 /// what [chatId] shared, from the container that holds it
 Future<SharedLists> loadShared(String chatId, {bool group = false}) async {
-  if (!group) return sortShared(await session.mediaFor(chatId));
+  if (!group) return sortSharedSoon(await session.mediaFor(chatId));
   final both = await Future.wait([
     session.loadGroupMessages(chatId),
     session.blockedIds(),
   ]);
   final rows = both[0] as List<Map<String, Object?>>;
-  return sortShared(rows.reversed, blocked: both[1] as Set<String>);
+  return sortSharedSoon(
+    rows.reversed.toList(),
+    blocked: both[1] as Set<String>,
+  );
 }
 
 // ---- the section on the contact and group pages ----

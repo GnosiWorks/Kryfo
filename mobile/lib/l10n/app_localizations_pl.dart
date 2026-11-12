@@ -12682,4 +12682,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'Zostaw';
+
+  @override
+  String get fileDocUnreadable =>
+      'Tego dokumentu nie da się tu pokazać. Możesz go zapisać albo otworzyć w innej aplikacji.';
+
+  @override
+  String get fileDocCut =>
+      'Reszta tego dokumentu jest za długa, by ją tu pokazać.';
 }

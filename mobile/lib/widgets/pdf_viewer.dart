@@ -292,6 +292,8 @@ class PdfViewerState extends State<PdfViewer>
       final i = _drawn[(page, s)];
       if (i != null) return i;
     }
+    // the first page as the bubble drew it, until this viewer's own is in
+    if (page == 0) return pdfGlanceNow(widget.path)?.image;
     return null;
   }
 
@@ -391,6 +393,8 @@ class PdfViewerState extends State<PdfViewer>
   }
 
   Offset? _tapAt;
+  // how far a sideways drag has gone
+  double _sideways = 0;
   void _doubleTap() {
     if (scale > 1.05) {
       _zoomTo(
@@ -448,50 +452,58 @@ class PdfViewerState extends State<PdfViewer>
       if (d != null) l10n.filePages(d.pages, whole(d.pages)),
     ].join(' · ');
     final kept = widget.kept;
-    return ColoredBox(
-      color: HaloColors.ink,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            FileViewerHead(
-              shown: shown,
-              facts: facts,
-              sub: sub,
-              heroTag: widget.heroTag,
-              actions: [
-                if (d?.canFind ?? false)
-                  ViewerIconButton(
-                    icon: Icons.search_rounded,
-                    label: l10n.fileSearchIn,
-                    on: _finding,
-                    onTap: () => setState(() {
-                      _finding = !_finding;
-                      if (!_finding) _hits = null;
-                    }),
-                  ),
-              ],
-            ),
-            EaseSize(
-              duration: const Duration(milliseconds: 220),
-              child: _finding
-                  ? _findRow()
-                  : const SizedBox(width: double.infinity),
-            ),
-            Expanded(child: _body(context)),
-            if (d != null && d.pages > 1) _thumbs(d),
-            FileViewerBar(
-              onForward: canForwardFile(widget.path, widget.name, kept: kept)
-                  ? () => forwardFile(context, widget.path, widget.name)
-                  : null,
-              onSave: kept
-                  ? null
-                  : () => saveReceivedFile(context, widget.path, widget.name),
-              onOpenWith: kept
-                  ? null
-                  : () => openFileOutside(context, widget.path, widget.name),
-            ),
-          ],
+    // going back: it closes on its first page, the one its bubble shows
+    return PopScope(
+      onPopInvokedWithResult: (popped, _) {
+        if (popped && _zoom.value != Matrix4.identity()) {
+          _zoom.value = Matrix4.identity();
+        }
+      },
+      child: ColoredBox(
+        color: HaloColors.ink,
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              FileViewerHead(
+                shown: shown,
+                facts: facts,
+                sub: sub,
+                heroTag: widget.heroTag,
+                actions: [
+                  if (d?.canFind ?? false)
+                    ViewerIconButton(
+                      icon: Icons.search_rounded,
+                      label: l10n.fileSearchIn,
+                      on: _finding,
+                      onTap: () => setState(() {
+                        _finding = !_finding;
+                        if (!_finding) _hits = null;
+                      }),
+                    ),
+                ],
+              ),
+              EaseSize(
+                duration: const Duration(milliseconds: 220),
+                child: _finding
+                    ? _findRow()
+                    : const SizedBox(width: double.infinity),
+              ),
+              Expanded(child: _body(context)),
+              if (d != null && d.pages > 1) _thumbs(d),
+              FileViewerBar(
+                onForward: canForwardFile(widget.path, widget.name, kept: kept)
+                    ? () => forwardFile(context, widget.path, widget.name)
+                    : null,
+                onSave: kept
+                    ? null
+                    : () => saveReceivedFile(context, widget.path, widget.name),
+                onOpenWith: kept
+                    ? null
+                    : () => openFileOutside(context, widget.path, widget.name),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -584,7 +596,22 @@ class PdfViewerState extends State<PdfViewer>
       );
     }
     final d = _doc;
-    if (d == null) return const SizedBox.expand();
+    if (d == null) {
+      // still opening: the page the bubble showed stands where it will be,
+      // so the viewer opens on it and only sharpens
+      final g = pdfGlanceNow(widget.path);
+      if (g == null) return const SizedBox.expand();
+      return Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(_side, _gap, _side, 0),
+          child: AspectRatio(
+            aspectRatio: g.image.width / g.image.height,
+            child: _PageTile(index: 0, image: g.image),
+          ),
+        ),
+      );
+    }
     return LayoutBuilder(
       builder: (context, box) {
         _layout(box.biggest);
@@ -595,6 +622,28 @@ class PdfViewerState extends State<PdfViewer>
             GestureDetector(
               onDoubleTapDown: (e) => _tapAt = e.localPosition,
               onDoubleTap: _doubleTap,
+              // at full width a sideways swipe turns the page; up and down
+              // still scroll, and once zoomed in the finger pans the page
+              onHorizontalDragStart: s > 1.05 ? null : (_) => _sideways = 0,
+              onHorizontalDragUpdate: s > 1.05
+                  ? null
+                  : (e) => _sideways += e.delta.dx,
+              onHorizontalDragEnd: s > 1.05
+                  ? null
+                  : (e) {
+                      final v = e.primaryVelocity ?? 0;
+                      // a slow but long drag turns it too
+                      final push = v.abs() >= 500
+                          ? v
+                          : _sideways.abs() > 80
+                          ? _sideways.sign * 600
+                          : 0.0;
+                      pageBySwipe(
+                        push,
+                        0,
+                        rtl: Directionality.of(context) == TextDirection.rtl,
+                      );
+                    },
               child: InteractiveViewer.builder(
                 transformationController: _zoom,
                 minScale: 1,

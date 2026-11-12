@@ -245,8 +245,14 @@ void main() {
             .toList();
         expect(boxes[0].color, isNull);
         expect((boxes[0].border! as Border).top.width, 1.4);
-        // ours on the amber bubble: a hairline
-        expect((boxes[1].border! as Border).top.width, 1);
+        // ours on the amber bubble: the bubble's dark ink, 1.2 px, readable
+        final ours = (boxes[1].border! as Border).top;
+        expect(ours.width, 1.2);
+        expect(ours.color, HaloColors.onAmber);
+        expect(
+          contrast(HaloColors.onAmber, HaloColors.amber),
+          greaterThanOrEqualTo(3),
+        );
       });
     }
 
@@ -575,7 +581,8 @@ void main() {
         expect(v('a.csv'), FileView.text);
         expect(v('a.jpg'), FileView.picture);
         expect(v('a.mp4'), FileView.video);
-        expect(v('a.docx'), isNull);
+        // a word document opens in kryfo's own reader
+        expect(v('a.docx'), FileView.doc);
         pdfViewHereForTest = false;
         expect(v('a.pdf'), isNull);
         pdfViewHereForTest = true;
@@ -837,6 +844,62 @@ void main() {
       expect(window().width, lessThan(390));
       await t.pumpAndSettle();
       expect(find.text('the page'), findsNothing);
+    });
+
+    testWidgets('it opens on the page its bubble showed, then sharpens', (
+      t,
+    ) async {
+      final fake = FakePdf();
+      pdfBackendForTest = fake;
+      pdfViewHereForTest = true;
+      t.view.physicalSize = const Size(390, 844);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      final f = made('in_g.pdf', '%PDF-1.7\n');
+      // the bubble drew its first page already
+      await t.runAsync(() => pdfGlance(f.path, 236));
+      fake.hold = Completer<void>();
+      late BuildContext ctx;
+      await t.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (c) {
+              ctx = c;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      unawaited(
+        openPdfFile(
+          ctx,
+          path: f.path,
+          name: 'g.pdf',
+          facts: const FileFacts(FileKind.pdf, 'pdf'),
+        ),
+      );
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      // the document is still opening: the bubble's page stands there
+      final img = t.widget<RawImage>(find.byType(RawImage).first);
+      expect(img.image, isNotNull);
+      fake.hold!.complete();
+      await settle(t);
+      expect(t.state<PdfViewerState>(find.byType(PdfViewer)).page, 0);
+    });
+
+    testWidgets('closing, it goes back to the page its bubble shows', (
+      t,
+    ) async {
+      final v = await openPdf(t, FakePdf());
+      v.jumpTo(2);
+      await settle(t);
+      expect(v.page, 2);
+      Navigator.of(t.element(find.byType(PdfViewer))).pop();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 40));
+      expect(v.page, 0);
+      await settle(t);
     });
 
     testWidgets('a sideways swipe turns the page; the last page clears the '

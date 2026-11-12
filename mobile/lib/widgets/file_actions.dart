@@ -21,6 +21,7 @@ import '../share_files.dart' show SharedCopy;
 import '../sound_player.dart';
 import '../theme.dart';
 import '../voice_format.dart' show isVoiceName;
+import 'doc_viewer.dart' show kDocViewExts, openDocFile;
 import 'file_badge.dart';
 import 'pdf_viewer.dart';
 import 'photo_viewer.dart';
@@ -31,7 +32,7 @@ import 'video_viewer.dart';
 export 'file_viewer_parts.dart' show fileHeroTag;
 
 /// kryfo's own viewers
-enum FileView { picture, video, text, pdf, audio }
+enum FileView { picture, video, text, pdf, audio, doc }
 
 /// the pdf viewer draws with the phone's own renderer, which only android
 /// has. tests turn it on and off
@@ -66,6 +67,8 @@ FileView? fileViewOf(FileFacts facts) {
     return audioViewHere(facts) ? FileView.audio : null;
   }
   if (textViewable(facts.ext)) return FileView.text;
+  // a word document: its words and tables in kryfo's own reader
+  if (kDocViewExts.contains(facts.ext)) return FileView.doc;
   return null;
 }
 
@@ -115,6 +118,16 @@ Future<bool> viewInKryfo(
         from: from,
         heroTag: heroTag,
         size: size,
+      );
+    case FileView.doc:
+      await openDocFile(
+        context,
+        path: path,
+        name: name,
+        facts: facts,
+        kept: kept,
+        from: from,
+        heroTag: heroTag,
       );
     case FileView.audio:
       final p = SoundPlayer.instance;

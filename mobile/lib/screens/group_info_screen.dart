@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // group info: name and member changes for the admin, leave for everyone
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart'
@@ -31,6 +33,7 @@ import 'home_screen.dart' show ContactPreview;
 import '../widgets/contact_pick_row.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
+import '../widgets/route_settled.dart';
 import '../widgets/shared_media.dart';
 import '../widgets/swap.dart';
 import 'wallpaper_sheet.dart';
@@ -174,8 +177,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     _shotsHold.want(appState.shotsBlocksGroup(widget.groupId), now: true);
     _seenRev = appState.chatRevOf('group:${widget.groupId}');
     appState.addListener(_onApp);
-    _load();
-    _loadMedia();
+    // read once the page is in: nothing it reads stalls the slide
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await routeSettled(context);
+      if (!mounted) return;
+      _load();
+      _loadMedia();
+    });
   }
 
   @override

@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, =1{1 फ़ाइल छोड़ दें?} other{{n} फ़ाइलें छोड़ दें?}}",
   "sendSheetDiscardLine": "अभी तक कुछ नहीं भेजा गया।",
   "sendSheetDiscard": "छोड़ दो",
-  "sendSheetKeep": "रखो"
+  "sendSheetKeep": "रखो",
+  "fileDocUnreadable": "यह दस्तावेज़ यहाँ नहीं दिख सकता। तुम इसे सहेज सकते हो या किसी और ऐप में खोल सकते हो।",
+  "fileDocCut": "इस दस्तावेज़ का बाकी हिस्सा यहाँ दिखाने के लिए बहुत लंबा है।"
 }

@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, =1{تجاهل ملف واحد؟} other{تجاهل {n} ملفات؟}}",
   "sendSheetDiscardLine": "لم يُرسَل شيء بعد.",
   "sendSheetDiscard": "تجاهل",
-  "sendSheetKeep": "الاحتفاظ بها"
+  "sendSheetKeep": "الاحتفاظ بها",
+  "fileDocUnreadable": "لا يمكن عرض هذا المستند هنا. يمكنك حفظه أو فتحه بتطبيق آخر.",
+  "fileDocCut": "بقية هذا المستند أطول من أن تُعرض هنا."
 }

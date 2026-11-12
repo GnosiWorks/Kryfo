@@ -12638,4 +12638,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'Залишити';
+
+  @override
+  String get fileDocUnreadable =>
+      'Цей документ не можна показати тут. Його можна зберегти або відкрити в іншому застосунку.';
+
+  @override
+  String get fileDocCut => 'Решта документа задовга, щоб показати її тут.';
 }

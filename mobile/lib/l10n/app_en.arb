@@ -15701,5 +15701,13 @@
   "sendSheetKeep": "Keep them",
   "@sendSheetKeep": {
     "description": "sending sheet discard question: keep picking"
+  },
+  "fileDocUnreadable": "This document can't be shown here. You can save it or open it with another app.",
+  "@fileDocUnreadable": {
+    "description": "document reader: a docx that could not be read here"
+  },
+  "fileDocCut": "The rest of this document is too long to show here.",
+  "@fileDocCut": {
+    "description": "document reader: the end of a very long document is not shown"
   }
 }

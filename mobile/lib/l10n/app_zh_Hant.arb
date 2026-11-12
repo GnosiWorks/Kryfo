@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, other{放棄 {n} 個檔案？}}",
   "sendSheetDiscardLine": "還沒有傳送任何內容。",
   "sendSheetDiscard": "放棄",
-  "sendSheetKeep": "保留"
+  "sendSheetKeep": "保留",
+  "fileDocUnreadable": "這份文件無法在這裡顯示。你可以儲存它，或用其他應用程式開啟。",
+  "fileDocCut": "這份文件其餘部分太長，無法在這裡顯示。"
 }

@@ -12451,4 +12451,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'रखो';
+
+  @override
+  String get fileDocUnreadable =>
+      'यह दस्तावेज़ यहाँ नहीं दिख सकता। तुम इसे सहेज सकते हो या किसी और ऐप में खोल सकते हो।';
+
+  @override
+  String get fileDocCut =>
+      'इस दस्तावेज़ का बाकी हिस्सा यहाँ दिखाने के लिए बहुत लंबा है।';
 }

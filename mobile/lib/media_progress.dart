@@ -55,6 +55,9 @@ final Map<String, String> _sendChat = {};
 // chat key for what comes in. the file a chat's strip fetches now, so the
 // strip can pause it
 final Map<String, int> _bytes = {};
+// a chat's send that has moved a byte, and its bytes in all, for the strip
+final Set<String> _outBegun = {};
+final Map<String, int> _outTotal = {};
 final Map<String, TransferPace> _pace = {};
 final Map<String, String> _fetchUid = {};
 
@@ -263,17 +266,29 @@ class IncomingMediaBanner extends StatelessWidget {
       builder: (_, _, _) {
         // an outgoing send for this chat comes first: leaving the app can
         // still break that one
+        // several going at once read as one send: their bytes summed, one
+        // line that never steps back from sending to preparing
         double? outV;
         String? outUid;
+        var sum = 0.0, all = 0;
         for (final e in _sendChat.entries) {
           if (e.value == chatKey && !_quiet.contains(e.key)) {
             final v = mediaSendProgress[e.key];
             if (v != null) {
-              outV = v;
-              outUid = e.key;
-              break;
+              outUid ??= e.key;
+              final b = _bytes[e.key] ?? 1;
+              sum += v.clamp(0.0, 1.0) * b;
+              all += b;
             }
           }
+        }
+        if (outUid != null) {
+          outV = all == 0 ? 0 : sum / all;
+          _outTotal[chatKey] = all;
+          if (outV > 0) _outBegun.add(chatKey);
+        } else {
+          _outBegun.remove(chatKey);
+          _outTotal.remove(chatKey);
         }
         final v = outV ?? incomingMediaProgress[chatKey];
         Widget strip = const SizedBox(width: double.infinity);
@@ -293,7 +308,9 @@ class IncomingMediaBanner extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: still ? Duration.zero : const Duration(milliseconds: 180),
             child: KeyedSubtree(
-              key: ValueKey(v == null ? 'none' : outUid ?? 'in'),
+              key: ValueKey(
+                v == null ? 'none' : (outUid == null ? 'in' : 'out'),
+              ),
               child: strip,
             ),
           ),
@@ -316,9 +333,13 @@ class IncomingMediaBanner extends StatelessWidget {
     final pause = onPause;
     final stalled = !sending && incomingMediaStalled.contains(chatKey);
     final count = _incomingCount[chatKey];
-    final detail = transferDetail(sending ? cancelUid! : chatKey, v);
-    // one honest order: preparing until a byte goes, then sending
-    final line = sending && (mediaPreparing.contains(cancelUid) || v <= 0)
+    final total = _outTotal[chatKey];
+    final detail = sending
+        ? (total == null || total <= 1 ? null : doneOfText(v, total))
+        : transferDetail(chatKey, v);
+    // preparing until the first byte of the send goes, then sending until
+    // it is done: never back
+    final line = sending && !_outBegun.contains(chatKey)
         ? l10n.mediaProgressPreparing
         : sending
         ? detail == null

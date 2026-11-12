@@ -21,7 +21,11 @@ import '../l10n/numbers.dart' show percent, whole;
 import '../media_progress.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
-import 'file_actions.dart' show fileViewOf, pdfViewHere;
+import '../doc_read.dart' show DocPara;
+import 'decode_px.dart' show screenPx;
+import 'doc_viewer.dart' show kDocViewExts, readDocFile;
+import 'file_actions.dart' show fileFactsOrName, fileViewOf, pdfViewHere;
+import 'sealed_picture.dart' show mediaImage;
 import 'ease_size.dart';
 import 'file_badge.dart';
 import 'halo_hero.dart';
@@ -73,6 +77,8 @@ class FileCard extends StatefulWidget {
   final bool glance;
   // one of several going one after the other: an empty ring while it waits
   final bool queued;
+  // the send did not go: no fill and no tick when its ring goes
+  final bool failed;
   const FileCard({
     super.key,
     required this.path,
@@ -83,6 +89,7 @@ class FileCard extends StatefulWidget {
     this.heroTag,
     this.glance = false,
     this.queued = false,
+    this.failed = false,
   });
 
   @override
@@ -93,8 +100,9 @@ class _FileCardState extends State<FileCard> {
   FileFacts? _facts;
   int? _size;
   // the last share its ring showed, and a tick for a moment once it is up
-  double _lastShare = 0;
   bool _ticked = false;
+  // done: the ring runs to full before the tick
+  bool _filling = false;
   Timer? _tickTimer;
 
   @override
@@ -107,16 +115,21 @@ class _FileCardState extends State<FileCard> {
   void didUpdateWidget(FileCard old) {
     super.didUpdateWidget(old);
     if (old.path != widget.path || old.name != widget.name) _start();
-    // the ring filled and the send is done: a tick, then the tile
-    if (old.sendingUid != null &&
-        widget.sendingUid == null &&
-        _lastShare >= 0.99) {
-      _lastShare = 0;
-      HapticFeedback.lightImpact();
-      _ticked = true;
+    // the send is done: the ring fills the rest of the way, however little
+    // it showed (a small file goes in one step), then a tick, then the tile
+    if (old.sendingUid != null && widget.sendingUid == null && !widget.failed) {
+      _filling = !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
       _tickTimer?.cancel();
-      _tickTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) setState(() => _ticked = false);
+      _tickTimer = Timer(Duration(milliseconds: _filling ? 300 : 0), () {
+        if (!mounted) return;
+        HapticFeedback.lightImpact();
+        setState(() {
+          _filling = false;
+          _ticked = true;
+        });
+        _tickTimer = Timer(const Duration(milliseconds: 700), () {
+          if (mounted) setState(() => _ticked = false);
+        });
       });
     }
   }
@@ -157,7 +170,6 @@ class _FileCardState extends State<FileCard> {
       valueListenable: mediaProgressTick,
       builder: (context, _, _) {
         final v = mediaSendProgress[uid];
-        if (v != null) _lastShare = v;
         if (mediaQuiet(uid)) return _card(context, null);
         // one of a set waiting its turn: its ring is there, empty, so the
         // row does not change shape when it starts
@@ -221,6 +233,12 @@ class _FileCardState extends State<FileCard> {
                     color: isOut ? HaloColors.onAmber : HaloColors.amber,
                   ),
                 ),
+              )
+            : _filling && going == null
+            ? FileSendRing(
+                key: const ValueKey('going'),
+                share: 1,
+                onAccent: isOut,
               )
             : _ticked && going == null && !still
             ? Container(
@@ -441,6 +459,9 @@ class _FileCardState extends State<FileCard> {
     if (textViewable(facts.ext)) {
       return FileTextPreview(path: path, isOut: widget.isOut);
     }
+    if (kDocViewExts.contains(facts.ext)) {
+      return FileTextPreview(path: path, isOut: widget.isOut, doc: true);
+    }
     if (facts.kind == FileKind.pdf &&
         pdfViewHere &&
         (widget.glance || pdfOpenedByHand.contains(path))) {
@@ -524,14 +545,23 @@ class FileSendRing extends StatelessWidget {
 class FileTextPreview extends StatefulWidget {
   final String path;
   final bool isOut;
-  const FileTextPreview({super.key, required this.path, required this.isOut});
+  // a word document: its first paragraphs, read as its reader reads it
+  final bool doc;
+  const FileTextPreview({
+    super.key,
+    required this.path,
+    required this.isOut,
+    this.doc = false,
+  });
 
   @override
   State<FileTextPreview> createState() => _FileTextPreviewState();
 }
 
 class _FileTextPreviewState extends State<FileTextPreview> {
-  late List<String>? _lines = firstLinesNow(widget.path);
+  late List<String>? _lines = widget.doc
+      ? _docLines[widget.path]
+      : firstLinesNow(widget.path);
 
   @override
   void initState() {
@@ -544,7 +574,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   void didUpdateWidget(FileTextPreview old) {
     super.didUpdateWidget(old);
     if (old.path != widget.path) {
-      _lines = firstLinesNow(widget.path);
+      _lines = widget.doc ? _docLines[widget.path] : firstLinesNow(widget.path);
       if (_lines == null) _read();
     }
   }
@@ -558,6 +588,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   void _lock() {
     if (picturesShut.value) {
       forgetFirstLines();
+      forgetDocLines();
       if (mounted) setState(() => _lines = null);
     } else {
       _read();
@@ -566,7 +597,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
 
   Future<void> _read() async {
     final p = widget.path;
-    final l = await firstLinesOf(p);
+    final l = widget.doc ? await docFirstLines(p) : await firstLinesOf(p);
     if (!mounted || p != widget.path || picturesShut.value) return;
     if (l != null) setState(() => _lines = l);
   }
@@ -806,3 +837,56 @@ class _PaperLines extends StatelessWidget {
     );
   }
 }
+
+/// what a bubble of ours draws from its own file, made ready before the
+/// bubble shows it: a pdf's first page, a text's first lines, a photo at
+/// the bubble's size. the file is on this phone, so nothing of ours ever
+/// shows a stand-in first. given up on after [most]
+Future<void> warmSentPreview(
+  BuildContext context,
+  String path,
+  String? name, {
+  Duration most = const Duration(milliseconds: 1500),
+}) async {
+  try {
+    if (name == null) {
+      await precacheImage(
+        mediaImage(path, screenPx(context, times: 0.78)),
+        context,
+        onError: (_, _) {},
+      ).timeout(most);
+      return;
+    }
+    final facts = fileFactsOrName(path, name);
+    if (textViewable(facts.ext)) {
+      await firstLinesOf(path).timeout(most);
+    } else if (facts.kind == FileKind.pdf && pdfViewHere) {
+      final px = (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context))
+          .round();
+      await pdfGlance(path, px).timeout(most);
+    }
+  } catch (_) {
+    // too slow or unreadable: the bubble draws as it would have
+  }
+}
+
+// a document's first lines, kept like a text's, dropped at the lock
+final Map<String, List<String>> _docLines = {};
+
+/// the first four paragraphs with words of the document at [path]
+Future<List<String>?> docFirstLines(String path) async {
+  final kept = _docLines[path];
+  if (kept != null) return kept;
+  final d = await readDocFile(path);
+  if (d == null) return null;
+  final lines = <String>[
+    for (final b in d.blocks)
+      if (b is DocPara && b.text.trim().isNotEmpty) b.text.trim(),
+  ].take(4).toList();
+  if (lines.isEmpty) return null;
+  if (_docLines.length > 24) _docLines.remove(_docLines.keys.first);
+  return _docLines[path] = lines;
+}
+
+/// the lock lets go of every document's first lines
+void forgetDocLines() => _docLines.clear();

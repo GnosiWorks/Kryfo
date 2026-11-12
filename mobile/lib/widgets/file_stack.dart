@@ -88,8 +88,10 @@ class FileStack extends StatelessWidget {
                   ? 320
                   : 260,
             ),
+            // every row as wide as the bubble: when its width moves (its
+            // time and tick come in) the rows keep to its start, no strip
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final (i, r) in rows.indexed) ...[

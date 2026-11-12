@@ -273,36 +273,73 @@ void main() {
 
   group('the ring', () {
     for (final still in [false, true]) {
-      testWidgets('a send that fills turns into a tick for a moment '
-          '(still: $still)', (t) async {
-        Widget card(String? uid) => MaterialApp(
-          home: MediaQuery(
-            data: MediaQueryData(disableAnimations: still),
-            child: Scaffold(
-              body: FileCard(
-                path: null,
-                name: 'route.pdf',
-                isOut: true,
-                sendingUid: uid,
+      for (final queued in [false, true]) {
+        testWidgets('done, the ring fills the rest of the way, then a tick '
+            '(still: $still, ${queued ? 'never started' : 'part way'})', (
+          t,
+        ) async {
+          Widget card(String? uid, {bool failed = false}) => MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(disableAnimations: still),
+              child: Scaffold(
+                body: FileCard(
+                  path: null,
+                  name: 'route.pdf',
+                  isOut: true,
+                  sendingUid: uid,
+                  queued: queued,
+                  failed: failed,
+                ),
               ),
             ),
-          ),
-        );
-        mediaSendProgress['s1'] = 1.0;
-        addTearDown(() => mediaSendProgress.remove('s1'));
-        await t.pumpWidget(card('s1'));
-        await t.pump();
-        mediaSendProgress.remove('s1');
-        await t.pumpWidget(card(null));
-        await t.pump(const Duration(milliseconds: 300));
-        expect(
-          find.byIcon(Icons.check_rounded),
-          still ? findsNothing : findsOneWidget,
-        );
-        await t.pump(const Duration(milliseconds: 900));
-        await t.pump(const Duration(milliseconds: 300));
-        expect(find.byIcon(Icons.check_rounded), findsNothing);
-      });
+          );
+          if (!queued) mediaSendProgress['s1'] = 0.3;
+          addTearDown(() => mediaSendProgress.remove('s1'));
+          await t.pumpWidget(card('s1'));
+          await t.pump();
+          // waiting or part way: its ring is there from the start
+          expect(find.byType(FileSendRing), findsOneWidget);
+          mediaSendProgress.remove('s1');
+          await t.pumpWidget(card(null));
+          await t.pump(const Duration(milliseconds: 100));
+          // it runs to full first, never jumps straight to the tile
+          expect(
+            find.byType(FileSendRing),
+            still ? findsNothing : findsOneWidget,
+          );
+          await t.pump(const Duration(milliseconds: 250));
+          await t.pump();
+          expect(
+            find.byIcon(Icons.check_rounded),
+            still ? findsNothing : findsOneWidget,
+          );
+          await t.pump(const Duration(milliseconds: 900));
+          await t.pump(const Duration(milliseconds: 300));
+          expect(find.byIcon(Icons.check_rounded), findsNothing);
+        });
+      }
     }
+
+    testWidgets('one that did not go: no fill, no tick', (t) async {
+      Widget card(String? uid) => MaterialApp(
+        home: Scaffold(
+          body: FileCard(
+            path: null,
+            name: 'route.pdf',
+            isOut: true,
+            sendingUid: uid,
+            queued: true,
+            failed: uid == null,
+          ),
+        ),
+      );
+      await t.pumpWidget(card('s2'));
+      await t.pump();
+      await t.pumpWidget(card(null));
+      await t.pump(const Duration(milliseconds: 100));
+      expect(find.byType(FileSendRing), findsNothing);
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+    });
   });
 }

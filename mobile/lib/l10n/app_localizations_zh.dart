@@ -11767,6 +11767,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sendSheetKeep => '保留';
+
+  @override
+  String get fileDocUnreadable => '这份文档无法在这里显示。你可以保存它，或用其他应用打开。';
+
+  @override
+  String get fileDocCut => '这份文档其余部分太长，无法在这里显示。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23412,4 +23418,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sendSheetKeep => '保留';
+
+  @override
+  String get fileDocUnreadable => '這份文件無法在這裡顯示。你可以儲存它，或用其他應用程式開啟。';
+
+  @override
+  String get fileDocCut => '這份文件其餘部分太長，無法在這裡顯示。';
 }

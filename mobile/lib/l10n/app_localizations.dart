@@ -19902,6 +19902,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep them'**
   String get sendSheetKeep;
+
+  /// document reader: a docx that could not be read here
+  ///
+  /// In en, this message translates to:
+  /// **'This document can\'t be shown here. You can save it or open it with another app.'**
+  String get fileDocUnreadable;
+
+  /// document reader: the end of a very long document is not shown
+  ///
+  /// In en, this message translates to:
+  /// **'The rest of this document is too long to show here.'**
+  String get fileDocCut;
 }
 
 class _AppLocalizationsDelegate

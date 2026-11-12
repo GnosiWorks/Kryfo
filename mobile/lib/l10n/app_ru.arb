@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, one{Отменить {n} файл?} few{Отменить {n} файла?} other{Отменить {n} файлов?}}",
   "sendSheetDiscardLine": "Пока ничего не отправлено.",
   "sendSheetDiscard": "Отменить",
-  "sendSheetKeep": "Оставить"
+  "sendSheetKeep": "Оставить",
+  "fileDocUnreadable": "Этот документ нельзя показать здесь. Его можно сохранить или открыть в другом приложении.",
+  "fileDocCut": "Остальная часть документа слишком длинная, чтобы показать её здесь."
 }

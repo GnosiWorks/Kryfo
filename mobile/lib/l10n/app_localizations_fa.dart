@@ -12458,4 +12458,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'نگه دار';
+
+  @override
+  String get fileDocUnreadable =>
+      'این سند اینجا نمایش داده نمی‌شود. می‌توانی ذخیره‌اش کنی یا با برنامهٔ دیگری بازش کنی.';
+
+  @override
+  String get fileDocCut => 'بقیهٔ این سند برای نمایش اینجا خیلی طولانی است.';
 }

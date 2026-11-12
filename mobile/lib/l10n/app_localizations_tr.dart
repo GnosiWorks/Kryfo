@@ -12467,4 +12467,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'Tut';
+
+  @override
+  String get fileDocUnreadable =>
+      'Bu belge burada gösterilemiyor. Kaydedebilir ya da başka bir uygulamayla açabilirsin.';
+
+  @override
+  String get fileDocCut =>
+      'Bu belgenin geri kalanı burada gösterilemeyecek kadar uzun.';
 }

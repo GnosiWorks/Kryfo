@@ -52,6 +52,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/ease_size.dart';
+import '../widgets/route_settled.dart';
 import '../widgets/shared_media.dart';
 import '../widgets/swap.dart';
 import 'home_screen.dart' show ContactPreview;
@@ -218,7 +219,12 @@ class _ContactScreenState extends State<ContactScreen> {
     _shotsHold.want(appState.shotsBlocksChat(widget.haloId), now: true);
     _rev = appState.chatRevOf(widget.haloId);
     appState.addListener(_changed);
-    _load();
+    // read once the page is in: nothing it reads stalls the slide
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await routeSettled(context);
+      if (mounted) unawaited(_load());
+    });
   }
 
   // a change from their phone shows here while the page is open
@@ -278,7 +284,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final photos =
         results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
     // a file that went missing draws as nothing; no stat per file up front
-    final shared = sortShared(rows);
+    final shared = await sortSharedSoon(rows);
     final compare = await _compareOnce(c, held);
     if (!mounted) return;
     setState(() {

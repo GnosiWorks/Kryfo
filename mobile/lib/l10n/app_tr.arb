@@ -3267,5 +3267,7 @@
   "sendSheetDiscardTitle": "{count, plural, other{{n} dosya atılsın mı?}}",
   "sendSheetDiscardLine": "Henüz hiçbir şey gönderilmedi.",
   "sendSheetDiscard": "At",
-  "sendSheetKeep": "Tut"
+  "sendSheetKeep": "Tut",
+  "fileDocUnreadable": "Bu belge burada gösterilemiyor. Kaydedebilir ya da başka bir uygulamayla açabilirsin.",
+  "fileDocCut": "Bu belgenin geri kalanı burada gösterilemeyecek kadar uzun."
 }

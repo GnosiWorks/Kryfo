@@ -12641,4 +12641,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sendSheetKeep => 'Оставить';
+
+  @override
+  String get fileDocUnreadable =>
+      'Этот документ нельзя показать здесь. Его можно сохранить или открыть в другом приложении.';
+
+  @override
+  String get fileDocCut =>
+      'Остальная часть документа слишком длинная, чтобы показать её здесь.';
 }

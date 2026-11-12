@@ -31,7 +31,7 @@ import '../widgets/spoiler_cover.dart';
 import '../show_in_chat.dart';
 import '../viewer_rules.dart';
 import '../widgets/select_parts.dart';
-import '../widgets/file_bubble.dart' show kFilePreviewWidth;
+import '../widgets/file_bubble.dart' show kFilePreviewWidth, warmSentPreview;
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/say.dart' show sayArrivals;
@@ -4877,6 +4877,8 @@ class _ChatScreenState extends State<ChatScreen>
       return null;
     }
     makeBlurSoon(at);
+    // its glance ready before its bubble draws: no stand-in on our side
+    if (mounted) await warmSentPreview(context, at, done.name);
     return _Ready(msgUid, at, fileName: done.name);
   }
 
@@ -4899,6 +4901,8 @@ class _ChatScreenState extends State<ChatScreen>
       return null;
     }
     makeBlurSoon(mediaFile.path);
+    // its glance ready before its bubble draws: no stand-in on our side
+    if (mounted) await warmSentPreview(context, mediaFile.path, null);
     return _Ready(msgUid, mediaFile.path);
   }
 
@@ -9809,6 +9813,7 @@ class _Bubble extends StatelessWidget {
                                               from: fromName,
                                               kept: kept,
                                               glance: known,
+                                              failed: msg.failed,
                                               when: msg.when,
                                               upNext: soundsAfter == null
                                                   ? null
@@ -9953,6 +9958,16 @@ class _Bubble extends StatelessWidget {
                                                         ),
                                                       ),
                                                     ),
+                                                    // ours on its way: a ring
+                                                    // that fills with the bytes
+                                                    if (isOut &&
+                                                        msg.sending &&
+                                                        msg.msgUid != null)
+                                                      Positioned.fill(
+                                                        child: MediaSendRing(
+                                                          uid: msg.msgUid!,
+                                                        ),
+                                                      ),
                                                     PositionedDirectional(
                                                       end: 8,
                                                       bottom: 8,
@@ -9994,7 +10009,8 @@ class _Bubble extends StatelessWidget {
                                               : EdgeInsets.zero,
                                           child: Column(
                                             crossAxisAlignment:
-                                                msg.mediaPath != null
+                                                (msg.mediaPath != null ||
+                                                    (album?.tag.files ?? false))
                                                 ? CrossAxisAlignment.start
                                                 : CrossAxisAlignment.end,
                                             mainAxisSize: MainAxisSize.min,
@@ -10008,7 +10024,9 @@ class _Bubble extends StatelessWidget {
                                                 ),
                                                 body: Column(
                                                   crossAxisAlignment:
-                                                      msg.mediaPath != null
+                                                      (msg.mediaPath != null ||
+                                                          (album?.tag.files ??
+                                                              false))
                                                       ? CrossAxisAlignment.start
                                                       : CrossAxisAlignment.end,
                                                   mainAxisSize:
@@ -10513,6 +10531,7 @@ class _Bubble extends StatelessWidget {
                 kept: kept,
                 glance: known,
                 queued: true,
+                failed: x.failed,
                 when: x.when,
                 upNext: soundsAfter == null ? null : () => soundsAfter!(x),
                 onCancel: onStop == null ? null : () => onStop!(x),
