@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/file_kind.dart' show sendLaneCleans;
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/recent_files.dart';
@@ -235,7 +236,9 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byType(SendTray), findsOneWidget);
       expect(find.textContaining(l10n.trayToSend(2, '2')), findsOneWidget);
-      expect(find.text(l10n.trayHint), findsOneWidget);
+      // a pdf and a script go as they are: the tray says so
+      expect(find.text(l10n.trayHintSome), findsOneWidget);
+      expect(find.text(l10n.trayHint), findsNothing);
       // 41 MB at a careful pace is about eleven minutes
       expect(
         find.textContaining(torTimeLine(41 * 1024 * 1024)),
@@ -246,6 +249,78 @@ void main() {
         find.textContaining(l10n.trayMost(humanFileSize(50 * 1024 * 1024))),
         findsOneWidget,
       );
+    });
+
+    testWidgets('a tray of kinds the lane cleans says every file is cleaned', (
+      t,
+    ) async {
+      trayCleans = (path, _) async => true;
+      addTearDown(() => trayCleans = sendLaneCleans);
+      await open(
+        t,
+        files: [
+          SendPick(
+            path: '/x/a.jpg',
+            name: 'a.jpg',
+            size: 1024,
+            from: SendTab.files,
+          ),
+          SendPick(
+            path: '/x/c.mp4',
+            name: 'c.mp4',
+            size: 1024,
+            from: SendTab.files,
+          ),
+        ],
+      );
+      await t.tap(find.text(l10n.sendSheetFiles));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetBrowseFiles));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.trayHint), findsOneWidget);
+      expect(find.text(l10n.trayHintSome), findsNothing);
+    });
+
+    testWidgets('every file is cleaned only when every card is a kind the '
+        'lane cleans', (t) async {
+      final cleans = <String, bool>{'/x/a.jpg': true, '/x/b.zip': false};
+      trayCleans = (path, _) async => cleans[path] ?? false;
+      addTearDown(() => trayCleans = sendLaneCleans);
+      final a = SendPick(
+        path: '/x/a.jpg',
+        name: 'a.jpg',
+        size: 1024,
+        from: SendTab.files,
+      );
+      final b = SendPick(
+        path: '/x/b.zip',
+        name: 'b.zip',
+        size: 5 * 1024 * 1024,
+        from: SendTab.files,
+      );
+      Future<void> browse(List<SendPick> files) async {
+        await open(t, files: files);
+        await t.tap(find.text(l10n.sendSheetFiles));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.sendSheetBrowseFiles));
+        await t.pumpAndSettle();
+      }
+
+      await browse([a, b]);
+      expect(find.text(l10n.trayHintSome), findsOneWidget);
+      expect(find.text(l10n.trayHint), findsNothing);
+      expect(
+        l10n.trayHintSome,
+        'Hold a file to rename it. Photos and videos are cleaned. Other '
+        'files go as they are.',
+      );
+      // the question for several files says the same
+      final ask = bodyOf(
+        sourceOf('lib/screens/chat_screen.dart'),
+        'Future<bool> _askSheet(',
+      );
+      expect(ask, contains('l10n.fileSomeGoAsTheyAre'));
+      expect(ask, contains('sendLaneCleans(f.path, f.name)'));
     });
 
     test('the tray and the question before a big send give one time over '

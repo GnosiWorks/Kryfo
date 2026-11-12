@@ -1844,39 +1844,9 @@
   "@chatFile2": {
     "description": "screens/chat_screen.dart"
   },
-  "chatAFewSeconds": "A few seconds",
-  "@chatAFewSeconds": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatUnderAMinute": "Under a minute",
-  "@chatUnderAMinute": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatRoughlyMin": "{count, plural, other{Roughly {count} min}}",
-  "@chatRoughlyMin": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      }
-    }
-  },
   "chatSendThis": "Send this file?",
   "@chatSendThis": {
     "description": "screens/chat_screen.dart"
-  },
-  "chatOverTor": "{humanBytes} · {wireEstimate} over Tor",
-  "@chatOverTor": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "humanBytes": {
-        "type": "Object"
-      },
-      "wireEstimate": {
-        "type": "Object"
-      }
-    }
   },
   "chatSendIt": "Send it",
   "@chatSendIt": {
@@ -11316,6 +11286,10 @@
   "@fileGoesAsItIs": {
     "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
   },
+  "fileSomeGoAsTheyAre": "Photos and videos are cleaned. Other files go as they are.",
+  "@fileSomeGoAsTheyAre": {
+    "description": "screens/chat_screen.dart: second line on the question before a big send of several files, some of a kind Kryfo does not clean"
+  },
   "voiceStoppedAtLimit": "Voice notes stop at 30 minutes. Listen to it, then send it.",
   "@voiceStoppedAtLimit": {
     "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
@@ -15454,6 +15428,10 @@
   "trayHint": "Hold a file to rename it. Every file is cleaned before sending.",
   "@trayHint": {
     "description": "sending sheet tray: line under the cards"
+  },
+  "trayHintSome": "Hold a file to rename it. Photos and videos are cleaned. Other files go as they are.",
+  "@trayHintSome": {
+    "description": "sending sheet tray: line under the cards when not every file is a kind Kryfo cleans"
   },
   "trayTimeSoon": "Under a minute over Tor",
   "@trayTimeSoon": {

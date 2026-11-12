@@ -5515,7 +5515,11 @@ class _ChatScreenState extends State<ChatScreen>
     }
     return _confirmSend(
       r.total,
-      line: asIs == 1 && files.length == 1 ? l10n.fileGoesAsItIs : '',
+      line: asIs == 0
+          ? ''
+          : files.length == 1
+          ? l10n.fileGoesAsItIs
+          : l10n.fileSomeGoAsTheyAre,
     );
   }
 

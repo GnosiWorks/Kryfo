@@ -697,17 +697,7 @@ void main() {
     expect(l.chatVideo, "Video");
     expect(l.chatGifFromPhone, "Gif from phone");
     expect(l.chatFile2, "File");
-    expect(l.chatAFewSeconds, "A few seconds");
-    expect(l.chatUnderAMinute, "Under a minute");
-    expect(l.chatRoughlyMin(0), "Roughly 0 min");
-    expect(l.chatRoughlyMin(1), "Roughly 1 min");
-    expect(l.chatRoughlyMin(2), "Roughly 2 min");
-    expect(l.chatRoughlyMin(5), "Roughly 5 min");
     expect(l.chatSendThis, "Send this file?");
-    expect(
-      l.chatOverTor("<humanBytes>", "<wireEstimate>"),
-      "<humanBytes> · <wireEstimate> over Tor",
-    );
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");
     expect(l.chatCouldNotCleanThat, "Could not clean that video");

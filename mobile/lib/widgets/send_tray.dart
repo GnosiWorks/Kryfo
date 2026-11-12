@@ -89,15 +89,46 @@ class SendTray extends StatefulWidget {
   State<SendTray> createState() => _SendTrayState();
 }
 
+/// whether the send lane cleans a card's file, read from its bytes as the
+/// lane reads it
+@visibleForTesting
+Future<bool> Function(String path, String name) trayCleans = sendLaneCleans;
+
 class _SendTrayState extends State<SendTray> {
   // cards on their way out, still drawn while they close up
   final Map<Object, TrayCard> _leaving = {};
   // where each card that left stood, so it closes up in its place
   final Map<Object, int> _leftAt = {};
+  // what the lane does with each card's file, by its path, once read
+  final Map<String, bool> _cleans = {};
+  final Set<String> _reading = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _readCleans();
+  }
+
+  void _readCleans() {
+    for (final c in widget.cards) {
+      final k = c.path;
+      if (_cleans.containsKey(k) || !_reading.add(k)) continue;
+      trayCleans(c.path, c.name).catchError((_) => false).then((v) {
+        _reading.remove(k);
+        if (mounted) setState(() => _cleans[k] = v);
+      });
+    }
+  }
+
+  // "every file is cleaned" only once each card's bytes said so
+  bool get _everyCleaned =>
+      widget.cards.isNotEmpty &&
+      widget.cards.every((c) => _cleans[c.path] == true);
 
   @override
   void didUpdateWidget(SendTray old) {
     super.didUpdateWidget(old);
+    _readCleans();
     final now = {for (final c in widget.cards) c.key};
     for (final (i, c) in old.cards.indexed) {
       if (!now.contains(c.key) && !_leaving.containsKey(c.key)) {
@@ -207,9 +238,17 @@ class _SendTrayState extends State<SendTray> {
           ),
         ),
         const SizedBox(height: 10),
-        Text(
-          l10n.trayHint,
-          style: HaloType.sans(size: 12.5, color: HaloColors.text),
+        AnimatedSwitcher(
+          duration: still ? Duration.zero : const Duration(milliseconds: 180),
+          layoutBuilder: (now, before) => Stack(
+            alignment: AlignmentDirectional.topStart,
+            children: [...before, ?now],
+          ),
+          child: Text(
+            _everyCleaned ? l10n.trayHint : l10n.trayHintSome,
+            key: ValueKey(_everyCleaned),
+            style: HaloType.sans(size: 12.5, color: HaloColors.text),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
