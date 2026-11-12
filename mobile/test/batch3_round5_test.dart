@@ -202,7 +202,7 @@ void main() {
       'lib/screens/group_chat_screen.dart',
     ]) {
       final src = sourceOf(file);
-      expect(src, contains('child: fileBubbleFrame('), reason: file);
+      expect(src, contains('child: BubbleWidth('), reason: file);
       expect(
         src,
         contains('clipBehavior: frameless || fileBleed'),

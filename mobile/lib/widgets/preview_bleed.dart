@@ -177,3 +177,30 @@ Widget fileBubbleFrame(
     ),
   );
 }
+
+/// a bubble's IntrinsicWidth, framed for a file when [file] (fileBubbleFrame)
+class BubbleWidth extends StatelessWidget {
+  final bool file;
+  final bool top;
+  final double side;
+  final double above;
+  final Widget child;
+  const BubbleWidth({
+    super.key,
+    required this.file,
+    required this.top,
+    required this.child,
+    this.side = 14,
+    this.above = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) => fileBubbleFrame(
+    context,
+    on: file,
+    top: top,
+    side: side,
+    above: above,
+    child: IntrinsicWidth(child: child),
+  );
+}
