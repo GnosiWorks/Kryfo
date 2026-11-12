@@ -13,6 +13,7 @@ import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'open_file.dart' show nameSaysVideo;
 import 'widgets/media_bubbles.dart' show humanFileSize;
+import 'zip_glance.dart' show ZipGlance;
 
 // ---- how fast, how long ----
 
@@ -193,11 +194,14 @@ class FileWait {
   final AutoGet rule;
   // 0..1 of it in, while it comes
   final double share;
+  // a zip's contents as its sender read them, shown before it comes
+  final ZipGlance? glance;
   const FileWait({
     required this.size,
     required this.state,
     required this.rule,
     this.share = 0,
+    this.glance,
   });
 
   FileWait copyWith({WaitState? state, double? share}) => FileWait(
@@ -205,6 +209,7 @@ class FileWait {
     state: state ?? this.state,
     rule: rule,
     share: share ?? this.share,
+    glance: glance,
   );
 }
 

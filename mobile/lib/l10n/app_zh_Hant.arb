@@ -485,12 +485,8 @@
   "chatAFewSeconds": "幾秒鐘",
   "chatUnderAMinute": "不到一分鐘",
   "chatRoughlyMin": "{count, plural, other{大約 {count} 分鐘}}",
-  "chatB2": "{b} b",
-  "chatKb2": "{b} kb",
-  "chatMb2": "{b} mb",
   "chatSendThis": "要傳送這個檔案嗎？",
   "chatOverTor": "{humanBytes} · 經 Tor 需 {wireEstimate}",
-  "chatBigFilesGoOut": "大檔案會切成加密的小片段送出，所以需要一點時間。保持應用程式開啟，就會持續傳送。",
   "chatSendIt": "傳送",
   "chatCouldNotReadThat": "無法讀取那個檔案",
   "chatCouldNotCleanThat": "無法清理那段影片",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "這份文件無法在這裡顯示。你可以儲存它，或用其他應用程式開啟。",
   "fileDocCut": "這份文件其餘部分太長，無法在這裡顯示。",
   "mediaProgressPreparingNow": "正在準備",
-  "mediaProgressFinishing": "正在完成"
+  "mediaProgressFinishing": "正在完成",
+  "archiveMore": "+ 另外 {n} 個",
+  "archiveUnpacked": "解壓縮後 {size}",
+  "archiveProtected": "受保護"
 }

@@ -700,6 +700,10 @@ extension AppStateGroups on AppState {
         await mediaSliceCount(path) > kMaxFileSlices) {
       return 'error: big';
     }
+    // a zip on the files service says what it holds, from its directory
+    final zipGlance = drop != null && zipGlanced(fileName)
+        ? await zipGlanceOf(path)
+        : null;
 
     // 16k slices. bigger sizes trip nip-44's 65535 plaintext ceiling once
     // base64'd + double-wrapped (envelope + signal + gift wrap ~= x2.4), and
@@ -748,6 +752,7 @@ extension AppStateGroups on AppState {
           imageB64: drop == null && fileName == null && !voice ? slice : null,
           fileB64: drop == null && (fileName != null || voice) ? slice : null,
           drop: drop?.frame.withToken(marker),
+          zipGlance: zipGlance,
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,

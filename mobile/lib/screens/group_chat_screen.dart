@@ -6849,7 +6849,7 @@ class _GroupBubble extends StatelessWidget {
                                           ? null
                                           : () => onLongPress!(ctx),
                                       child: Container(
-                                        padding: frameless
+                                        padding: frameless || fileBleed
                                             ? EdgeInsets.zero
                                             : const EdgeInsets.fromLTRB(
                                                 12,
@@ -6860,7 +6860,7 @@ class _GroupBubble extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           // a photo or video goes edge to edge with no
                                           // bubble fill, so no amber or grey frame
-                                          color: frameless
+                                          color: frameless || fileBleed
                                               ? Colors.transparent
                                               : (isOut
                                                     ? HaloColors.amber
@@ -6892,6 +6892,18 @@ class _GroupBubble extends StatelessWidget {
                                         child: BubbleWidth(
                                           file: fileBleed,
                                           top: quotedText == null,
+                                          ground: isOut
+                                              ? HaloColors.amber
+                                              : atmoBubbleIn(
+                                                  context,
+                                                  HaloColors.surface2,
+                                                ),
+                                          pad: const EdgeInsets.fromLTRB(
+                                            12,
+                                            8,
+                                            12,
+                                            9,
+                                          ),
                                           side: 12,
                                           above: 10,
                                           child: Column(

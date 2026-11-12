@@ -485,12 +485,8 @@
   "chatAFewSeconds": "Несколько секунд",
   "chatUnderAMinute": "Меньше минуты",
   "chatRoughlyMin": "{count, plural, other{Примерно {count} мин}}",
-  "chatB2": "{b} Б",
-  "chatKb2": "{b} КБ",
-  "chatMb2": "{b} МБ",
   "chatSendThis": "Отправить файл?",
   "chatOverTor": "{humanBytes} · {wireEstimate} через Tor",
-  "chatBigFilesGoOut": "Большие файлы уходят маленькими зашифрованными частями, поэтому это небыстро. Не закрывай приложение, и отправка продолжится.",
   "chatSendIt": "Отправить",
   "chatCouldNotReadThat": "Не удалось прочитать файл",
   "chatCouldNotCleanThat": "Не удалось очистить видео",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "Этот документ нельзя показать здесь. Его можно сохранить или открыть в другом приложении.",
   "fileDocCut": "Остальная часть документа слишком длинная, чтобы показать её здесь.",
   "mediaProgressPreparingNow": "Подготовка",
-  "mediaProgressFinishing": "Завершение"
+  "mediaProgressFinishing": "Завершение",
+  "archiveMore": "+ ещё {n}",
+  "archiveUnpacked": "{size} в распакованном виде",
+  "archiveProtected": "Защищён"
 }

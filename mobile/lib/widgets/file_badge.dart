@@ -156,6 +156,8 @@ class FileBadge extends StatelessWidget {
     final ink = onAccent ? HaloColors.onAmber : onFileTone(tone);
     final glyph = _glyphOf(tone, facts);
     final label = fileBadgeLabel(facts);
+    // a zip carries the archive mark, here and in its glance
+    final zip = facts.ext == 'zip';
     return ExcludeSemantics(
       child: Container(
         width: size,
@@ -165,7 +167,9 @@ class FileBadge extends StatelessWidget {
           borderRadius: BorderRadius.circular(size * 0.27),
           color: ink.withValues(alpha: onAccent ? 0.12 : 0.14),
         ),
-        child: glyph != null
+        child: zip
+            ? ZipMark(color: ink, size: size * 0.5)
+            : glyph != null
             ? Icon(glyph, size: size * 0.5, color: ink)
             : FittedBox(
                 fit: BoxFit.scaleDown,
@@ -189,4 +193,61 @@ class FileBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+/// the archive mark: a bundle with a zipper down its middle, drawn in [color]
+class ZipMark extends StatelessWidget {
+  final Color color;
+  final double size;
+  const ZipMark({super.key, required this.color, this.size = 18});
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(painter: _ZipPainter(color)),
+  );
+}
+
+class _ZipPainter extends CustomPainter {
+  final Color color;
+  const _ZipPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final line = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.08
+      ..strokeJoin = StrokeJoin.round;
+    final fill = Paint()..color = color;
+    // the bundle
+    final body = RRect.fromRectAndRadius(
+      Rect.fromLTWH(s * 0.16, s * 0.08, s * 0.68, s * 0.84),
+      Radius.circular(s * 0.14),
+    );
+    canvas.drawRRect(body, line);
+    // the zipper's teeth, left and right of the middle, down to the pull
+    final mid = s * 0.5;
+    final tooth = s * 0.09;
+    for (var i = 0; i < 4; i++) {
+      final y = s * 0.14 + i * s * 0.1;
+      final left = i.isEven;
+      canvas.drawRect(
+        Rect.fromLTWH(left ? mid - tooth : mid, y, tooth, s * 0.06),
+        fill,
+      );
+    }
+    // the pull
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(mid - s * 0.1, s * 0.56, s * 0.2, s * 0.22),
+        Radius.circular(s * 0.05),
+      ),
+      line,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ZipPainter old) => old.color != color;
 }

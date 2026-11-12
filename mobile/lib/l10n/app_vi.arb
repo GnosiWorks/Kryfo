@@ -485,12 +485,8 @@
   "chatAFewSeconds": "Vài giây",
   "chatUnderAMinute": "Dưới một phút",
   "chatRoughlyMin": "{count, plural, other{Khoảng {count} phút}}",
-  "chatB2": "{b} b",
-  "chatKb2": "{b} kb",
-  "chatMb2": "{b} mb",
   "chatSendThis": "Gửi tệp này?",
   "chatOverTor": "{humanBytes} · {wireEstimate} qua Tor",
-  "chatBigFilesGoOut": "Tệp lớn được gửi đi thành từng mảnh nhỏ được mã hóa, nên sẽ mất một lúc. Cứ để ứng dụng mở là việc gửi sẽ tiếp tục.",
   "chatSendIt": "Gửi",
   "chatCouldNotReadThat": "Không đọc được tệp đó",
   "chatCouldNotCleanThat": "Không làm sạch được video đó",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "Không thể hiển thị tài liệu này tại đây. Bạn có thể lưu hoặc mở bằng ứng dụng khác.",
   "fileDocCut": "Phần còn lại của tài liệu quá dài để hiển thị tại đây.",
   "mediaProgressPreparingNow": "Đang chuẩn bị",
-  "mediaProgressFinishing": "Đang hoàn tất"
+  "mediaProgressFinishing": "Đang hoàn tất",
+  "archiveMore": "+ {n} mục khác",
+  "archiveUnpacked": "{size} khi giải nén",
+  "archiveProtected": "Được bảo vệ"
 }

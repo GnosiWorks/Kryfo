@@ -31,6 +31,8 @@ import 'file_badge.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'preview_bleed.dart';
+import 'archive_glance.dart' show ArchiveGlanceOf, zipGlanceKept;
+import '../zip_glance.dart' show zipGlanced;
 import 'swap.dart';
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 
@@ -476,6 +478,10 @@ class _FileCardState extends State<FileCard> {
     if (kDocViewExts.contains(facts.ext)) {
       return FileTextPreview(path: path, isOut: widget.isOut, doc: true);
     }
+    // a zip: what it holds, from its own directory
+    if (zipGlanced(widget.name ?? path) || facts.ext == 'zip') {
+      return ArchiveGlanceOf(path: path, isOut: widget.isOut);
+    }
     if (facts.kind == FileKind.pdf &&
         pdfViewHere &&
         (widget.glance || pdfOpenedByHand.contains(path))) {
@@ -886,7 +892,9 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   // drawn from its first frame: no paper, no fade, the page as it is
   bool _hadIt = false;
 
-  static const _height = 120.0;
+  // the top of the page in a 4:3 window at the card's width: its heading
+  // and a good part of what follows, the pill clear of it in the corner
+  static const _height = 178.0;
 
   @override
   void initState() {
@@ -1078,6 +1086,8 @@ Future<void> warmSentPreview(
       await firstLinesOf(path).timeout(most);
     } else if (kDocViewExts.contains(facts.ext)) {
       await docFirstLines(path).timeout(most);
+    } else if (facts.ext == 'zip') {
+      await zipGlanceKept(path).timeout(most);
     } else if (facts.kind == FileKind.pdf && pdfViewHere) {
       final px = (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context))
           .round();

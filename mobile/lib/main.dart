@@ -181,6 +181,7 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'voice_choice.dart';
+import 'zip_glance.dart' show zipGlanced, zipGlanceOf;
 import 'voice_format.dart';
 import 'file_drop.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;

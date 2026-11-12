@@ -485,12 +485,8 @@
   "chatAFewSeconds": "Quelques secondes",
   "chatUnderAMinute": "Moins d’une minute",
   "chatRoughlyMin": "{count, plural, other{Environ {count} min}}",
-  "chatB2": "{b} o",
-  "chatKb2": "{b} Ko",
-  "chatMb2": "{b} Mo",
   "chatSendThis": "Envoyer ce fichier ?",
   "chatOverTor": "{humanBytes} · {wireEstimate} par Tor",
-  "chatBigFilesGoOut": "Les gros fichiers partent en petits morceaux chiffrés, donc ça prend un moment. Gardez l’appli ouverte et l’envoi continue.",
   "chatSendIt": "Envoyer",
   "chatCouldNotReadThat": "Impossible de lire ce fichier",
   "chatCouldNotCleanThat": "Impossible de nettoyer cette vidéo",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "Ce document ne peut pas s'afficher ici. Tu peux l'enregistrer ou l'ouvrir avec une autre app.",
   "fileDocCut": "La suite de ce document est trop longue pour s'afficher ici.",
   "mediaProgressPreparingNow": "Préparation",
-  "mediaProgressFinishing": "Finalisation"
+  "mediaProgressFinishing": "Finalisation",
+  "archiveMore": "+ {n} de plus",
+  "archiveUnpacked": "{size} décompressé",
+  "archiveProtected": "Protégé"
 }

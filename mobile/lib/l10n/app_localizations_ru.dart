@@ -1548,31 +1548,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String chatB2(Object b) {
-    return '$b Б';
-  }
-
-  @override
-  String chatKb2(Object b) {
-    return '$b КБ';
-  }
-
-  @override
-  String chatMb2(Object b) {
-    return '$b МБ';
-  }
-
-  @override
   String get chatSendThis => 'Отправить файл?';
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
     return '$humanBytes · $wireEstimate через Tor';
   }
-
-  @override
-  String get chatBigFilesGoOut =>
-      'Большие файлы уходят маленькими зашифрованными частями, поэтому это небыстро. Не закрывай приложение, и отправка продолжится.';
 
   @override
   String get chatSendIt => 'Отправить';
@@ -12647,4 +12628,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mediaProgressFinishing => 'Завершение';
+
+  @override
+  String archiveMore(String n) {
+    return '+ ещё $n';
+  }
+
+  @override
+  String archiveUnpacked(String size) {
+    return '$size в распакованном виде';
+  }
+
+  @override
+  String get archiveProtected => 'Защищён';
 }

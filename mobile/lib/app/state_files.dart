@@ -316,6 +316,7 @@ extension AppStateFiles on AppState {
         size: env.drop!.size,
         state: _waitStateOf(state),
         rule: kind == null ? AutoGet.always : rules[kind]!,
+        glance: zipGlanced(env.fileName) ? env.zipGlance : null,
       ),
     );
     return _namedPath(env, db);
@@ -466,6 +467,7 @@ extension AppStateFiles on AppState {
                   ? WaitState.asks
                   : state,
               rule: kind == null ? AutoGet.always : rules[kind]!,
+              glance: zipGlanced(env.fileName) ? env.zipGlance : null,
             ),
           );
         }

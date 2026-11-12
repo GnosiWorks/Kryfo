@@ -485,12 +485,8 @@
   "chatAFewSeconds": "Кілька секунд",
   "chatUnderAMinute": "Менше хвилини",
   "chatRoughlyMin": "{count, plural, other{Приблизно {count} хв}}",
-  "chatB2": "{b} Б",
-  "chatKb2": "{b} КБ",
-  "chatMb2": "{b} МБ",
   "chatSendThis": "Надіслати файл?",
   "chatOverTor": "{humanBytes} · {wireEstimate} через Tor",
-  "chatBigFilesGoOut": "Великі файли йдуть малими зашифрованими частинами, тож це займає час. Не закривай застосунок, і надсилання триватиме.",
   "chatSendIt": "Надіслати",
   "chatCouldNotReadThat": "Не вдалося прочитати файл",
   "chatCouldNotCleanThat": "Не вдалося очистити це відео",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "Цей документ не можна показати тут. Його можна зберегти або відкрити в іншому застосунку.",
   "fileDocCut": "Решта документа задовга, щоб показати її тут.",
   "mediaProgressPreparingNow": "Підготовка",
-  "mediaProgressFinishing": "Завершення"
+  "mediaProgressFinishing": "Завершення",
+  "archiveMore": "+ ще {n}",
+  "archiveUnpacked": "{size} після розпакування",
+  "archiveProtected": "Захищено"
 }

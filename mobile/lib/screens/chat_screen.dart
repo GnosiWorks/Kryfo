@@ -4720,11 +4720,8 @@ class _ChatScreenState extends State<ChatScreen>
     return l10n.chatRoughlyMin(mins);
   }
 
-  String _humanBytes(int b) {
-    if (b < 1024) return l10n.chatB2(whole(b));
-    if (b < 1024 * 1024) return l10n.chatKb2(whole((b / 1024).round()));
-    return l10n.chatMb2(decimal((b / (1024 * 1024)), 1));
-  }
+  // the shared size line: 5.0 MB as everywhere else
+  String _humanBytes(int b) => humanFileSize(b);
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out: a dialog on a 40kb photo is noise.
@@ -4739,9 +4736,8 @@ class _ChatScreenState extends State<ChatScreen>
       figure: appState.sendMode == 'private'
           ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
           : _humanBytes(bytes),
-      line: asItIs
-          ? '${l10n.chatBigFilesGoOut}\n\n${l10n.fileGoesAsItIs}'
-          : l10n.chatBigFilesGoOut,
+      line: asItIs ? l10n.fileGoesAsItIs : '',
+
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
       rose: false,
@@ -9561,13 +9557,15 @@ class _Bubble extends StatelessWidget {
                                   maxWidth:
                                       MediaQuery.of(context).size.width * 0.78,
                                 ),
-                                padding: frameless
+                                // a file's bubble pads and fills inside its
+                                // clip (BubbleWidth): no seam at its preview
+                                padding: frameless || fileBleed
                                     ? EdgeInsets.zero
                                     : const EdgeInsets.fromLTRB(14, 10, 14, 8),
                                 decoration: BoxDecoration(
                                   color: (isImage && msg.text.isNotEmpty)
                                       ? HaloColors.surface2
-                                      : frameless
+                                      : frameless || fileBleed
                                       ? null
                                       : isOut
                                       ? HaloColors.amber
@@ -9596,6 +9594,10 @@ class _Bubble extends StatelessWidget {
                                 child: BubbleWidth(
                                   file: fileBleed,
                                   top: quotedText == null,
+                                  ground: isOut
+                                      ? HaloColors.amber
+                                      : atmoBubbleIn(context),
+                                  pad: const EdgeInsets.fromLTRB(14, 10, 14, 8),
                                   child: Column(
                                     crossAxisAlignment: isOut
                                         ? CrossAxisAlignment.end

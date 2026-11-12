@@ -1442,30 +1442,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String chatB2(Object b) {
-    return '$b B';
-  }
-
-  @override
-  String chatKb2(Object b) {
-    return '$b KB';
-  }
-
-  @override
-  String chatMb2(Object b) {
-    return '$b MB';
-  }
-
-  @override
   String get chatSendThis => '要发送这个文件吗？';
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
     return '$humanBytes · 经 Tor 需要$wireEstimate';
   }
-
-  @override
-  String get chatBigFilesGoOut => '大文件会拆成加密的小块发出，所以需要一些时间。保持应用打开，它就会一直发下去。';
 
   @override
   String get chatSendIt => '发送';
@@ -11771,6 +11753,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mediaProgressFinishing => '正在完成';
+
+  @override
+  String archiveMore(String n) {
+    return '+ 另外 $n 个';
+  }
+
+  @override
+  String archiveUnpacked(String size) {
+    return '解压后 $size';
+  }
+
+  @override
+  String get archiveProtected => '受保护';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -13211,30 +13206,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String chatB2(Object b) {
-    return '$b b';
-  }
-
-  @override
-  String chatKb2(Object b) {
-    return '$b kb';
-  }
-
-  @override
-  String chatMb2(Object b) {
-    return '$b mb';
-  }
-
-  @override
   String get chatSendThis => '要傳送這個檔案嗎？';
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
     return '$humanBytes · 經 Tor 需 $wireEstimate';
   }
-
-  @override
-  String get chatBigFilesGoOut => '大檔案會切成加密的小片段送出，所以需要一點時間。保持應用程式開啟，就會持續傳送。';
 
   @override
   String get chatSendIt => '傳送';
@@ -23420,4 +23397,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get mediaProgressFinishing => '正在完成';
+
+  @override
+  String archiveMore(String n) {
+    return '+ 另外 $n 個';
+  }
+
+  @override
+  String archiveUnpacked(String size) {
+    return '解壓縮後 $size';
+  }
+
+  @override
+  String get archiveProtected => '受保護';
 }

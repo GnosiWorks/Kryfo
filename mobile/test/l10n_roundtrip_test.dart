@@ -703,17 +703,10 @@ void main() {
     expect(l.chatRoughlyMin(1), "Roughly 1 min");
     expect(l.chatRoughlyMin(2), "Roughly 2 min");
     expect(l.chatRoughlyMin(5), "Roughly 5 min");
-    expect(l.chatB2("<b>"), "<b> b");
-    expect(l.chatKb2("<b>"), "<b> kb");
-    expect(l.chatMb2("<b>"), "<b> mb");
     expect(l.chatSendThis, "Send this file?");
     expect(
       l.chatOverTor("<humanBytes>", "<wireEstimate>"),
       "<humanBytes> · <wireEstimate> over Tor",
-    );
-    expect(
-      l.chatBigFilesGoOut,
-      "Big files go out in small encrypted pieces, so they take a while. Keep the app open and it keeps going.",
     );
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");

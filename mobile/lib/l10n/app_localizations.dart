@@ -2392,24 +2392,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'{b} b'**
-  String chatB2(Object b);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{b} kb'**
-  String chatKb2(Object b);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{b} mb'**
-  String chatMb2(Object b);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Send this file?'**
   String get chatSendThis;
 
@@ -2418,12 +2400,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{humanBytes} · {wireEstimate} over Tor'**
   String chatOverTor(Object humanBytes, Object wireEstimate);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Big files go out in small encrypted pieces, so they take a while. Keep the app open and it keeps going.'**
-  String get chatBigFilesGoOut;
 
   /// screens/chat_screen.dart
   ///
@@ -19914,6 +19890,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finishing'**
   String get mediaProgressFinishing;
+
+  /// zip glance in a bubble: how many files are not listed. n is the count in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'+ {n} more'**
+  String archiveMore(String n);
+
+  /// zip glance in a bubble: what the files come to once unpacked, a size like 48 MB
+  ///
+  /// In en, this message translates to:
+  /// **'{size} unpacked'**
+  String archiveUnpacked(String size);
+
+  /// zip glance in a bubble: some of the zip needs a password to open
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get archiveProtected;
 }
 
 class _AppLocalizationsDelegate

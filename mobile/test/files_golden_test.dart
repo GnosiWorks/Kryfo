@@ -5,6 +5,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -15,6 +16,7 @@ import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/file_actions.dart';
 import 'package:kryfo/widgets/file_bubble.dart';
 import 'package:kryfo/widgets/preview_bleed.dart';
+import 'package:kryfo/zip_glance.dart';
 import 'package:kryfo/widgets/file_stack.dart';
 import 'package:kryfo/widgets/file_wait.dart';
 import 'package:kryfo/widgets/sound_views.dart';
@@ -103,8 +105,20 @@ void main() {
         ..writeAsBytesSync(
           List.filled(2400 * 1024, 1)..setAll(0, '%PDF-1.7\n'.codeUnits),
         );
+      final zipped = Archive();
+      for (final (n, body) in [
+        ('route-day1.gpx', 'x' * 2000),
+        ('photos/ridge.jpg', 'a' * 9000),
+        ('photos/lake.jpg', 'b' * 7000),
+        ('photos/camp.jpg', 'c' * 8000),
+        ('packing list.txt', 'tent'),
+        ('maps/north.pdf', 'p' * 4000),
+        ('notes.md', 'n'),
+      ]) {
+        zipped.addFile(ArchiveFile.string(n, body));
+      }
       final zip = File('${tmp.path}/out_b.zip')
-        ..writeAsBytesSync([0x50, 0x4B, 3, 4]);
+        ..writeAsBytesSync(ZipEncoder().encode(zipped));
       final m4a = File('${tmp.path}/in_c.m4a')
         ..writeAsBytesSync(List.filled(3100 * 1024, 0));
       final py = File('${tmp.path}/out_d.py')
@@ -115,6 +129,22 @@ void main() {
       mediaProgressUpdate('up', 0.64);
       addTearDown(() => mediaProgressEnd('up'));
       fileWaits.value = {
+        'z': const FileWait(
+          size: 48 << 20,
+          state: WaitState.asks,
+          rule: AutoGet.never,
+          glance: ZipGlance(
+            count: 41,
+            unpacked: 61 << 20,
+            locked: true,
+            top: [
+              ZipTop('photos', 12),
+              ZipTop('trip-plan.pdf', -1),
+              ZipTop('maps', 6),
+              ZipTop('budget.xlsx', -1),
+            ],
+          ),
+        ),
         'w': const FileWait(
           size: 220 * 1024,
           state: WaitState.asks,
@@ -127,22 +157,18 @@ void main() {
             : AlignmentDirectional.centerStart,
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-          decoration: BoxDecoration(
-            color: out ? HaloColors.amber : HaloColors.bubbleIn,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          // as the chat draws a file: previews out to the bubble's edges
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
+          // as the chat draws a file: previews out to the bubble's edges,
+          // its fill and padding inside the clip
           clipBehavior: Clip.antiAlias,
-          child: Builder(
-            builder: (context) => fileBubbleFrame(
-              context,
-              on: true,
-              top: true,
-              side: 14,
-              above: 10,
-              child: IntrinsicWidth(child: child),
-            ),
+          child: BubbleWidth(
+            file: true,
+            top: true,
+            side: 14,
+            above: 10,
+            ground: out ? HaloColors.amber : HaloColors.bubbleIn,
+            pad: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+            child: child,
           ),
         ),
       );
@@ -197,6 +223,16 @@ void main() {
                 bubble(
                   true,
                   FileCard(path: py.path, name: 'rent.py', isOut: true),
+                ),
+                bubble(
+                  false,
+                  FileWaitOr(
+                    uid: 'z',
+                    fileName: 'Trip-2027.zip',
+                    onGet: (_) {},
+                    onPause: (_) {},
+                    child: () => const SizedBox.shrink(),
+                  ),
                 ),
                 bubble(
                   false,
@@ -274,22 +310,18 @@ void main() {
             : AlignmentDirectional.centerStart,
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-          decoration: BoxDecoration(
-            color: out ? HaloColors.amber : HaloColors.bubbleIn,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          // as the chat draws a file: previews out to the bubble's edges
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
+          // as the chat draws a file: previews out to the bubble's edges,
+          // its fill and padding inside the clip
           clipBehavior: Clip.antiAlias,
-          child: Builder(
-            builder: (context) => fileBubbleFrame(
-              context,
-              on: true,
-              top: true,
-              side: 12,
-              above: 10,
-              child: IntrinsicWidth(child: child),
-            ),
+          child: BubbleWidth(
+            file: true,
+            top: true,
+            side: 12,
+            above: 10,
+            ground: out ? HaloColors.amber : HaloColors.bubbleIn,
+            pad: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            child: child,
           ),
         ),
       );

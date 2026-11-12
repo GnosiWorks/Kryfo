@@ -485,12 +485,8 @@
   "chatAFewSeconds": "几秒钟",
   "chatUnderAMinute": "不到 1 分钟",
   "chatRoughlyMin": "{count, plural, other{大约 {count} 分钟}}",
-  "chatB2": "{b} B",
-  "chatKb2": "{b} KB",
-  "chatMb2": "{b} MB",
   "chatSendThis": "要发送这个文件吗？",
   "chatOverTor": "{humanBytes} · 经 Tor 需要{wireEstimate}",
-  "chatBigFilesGoOut": "大文件会拆成加密的小块发出，所以需要一些时间。保持应用打开，它就会一直发下去。",
   "chatSendIt": "发送",
   "chatCouldNotReadThat": "无法读取这个文件",
   "chatCouldNotCleanThat": "无法清理这个视频",
@@ -3269,5 +3265,8 @@
   "fileDocUnreadable": "这份文档无法在这里显示。你可以保存它，或用其他应用打开。",
   "fileDocCut": "这份文档其余部分太长，无法在这里显示。",
   "mediaProgressPreparingNow": "正在准备",
-  "mediaProgressFinishing": "正在完成"
+  "mediaProgressFinishing": "正在完成",
+  "archiveMore": "+ 另外 {n} 个",
+  "archiveUnpacked": "解压后 {size}",
+  "archiveProtected": "受保护"
 }

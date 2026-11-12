@@ -3,6 +3,8 @@
 // close back into it, the head with the file's tile and name, and the bar
 // that sends it on, saves it or, last and said plainly, hands it to
 // another app
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -305,8 +307,10 @@ class _RenderLanding extends RenderProxyBox {
     final t = _t;
     final at = from.shift(-offset);
     Matrix4 m;
+    Rect window;
     if (a == null || a.width <= 0) {
       m = Matrix4.identity();
+      window = Rect.lerp(at, full, t)!;
     } else {
       final s0 = at.width / a.width;
       final s = s0 + (1 - s0) * t;
@@ -315,8 +319,22 @@ class _RenderLanding extends RenderProxyBox {
       m = Matrix4.identity()
         ..translateByDouble(dx, dy, 0, 1)
         ..scaleByDouble(s, s, 1, 1);
+      // the crop the bubble showed grows with the page first, and only
+      // then opens to the rest of it and the screen
+      final page = Rect.fromLTWH(
+        dx + a.left * s,
+        dy + a.top * s,
+        a.width * s,
+        a.height * s,
+      );
+      final crop = Rect.fromLTWH(
+        page.left,
+        page.top,
+        page.width,
+        math.min(at.height / s0 * s, page.height),
+      );
+      window = Rect.lerp(crop, full, t * t)!;
     }
-    final window = Rect.lerp(at, full, t)!;
     _clip.layer = context.pushClipRRect(
       needsCompositing,
       offset,

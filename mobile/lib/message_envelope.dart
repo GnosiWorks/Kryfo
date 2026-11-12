@@ -16,6 +16,7 @@ import 'profile_photo.dart' show PhotoFrame, kPhotoWire;
 import 'stickers/sticker_wire.dart' show StickerWire;
 import 'typing.dart' show capsFromWire, kCapsWire, kTypingWire, myGroupCaps;
 import 'voice_format.dart' show kOpusWire;
+import 'zip_glance.dart' show ZipGlance, kZipGlanceWire;
 
 const _envelopePrefix = kEnvelopePrefix;
 
@@ -106,6 +107,8 @@ class UnwrappedMessage {
   final PhotoFrame? photo;
   final AlbumTag? album; // 'al': its place in an album, on every slice
   final bool spoiler; // 'sv': a photo blurred until it is tapped
+  // 'zg': what a zip holds, by its sender: shown, never trusted
+  final ZipGlance? zipGlance;
   final bool gif; // 'gf': the picture is a gif, which comes with no share
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -164,6 +167,7 @@ class UnwrappedMessage {
     this.shotsNudge = false,
     this.album,
     this.spoiler = false,
+    this.zipGlance,
     this.gif = false,
     this.writtenAt,
     this.endNotice = false,
@@ -444,6 +448,8 @@ Future<String> wrapMessage(
   DropFrame? drop,
   // sent without sound: the far side posts it quietly
   bool silent = false,
+  // what a zip holds, with the file's place on the files service
+  ZipGlance? zipGlance,
 }) async {
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -506,6 +512,7 @@ Future<String> wrapMessage(
   if (secure) body['sc'] = 1;
   if (album != null) body[album.wireKey] = album.toWire();
   if (spoiler) body['sv'] = 1;
+  if (zipGlance != null) body[kZipGlanceWire] = zipGlance.toWire();
   if (gif) body['gf'] = 1;
   // kSilentWire
   if (silent) body['sl'] = 1;
@@ -670,6 +677,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
           AlbumTag.fromWire(json['al']) ??
           AlbumTag.fromWire(json[kFileSetWire], files: true),
       spoiler: json['sv'] == 1,
+      zipGlance: ZipGlance.fromWire(json[kZipGlanceWire]),
       gif: json['gf'] == 1,
       silent: json[kSilentWire] == 1,
       writtenAt: switch (json['w']) {

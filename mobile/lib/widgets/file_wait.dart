@@ -13,6 +13,8 @@ import 'file_bubble.dart' show fileNameDir;
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
+import 'archive_glance.dart' show ArchiveGlance;
+import 'preview_bleed.dart' show bleedPreview;
 
 /// the bubble's line under the name: its size and what it waits for, or
 /// how far it is
@@ -306,16 +308,37 @@ class FileWaitOr extends StatelessWidget {
           switchInCurve: kHouseCurve,
           child: w == null
               ? KeyedSubtree(key: const ValueKey('in'), child: child())
-              : WaitingFileCard(
+              : KeyedSubtree(
                   key: const ValueKey('wait'),
-                  uid: id,
-                  fileName: fileName,
-                  wait: w,
-                  onGet: () => onGet(id),
-                  onPause: () => onPause(id),
+                  child: _withGlance(
+                    context,
+                    w,
+                    WaitingFileCard(
+                      uid: id,
+                      fileName: fileName,
+                      wait: w,
+                      onGet: () => onGet(id),
+                      onPause: () => onPause(id),
+                    ),
+                  ),
                 ),
         );
       },
     );
   }
+}
+
+// a zip says what it holds before it comes, from its sender's summary
+Widget _withGlance(BuildContext context, FileWait w, Widget card) {
+  final g = w.glance;
+  if (g == null) return card;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      bleedPreview(context, ArchiveGlance(glance: g, isOut: false)),
+      const SizedBox(height: 8),
+      card,
+    ],
+  );
 }

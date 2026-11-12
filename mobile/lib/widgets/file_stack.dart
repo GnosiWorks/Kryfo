@@ -24,6 +24,7 @@ import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
 import 'preview_bleed.dart';
+import 'archive_glance.dart' show ArchiveGlance;
 import 'spoiler_cover.dart';
 
 /// a file kept on the files service: past this from when it was written it
@@ -186,14 +187,32 @@ class _RowState extends State<_Row> with SingleTickerProviderStateMixin {
     final still = motionStill(context);
     final Widget child;
     if (w != null && r.waitUid != null) {
-      child = _WaitRow(
-        key: const ValueKey('wait'),
+      final row = _WaitRow(
         uid: r.waitUid!,
         name: r.name,
         wait: w,
         until: r.until,
         onGet: () => widget.onGet(r.waitUid!),
         onPause: () => widget.onPause(r.waitUid!),
+      );
+      final g = w.glance;
+      // a zip says what it holds before it comes
+      child = KeyedSubtree(
+        key: const ValueKey('wait'),
+        child: g == null
+            ? row
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  bleedPreview(
+                    context,
+                    ArchiveGlance(glance: g, isOut: widget.isOut),
+                  ),
+                  const SizedBox(height: 8),
+                  row,
+                ],
+              ),
       );
     } else if (r.failed) {
       child = _FailedRow(
@@ -316,7 +335,6 @@ class _WaitRow extends StatelessWidget {
   final VoidCallback onGet;
   final VoidCallback onPause;
   const _WaitRow({
-    super.key,
     required this.uid,
     required this.name,
     required this.wait,

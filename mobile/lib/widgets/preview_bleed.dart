@@ -179,11 +179,18 @@ Widget fileBubbleFrame(
 }
 
 /// a bubble's IntrinsicWidth, framed for a file when [file] (fileBubbleFrame)
+///
+/// a file's bubble has no padding or fill of its own: they are here, inside
+/// its clip, so the clip's soft edge falls on the preview, never on a fill
+/// under it (no seam where they meet)
 class BubbleWidth extends StatelessWidget {
   final bool file;
   final bool top;
   final double side;
   final double above;
+  // the bubble's fill and padding, for a file
+  final Color? ground;
+  final EdgeInsets pad;
   final Widget child;
   const BubbleWidth({
     super.key,
@@ -192,15 +199,24 @@ class BubbleWidth extends StatelessWidget {
     required this.child,
     this.side = 14,
     this.above = 12,
+    this.ground,
+    this.pad = EdgeInsets.zero,
   });
 
   @override
-  Widget build(BuildContext context) => fileBubbleFrame(
-    context,
-    on: file,
-    top: top,
-    side: side,
-    above: above,
-    child: IntrinsicWidth(child: child),
-  );
+  Widget build(BuildContext context) {
+    final framed = fileBubbleFrame(
+      context,
+      on: file,
+      top: top,
+      side: side,
+      above: above,
+      child: IntrinsicWidth(child: child),
+    );
+    if (!file) return framed;
+    return ColoredBox(
+      color: ground ?? const Color(0x00000000),
+      child: Padding(padding: pad, child: framed),
+    );
+  }
 }

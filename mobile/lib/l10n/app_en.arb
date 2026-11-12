@@ -1862,33 +1862,6 @@
       }
     }
   },
-  "chatB2": "{b} b",
-  "@chatB2": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "b": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatKb2": "{b} kb",
-  "@chatKb2": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "b": {
-        "type": "Object"
-      }
-    }
-  },
-  "chatMb2": "{b} mb",
-  "@chatMb2": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "b": {
-        "type": "Object"
-      }
-    }
-  },
   "chatSendThis": "Send this file?",
   "@chatSendThis": {
     "description": "screens/chat_screen.dart"
@@ -1904,10 +1877,6 @@
         "type": "Object"
       }
     }
-  },
-  "chatBigFilesGoOut": "Big files go out in small encrypted pieces, so they take a while. Keep the app open and it keeps going.",
-  "@chatBigFilesGoOut": {
-    "description": "screens/chat_screen.dart"
   },
   "chatSendIt": "Send it",
   "@chatSendIt": {
@@ -15704,5 +15673,27 @@
   "mediaProgressFinishing": "Finishing",
   "@mediaProgressFinishing": {
     "description": "send strip: the last part of a send is on its way, held at its share for a moment"
+  },
+  "archiveMore": "+ {n} more",
+  "@archiveMore": {
+    "description": "zip glance in a bubble: how many files are not listed. n is the count in the language's digits",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveUnpacked": "{size} unpacked",
+  "@archiveUnpacked": {
+    "description": "zip glance in a bubble: what the files come to once unpacked, a size like 48 MB",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveProtected": "Protected",
+  "@archiveProtected": {
+    "description": "zip glance in a bubble: some of the zip needs a password to open"
   }
 }

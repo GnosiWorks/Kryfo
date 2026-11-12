@@ -233,8 +233,8 @@ Future<bool> showConfirmSheet(
             style: HaloType.mono(size: 12, color: HaloColors.amberText),
           ),
         ],
-        const SizedBox(height: 8),
-        _line(line),
+        // an empty line is none: the figure says it all
+        if (line.isNotEmpty) ...[const SizedBox(height: 8), _line(line)],
         for (var i = 0; i < steps.length; i++) ...[
           SizedBox(height: i == 0 ? 10 : 8),
           _step(i + 1, steps[i]),

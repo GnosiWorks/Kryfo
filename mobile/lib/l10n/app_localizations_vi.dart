@@ -1500,31 +1500,12 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String chatB2(Object b) {
-    return '$b b';
-  }
-
-  @override
-  String chatKb2(Object b) {
-    return '$b kb';
-  }
-
-  @override
-  String chatMb2(Object b) {
-    return '$b mb';
-  }
-
-  @override
   String get chatSendThis => 'Gửi tệp này?';
 
   @override
   String chatOverTor(Object humanBytes, Object wireEstimate) {
     return '$humanBytes · $wireEstimate qua Tor';
   }
-
-  @override
-  String get chatBigFilesGoOut =>
-      'Tệp lớn được gửi đi thành từng mảnh nhỏ được mã hóa, nên sẽ mất một lúc. Cứ để ứng dụng mở là việc gửi sẽ tiếp tục.';
 
   @override
   String get chatSendIt => 'Gửi';
@@ -12440,4 +12421,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mediaProgressFinishing => 'Đang hoàn tất';
+
+  @override
+  String archiveMore(String n) {
+    return '+ $n mục khác';
+  }
+
+  @override
+  String archiveUnpacked(String size) {
+    return '$size khi giải nén';
+  }
+
+  @override
+  String get archiveProtected => 'Được bảo vệ';
 }

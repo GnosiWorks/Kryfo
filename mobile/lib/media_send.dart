@@ -41,6 +41,7 @@ import 'media_resend.dart' show kMaxFileSlices;
 import 'message_envelope.dart';
 import 'signal_session.dart';
 import 'text_send.dart' show kSendBlocked;
+import 'zip_glance.dart' show zipGlanced, zipGlanceOf;
 
 // msgUid -> slices the peer has. dropped when the file is across, or when
 // the record is old enough that the peer may have restarted without it
@@ -274,6 +275,10 @@ Future<String> _sendChunkedMediaInner({
   }
   // a phone that takes slices only takes so many of a file: past that it
   // would drop every one
+  // a zip on the files service says what it holds, from its directory
+  final zipGlance = drop != null && zipGlanced(fileName)
+      ? await zipGlanceOf(path)
+      : null;
   if (drop == null && fileName != null && !voice && total > kMaxFileSlices) {
     return 'error: big';
   }
@@ -395,6 +400,7 @@ Future<String> _sendChunkedMediaInner({
           imageB64: drop == null && fileName == null ? slice : null,
           fileB64: drop == null && fileName != null ? slice : null,
           drop: drop,
+          zipGlance: zipGlance,
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,
