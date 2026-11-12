@@ -39,6 +39,7 @@ if [ -f "$B/lib/libsqlcipher.so.0" ] && ! readelf -d "$B/lib/libsqlcipher.so.0" 
 fi
 ls "$B/lib" | grep -q '^libsqlite3' && no "a plain sqlite is in lib/"
 [ -f "$B/data/kryfo.png" ] || no "data/kryfo.png missing"
+[ -f "$B/data/icons/hicolor/scalable/apps/app.kryfo.Kryfo.svg" ] || no "data/icons/hicolor missing"
 [ -e "$B/lib/libdartjni.so" ] && no "lib/libdartjni.so is in the bundle (it needs a java vm)"
 # run paths only inside the bundle, and no home folder in any file
 for f in "$B/kryfo" "$B"/lib/*.so*; do

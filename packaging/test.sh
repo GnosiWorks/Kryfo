@@ -63,6 +63,7 @@ else
   touch "$LB/lib/libapp.so" "$LB/lib/libflutter_linux_gtk.so" "$LB/lib/libhalo.so" "$LB/lib/libsqlcipher.so.0" \
     "$LB/lib/libkryfo_signal.so" "$LB/lib/libflutter_zxing.so" "$LB/data/icudtl.dat" "$LB/data/kryfo.png" \
     "$LB/data/flutter_assets/AssetManifest.bin"
+  cp -a "$ROOT/mobile/linux/icons" "$LB/data/"
 fi
 # what flutter build windows leaves
 WB="$R/mobile/build/windows/x64/runner/Release"
