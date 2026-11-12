@@ -160,7 +160,8 @@ class GrowFromRect extends StatelessWidget {
           animation: animation,
           child: child,
           builder: (context, page) {
-            final t = grow.value;
+            // one gentle curve for the move, the scale and the clip
+            final t = Curves.fastOutSlowIn.transform(animation.value);
             final landed = _Landing(
               t: t,
               from: from,
@@ -262,18 +263,22 @@ Matrix4 landingMove(Rect at, Rect? a, double t) {
 /// what of it shows at [t]: the crop the bubble showed, growing with the
 /// page first, then opening to the rest of it and to [full]
 Rect landingWindow(Rect at, Rect? a, Rect full, double t) {
-  if (a == null || a.width <= 0) return Rect.lerp(at, full, t)!;
+  if (a == null || a.width <= 0) return at;
   final s0 = at.width / a.width;
   final s = s0 + (1 - s0) * t;
   final left = (at.left - a.left * s0) * (1 - t) + a.left * s;
   final top = (at.top - a.top * s0) * (1 - t) + a.top * s;
-  final crop = Rect.fromLTWH(
+  // how much of the page shows, in the page's own height: the crop's at
+  // t 0, all of it at t 1, on the same curve as the scale and the move
+  final shown = at.height / s0 + (a.height - at.height / s0) * t;
+  final page = Rect.fromLTWH(
     left,
     top,
     a.width * s,
-    math.min(at.height / s0 * s, a.height * s),
+    math.min(shown, a.height) * s,
   );
-  return Rect.lerp(crop, full, t * t)!;
+  // the viewer around the page comes in last
+  return Rect.lerp(page, full, t * t * t)!;
 }
 
 // paints the page so that [landing] sits on [from] at t 0 and where it
@@ -348,6 +353,8 @@ class _RenderLanding extends RenderProxyBox {
     final a = _target();
     final t = _t;
     final at = from.shift(-offset);
+    // not laid out yet: nothing of it drawn this frame, the bubble shows
+    if (a == null && t < 1) return;
     final m = landingMove(at, a, t);
     final window = landingWindow(at, a, full, t);
     _clip.layer = context.pushClipRRect(
