@@ -26,15 +26,16 @@
 - the flame opens the timer picker, with Off on top while a timer is on.
 - linux: notifications stay quiet while the screen is locked.
 - windows and linux: camera raw and tiff pictures are sent as clean jpegs.
-- [batch3] files never download on their own: a tap gets them.
-- [batch3] several files sent together arrive as one message, each with its own preview.
-- [batch3] a tray when you send files: rename them, see the total size and roughly how long it takes over tor.
-- [batch3] the files tab: search by name, filter by type or sender, sort by date or size.
-- [batch3] the photo viewer can save, forward and unsend, and you swipe through every photo and video in the chat.
-- [batch3] select several messages to copy, forward or delete them.
-- [batch3] photo spoilers: a blurred photo opens with a tap.
-- [batch3] a disappearing timer for each chat, with its time next to the flame.
-- [batch3] on a computer, drop files on a chat in the list to send them there.
+- files never download on their own: a tap gets them.
+- several files sent together arrive as one message, each with its own preview.
+- zip files show what is inside before you download them.
+- a tray when you send files: rename them, see the total size and roughly how long it takes over tor.
+- the files tab: search by name, filter by type or sender, sort by date or size.
+- the photo viewer can save, forward and unsend, and you swipe through every photo and video in the chat.
+- select several messages to copy, forward or delete them.
+- photo spoilers: a blurred photo opens with a tap.
+- a disappearing timer for each chat, with its time next to the flame.
+- on a computer, drop files on a chat in the list to send them there.
 - search a whole chat, and jump to an older message from a reply.
 - favourite gifs: star the ones you like and they wait on their own tab.
 
