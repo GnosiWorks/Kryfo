@@ -124,6 +124,30 @@ void main() {
     await t.pumpAndSettle();
   });
 
+  testWidgets('in its last stretch the bubble says finishing with the strip, '
+      'and nothing of the time left', (t) async {
+    mediaProgressStart('s2', chatKey: 'chat2', bytes: 5 * 1024 * 1024);
+    mediaProgressUpdate('s2', 0.97);
+    await t.pumpWidget(_frame(const IncomingMediaBanner(chatKey: 'chat2')));
+    expect(mediaSendFinishing('s2'), isFalse);
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.text(l10n.mediaProgressFinishing), findsOneWidget);
+    expect(mediaSendFinishing('s2'), isTrue);
+    // it stays so while the share holds
+    mediaProgressUpdate('s2', 0.975);
+    await t.pump(const Duration(seconds: 20));
+    expect(mediaSendFinishing('s2'), isTrue);
+    expect(
+      sourceOf('lib/widgets/file_bubble.dart'),
+      contains(
+        'if (mediaSendFinishing(uid)) return l10n.mediaProgressFinishing;',
+      ),
+    );
+    mediaProgressEnd('s2');
+    expect(mediaSendFinishing('s2'), isFalse);
+    await t.pumpAndSettle();
+  });
+
   testWidgets('waiting gives way to its size with no frame showing both', (
     t,
   ) async {

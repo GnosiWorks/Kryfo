@@ -30,11 +30,17 @@ class TransferPace {
   final Duration settle;
   final List<(int, double)> _seen = [];
   int? _first;
+  // the time left last said: a stall holds it and a small rise leaves it,
+  // so the words neither come and go nor step across a minute and back
+  int? _said;
 
   /// [share] of it done at [atMs]. a share that went back (a resend from
   /// the start) starts the pace over
   void add(int atMs, double share) {
-    if (_seen.isNotEmpty && share < _seen.last.$2) _seen.clear();
+    if (_seen.isNotEmpty && share < _seen.last.$2) {
+      _seen.clear();
+      _said = null;
+    }
     _first ??= atMs;
     if (_seen.isEmpty) _first = atMs;
     _seen.add((atMs, share));
@@ -46,6 +52,14 @@ class TransferPace {
 
   /// seconds left, or null while too little is known
   int? secondsLeft() {
+    final now = _guess();
+    final said = _said;
+    if (now == null) return said;
+    if (said != null && now > said && now <= said * 1.25 + 5) return said;
+    return _said = now;
+  }
+
+  int? _guess() {
     if (_seen.length < 2) return null;
     final (t0, s0) = _seen.first;
     final (t1, s1) = _seen.last;

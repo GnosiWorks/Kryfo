@@ -110,9 +110,9 @@ Timer? _sweeper;
 
 void _bump() => mediaProgressTick.value++;
 
-// a send's last stretch, by chat: when its share first reached it. held at
-// its share, the strip says it is finishing once a moment has passed
-// true once the moment has passed
+// a send's last stretch, by chat for the strip and by message for its
+// bubble: when its share first reached it. held at its share, both say it
+// is finishing once a moment has passed. true once the moment has passed
 final Map<String, bool> _outNearDone = {};
 Timer? _finishTimer;
 const _finishAfter = Duration(milliseconds: 500);
@@ -134,6 +134,14 @@ bool _finishing(String chatKey, double v) {
     });
   }
   return _outNearDone[chatKey]!;
+}
+
+/// [msgUid]'s send in its last stretch, as the strip says it: its bubble
+/// then says finishing too, and nothing of the time left
+bool mediaSendFinishing(String msgUid) {
+  final v = mediaSendProgress[msgUid];
+  if (v == null || _quiet.contains(msgUid)) return false;
+  return _finishing(msgUid, v);
 }
 
 // a transfer quiet for 75s is shown as paused; one quiet for a day is
@@ -198,6 +206,7 @@ void mediaProgressEnd(String msgUid) {
     _finishTimer = null;
     _outNearDone.clear();
   }
+  _outNearDone.remove(msgUid);
   _quiet.remove(msgUid);
   mediaPreparing.remove(msgUid);
   _bytes.remove(msgUid);

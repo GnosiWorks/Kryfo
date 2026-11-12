@@ -463,6 +463,8 @@ class _FileCardState extends State<FileCard> {
     if (mediaPreparing.contains(uid) || v == 0) {
       return l10n.mediaProgressPreparingNow;
     }
+    // the strip's last stretch: no time left, as it says none
+    if (mediaSendFinishing(uid)) return l10n.mediaProgressFinishing;
     final d = transferDetail(uid, v);
     return d == null ? percent(v) : '$d · ${percent(v)}';
   }

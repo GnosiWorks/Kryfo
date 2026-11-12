@@ -50,6 +50,40 @@ void main() {
       expect(p.secondsLeft(), isNull);
     });
 
+    test('a stall holds what was said, never comes and goes', () {
+      final p = TransferPace();
+      for (var t = 0; t <= 5000; t += 1000) {
+        p.add(t, t / 10000);
+      }
+      var said = p.secondsLeft();
+      expect(said, isNotNull);
+      // held at one share past the window: the line never drops out, and
+      // a wait only ever makes it longer
+      for (var t = 6000; t <= 30000; t += 1000) {
+        p.add(t, 0.5);
+        final now = p.secondsLeft();
+        expect(now, isNotNull);
+        expect(now, greaterThanOrEqualTo(said!));
+        said = now;
+      }
+    });
+
+    test('a small rise keeps the last guess, a fall takes the new one', () {
+      final p = TransferPace(window: const Duration(seconds: 4));
+      for (var t = 0; t <= 4000; t += 1000) {
+        p.add(t, t / 100000);
+      }
+      // a hundredth a second, 96 hundredths to go
+      expect(p.secondsLeft(), 96);
+      // a touch slower: still 96, not a step up and back
+      p.add(5000, 0.0495);
+      expect(p.secondsLeft(), 96);
+      // much faster: the new guess
+      p.add(6000, 0.2);
+      p.add(7000, 0.4);
+      expect(p.secondsLeft(), lessThan(96));
+    });
+
     test('nothing moving says nothing', () {
       final p = TransferPace();
       for (var t = 0; t <= 5000; t += 1000) {
