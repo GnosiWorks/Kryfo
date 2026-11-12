@@ -357,7 +357,7 @@ void main() {
       expect(ask, contains('_confirmSend('));
       expect(ask, contains('r.total,'));
       final send = bodyOf(chat, 'Future<void> _sendFromSheet(');
-      expect(send, contains('if (!await _askSheet(r) || !mounted) return;'));
+      expect(send, contains('if (!await _askSheet(r) || !mounted) break;'));
       expect(send, isNot(contains('_askBig')));
       expect(send, contains('asked: true,'));
       expect(

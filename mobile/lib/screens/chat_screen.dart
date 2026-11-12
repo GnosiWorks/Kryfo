@@ -4794,19 +4794,24 @@ class _ChatScreenState extends State<ChatScreen>
       // the sheet is the preview: one send, one caption, in the order
       // picked, with no second screen
       var caption = r.caption;
-      if (!await _askSheet(r) || !mounted) return;
+      // its one question, once nothing stands in the way of what it asks of
+      var asked = false;
       for (final run in r.runs) {
         if (!mounted || lockState.locked) break;
+        if (run.media && (_mediaWaits || _roomLeft <= 0)) {
+          showHaloToast(
+            context,
+            _mediaWaits
+                ? l10n.requestSenderMediaLater
+                : l10n.chatWaitingForThemTo,
+          );
+          break;
+        }
+        if (!asked) {
+          if (!await _askSheet(r) || !mounted) break;
+          asked = true;
+        }
         if (run.media) {
-          if (_mediaWaits || _roomLeft <= 0) {
-            showHaloToast(
-              context,
-              _mediaWaits
-                  ? l10n.requestSenderMediaLater
-                  : l10n.chatWaitingForThemTo,
-            );
-            break;
-          }
           final items = await readGalleryPicks([
             for (final m in run.picks) m.source as XFile? ?? XFile(m.path),
           ], spoilers: r.spoilers);
