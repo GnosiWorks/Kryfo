@@ -689,8 +689,9 @@ class _FileTextPreviewState extends State<FileTextPreview> {
         color: fg.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: LayoutBuilder(
-        builder: (context, box) {
+      // a fixed width: the bubble measures it in its intrinsic pass
+      child: Builder(
+        builder: (context) {
           final dir = Directionality.of(context);
           var left = kDocGlanceLines;
           var more = false;
@@ -706,7 +707,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
               textDirection: dir,
               textScaler: scaler,
               maxLines: left,
-            )..layout(maxWidth: box.maxWidth);
+            )..layout(maxWidth: kFilePreviewWidth - 22);
             final n = tp.computeLineMetrics().length;
             final over = tp.didExceedMaxLines;
             tp.dispose();
