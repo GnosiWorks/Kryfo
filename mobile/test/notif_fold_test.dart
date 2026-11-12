@@ -76,8 +76,7 @@ _Shade _start({bool hide = false, bool? popups}) {
   addTearDown(() => debugDefaultTargetPlatformOverride = null);
   SharedPreferences.setMockInitialValues({
     HaloContainer.everyday.key('notif_hide_content'): hide,
-    if (popups != null)
-      HaloContainer.everyday.key('kryfo.requests.popups'): popups,
+    HaloContainer.everyday.key('kryfo.requests.popups'): ?popups,
   });
   FlutterSecureStorage.setMockInitialValues({});
   forgetNotifPlain();

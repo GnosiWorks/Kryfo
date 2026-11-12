@@ -6,7 +6,6 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications_linux/flutter_local_notifications_linux.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_start.dart';
 import 'package:kryfo/desktop/desktop_toasts.dart';

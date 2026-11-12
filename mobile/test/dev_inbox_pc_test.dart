@@ -11,58 +11,35 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/devices/device_receive.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/device_store.dart' show deviceTables;
-import 'package:kryfo/devices/own_gone.dart';
-import 'package:kryfo/heal.dart' show restoreCutsLinkedDevices;
 import 'package:kryfo/devices/own_sync.dart';
 import 'package:kryfo/main.dart'
     show
         AppState,
         HaloDb,
         HaloEngine,
-        devContactByKeyForTest,
-        deviceReceiveForTest,
-        engineDeviceWireForTest,
-        ownAddedForTest,
         linkedRoleForTest,
-        linkedChatsComing,
-        historyCopyShown,
-        ownShownId,
-        appState,
-        AppStateSession,
         ownApplyForTest,
         ownPassForTest,
         ownTellMeForTest,
         AppStateRefresh,
         ownHeldGoForTest,
-        ownNoteForTest,
-        ownAroundHideForTest,
-        deviceSealOutcome,
-        DeviceSent,
-        DeviceCannotReach,
-        kNotFromDevice,
         phonePqForTest,
         ownSyncForTest,
         searchTables,
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateOutbox,
         AppStateReceive,
         AppStateContacts,
         AppStateDevchat,
         AppStateInbox,
         devInboxHere,
         devInboxForTest;
-import 'package:kryfo/devices/history_link.dart'
-    show HistoryCopyStage, HistoryCopyStep;
-import 'package:kryfo/devices/own_device_store.dart' show ownPhoneHeard;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
-import 'package:kryfo/supporter.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -154,20 +131,6 @@ class _Told extends OwnSync {
 }
 
 String _f(Map<String, Object?> j) => 'halo/1:${jsonEncode(j)}';
-
-// the receiving side as the app reaches it: each line opens to what is set
-class _Recv implements DeviceReceive {
-  final copies = <String, DevCopyIn>{};
-  @override
-  Future<DevCopyIn?> receive(
-    String tag,
-    String cipher, {
-    int? heldSince,
-  }) async => copies[cipher];
-
-  @override
-  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
-}
 
 const _x = '7a1f0c3e9b2d4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f';
 
