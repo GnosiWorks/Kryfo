@@ -9,6 +9,7 @@ import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/pdf_pages.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/widgets/file_badge.dart';
+import 'package:kryfo/widgets/preview_bleed.dart';
 import 'package:kryfo/widgets/swap.dart';
 
 import 'source_body.dart';
@@ -148,5 +149,65 @@ void main() {
         pdfGlanceNow(widget.path)?.image;''',
       ),
     );
+  });
+
+  testWidgets('in a bubble a preview reaches its edges; elsewhere it keeps '
+      'its card', (t) async {
+    const key = ValueKey('preview');
+    Widget host({required bool inBubble}) => Directionality(
+      textDirection: TextDirection.ltr,
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+          child: SizedBox(
+            width: 200,
+            child: Builder(
+              builder: (context) {
+                final preview = Builder(
+                  builder: (context) => bleedPreview(
+                    context,
+                    Container(
+                      key: key,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: previewRadius(context),
+                      ),
+                    ),
+                  ),
+                );
+                return inBubble
+                    ? PreviewBleed(side: 14, top: 12, child: preview)
+                    : preview;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpWidget(host(inBubble: true));
+    expect(t.getSize(find.byKey(key)), const Size(228, 100));
+    expect(t.getTopLeft(find.byKey(key)), Offset.zero);
+    final d = t.widget<Container>(find.byKey(key)).decoration! as BoxDecoration;
+    expect(d.borderRadius, BorderRadius.zero);
+    await t.pumpWidget(host(inBubble: false));
+    expect(t.getSize(find.byKey(key)), const Size(200, 100));
+    expect(t.getTopLeft(find.byKey(key)), const Offset(14, 12));
+  });
+
+  test('both chats draw a file like a photo: preview to the edges, clipped '
+      'to the bubble', () {
+    for (final file in [
+      'lib/screens/chat_screen.dart',
+      'lib/screens/group_chat_screen.dart',
+    ]) {
+      final src = sourceOf(file);
+      expect(src, contains('child: fileBubbleFrame('), reason: file);
+      expect(
+        src,
+        contains('clipBehavior: frameless || fileBleed'),
+        reason: file,
+      );
+    }
   });
 }

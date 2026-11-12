@@ -19,6 +19,7 @@ import 'sealed_picture.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
 import 'file_actions.dart' show FileView, fileFactsOrName, fileViewOf;
+import 'preview_bleed.dart';
 import 'file_bubble.dart';
 import 'sound_views.dart' show SoundFileBubble, soundHeroTag;
 import '../sound_player.dart' show SoundItem;
@@ -139,7 +140,13 @@ Widget fileCard(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: picture),
+            // out to the bubble's edges, as a photo is
+            Builder(
+              builder: (context) => bleedPreview(
+                context,
+                ClipRRect(borderRadius: previewRadius(context), child: picture),
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               safeFileName(fileName),

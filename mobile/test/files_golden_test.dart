@@ -14,6 +14,7 @@ import 'package:kryfo/theme.dart';
 import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/file_actions.dart';
 import 'package:kryfo/widgets/file_bubble.dart';
+import 'package:kryfo/widgets/preview_bleed.dart';
 import 'package:kryfo/widgets/file_stack.dart';
 import 'package:kryfo/widgets/file_wait.dart';
 import 'package:kryfo/widgets/sound_views.dart';
@@ -131,7 +132,18 @@ void main() {
             color: out ? HaloColors.amber : HaloColors.bubbleIn,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: IntrinsicWidth(child: child),
+          // as the chat draws a file: previews out to the bubble's edges
+          clipBehavior: Clip.antiAlias,
+          child: Builder(
+            builder: (context) => fileBubbleFrame(
+              context,
+              on: true,
+              top: true,
+              side: 14,
+              above: 10,
+              child: IntrinsicWidth(child: child),
+            ),
+          ),
         ),
       );
       // its first page drawn before the frame, so every run draws it alike
@@ -267,7 +279,18 @@ void main() {
             color: out ? HaloColors.amber : HaloColors.bubbleIn,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: IntrinsicWidth(child: child),
+          // as the chat draws a file: previews out to the bubble's edges
+          clipBehavior: Clip.antiAlias,
+          child: Builder(
+            builder: (context) => fileBubbleFrame(
+              context,
+              on: true,
+              top: true,
+              side: 12,
+              above: 10,
+              child: IntrinsicWidth(child: child),
+            ),
+          ),
         ),
       );
       await t.runAsync(() => pdfGlance(pdf.path, 236));

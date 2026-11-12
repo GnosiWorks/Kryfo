@@ -23,6 +23,7 @@ import 'file_wait.dart' show FileWaitMark, fileWaitLine;
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
+import 'preview_bleed.dart';
 import 'spoiler_cover.dart';
 
 /// a file kept on the files service: past this from when it was written it
@@ -100,13 +101,21 @@ class FileStack extends StatelessWidget {
               children: [
                 for (final (i, r) in rows.indexed) ...[
                   if (i > 0) const SizedBox(height: 10),
-                  _Row(
+                  // only the first preview reaches the bubble's top; every
+                  // one reaches its sides
+                  KeyedSubtree(
                     key: ValueKey(r.id),
-                    row: r,
-                    wait: r.waitUid == null ? null : waits[r.waitUid],
-                    isOut: isOut,
-                    onGet: onGet,
-                    onPause: onPause,
+                    child: PreviewBleed.sidesOnly(
+                      context,
+                      _Row(
+                        row: r,
+                        wait: r.waitUid == null ? null : waits[r.waitUid],
+                        isOut: isOut,
+                        onGet: onGet,
+                        onPause: onPause,
+                      ),
+                      keep: i == 0,
+                    ),
                   ),
                 ],
                 if (waiting.length > 1 || (asks.isNotEmpty && coming > 0))
@@ -131,7 +140,6 @@ class _Row extends StatefulWidget {
   final void Function(String uid) onGet;
   final void Function(String uid) onPause;
   const _Row({
-    super.key,
     required this.row,
     required this.wait,
     required this.isOut,

@@ -30,6 +30,7 @@ import 'ease_size.dart';
 import 'file_badge.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
+import 'preview_bleed.dart';
 import 'swap.dart';
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 
@@ -327,7 +328,8 @@ class _FileCardState extends State<FileCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (preview != null) ...[
-                  ExcludeSemantics(child: preview),
+                  // out to the bubble's edges, as a photo is
+                  ExcludeSemantics(child: bleedPreview(context, preview)),
                   const SizedBox(height: 8),
                 ],
                 Row(
@@ -501,7 +503,7 @@ class SetPicture extends StatelessWidget {
   Widget build(BuildContext context) {
     final still = motionStill(context);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: previewRadius(context),
       child: SizedBox(
         width: kFilePreviewWidth,
         height: height,
@@ -688,7 +690,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
       padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
       decoration: BoxDecoration(
         color: fg.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: previewRadius(context),
       ),
       // a fixed width: the bubble measures it in its intrinsic pass
       child: Builder(
@@ -788,7 +790,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
                     ? (widget.isOut ? HaloColors.onAmber : HaloColors.text)
                           .withValues(alpha: 0.06)
                     : HaloColors.ink.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: previewRadius(context),
               ),
             )
           : TweenAnimationBuilder<double>(
@@ -803,7 +805,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
                 padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
                 decoration: BoxDecoration(
                   color: HaloColors.ink,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: previewRadius(context),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -967,7 +969,7 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
     final still = motionStill(context);
     final pages = _pages;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: previewRadius(context),
       child: SizedBox(
         width: kFilePreviewWidth,
         height: _height,
