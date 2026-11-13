@@ -10952,6 +10952,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkedAddOnPhone => 'أضف الأشخاص من هاتفك. سيظهرون هنا أيضًا.';
 
   @override
+  String get linkedGroupOnPhone => 'أنشئ المجموعات من هاتفك. ستظهر هنا أيضًا.';
+
+  @override
   String get linkedLinkOnPhone => 'افتح هذا الرابط على هاتفك.';
 
   @override

@@ -10662,6 +10662,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get linkedAddOnPhone => 'Thêm người trên điện thoại của bạn. Họ cũng hiện ở đây.';
 
   @override
+  String get linkedGroupOnPhone => 'Tạo nhóm trên điện thoại của bạn. Chúng cũng hiện ở đây.';
+
+  @override
   String get linkedLinkOnPhone => 'Mở liên kết này trên điện thoại của bạn.';
 
   @override

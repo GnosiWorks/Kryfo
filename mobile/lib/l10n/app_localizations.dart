@@ -18610,6 +18610,12 @@ abstract class AppLocalizations {
   /// **'Add people on your phone. They show up here too.'**
   String get linkedAddOnPhone;
 
+  /// screens/home_screen.dart: on a linked device, a tap on Room or + New over the groups; groups and rooms are made on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Create groups on your phone. They show up here too.'**
+  String get linkedGroupOnPhone;
+
   /// widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's
   ///
   /// In en, this message translates to:

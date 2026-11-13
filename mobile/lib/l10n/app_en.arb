@@ -14541,6 +14541,10 @@
   "@linkedAddOnPhone": {
     "description": "screens/home_screen.dart, app/shell.dart: on a linked device, where adding a contact would be; people are added on the phone"
   },
+  "linkedGroupOnPhone": "Create groups on your phone. They show up here too.",
+  "@linkedGroupOnPhone": {
+    "description": "screens/home_screen.dart: on a linked device, a tap on Room or + New over the groups; groups and rooms are made on the phone"
+  },
   "linkedLinkOnPhone": "Open this link on your phone.",
   "@linkedLinkOnPhone": {
     "description": "widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's"

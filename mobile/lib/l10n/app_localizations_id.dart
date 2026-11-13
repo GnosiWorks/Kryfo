@@ -10662,6 +10662,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get linkedAddOnPhone => 'Tambahkan orang di ponselmu. Mereka juga muncul di sini.';
 
   @override
+  String get linkedGroupOnPhone => 'Buat grup di ponselmu. Grupnya juga muncul di sini.';
+
+  @override
   String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
 
   @override

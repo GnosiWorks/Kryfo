@@ -2535,17 +2535,13 @@ class _ContactListState extends State<_ContactList> {
         children: [
           // the developer chat, pinned: above everything, the groups too
           for (final (n, d) in top.indexed) _row(_top, d, n),
-          // on the phone the heading is where a group or a room is made, even
-          // with none yet. a linked device makes neither, so it shows only
-          // over groups or an ended room
-          if (!linkedRole ||
-              groups.isNotEmpty ||
-              widget.expiredRoomName != null)
-            _GroupsHead(
-              onNewGroup: widget.onNewGroup,
-              onNewRoom: widget.onNewRoom,
-              expiredRoomName: widget.expiredRoomName,
-            ),
+          // the groups heading is always there: it is where a group or a
+          // room is made, even with none yet
+          _GroupsHead(
+            onNewGroup: widget.onNewGroup,
+            onNewRoom: widget.onNewRoom,
+            expiredRoomName: widget.expiredRoomName,
+          ),
           for (final (n, g) in groups.indexed) _row(_groups, g, n),
           if (chats.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -2575,28 +2571,27 @@ class _GroupsHead extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final expired = expiredRoomName;
+    // groups and burner rooms are made on the phone: a linked device keeps
+    // the two ways in and says where
+    void onPhone() => showHaloToast(context, l10n.linkedGroupOnPhone);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _SectionHead(
           label: l10n.homeGroups,
           actions: [
-            // burner rooms stay on the phone
-            if (!linkedRole)
-              _HeadAction(
-                icon: Icons.timer_outlined,
-                label: l10n.homeRoom,
-                color: HaloColors.violet,
-                onTap: onNewRoom,
-              ),
-            // and so are groups: a phone takes no group from a device
-            if (!linkedRole)
-              _HeadAction(
-                icon: Icons.add_rounded,
-                label: l10n.homeNew,
-                color: HaloColors.amber,
-                onTap: onNewGroup,
-              ),
+            _HeadAction(
+              icon: Icons.timer_outlined,
+              label: l10n.homeRoom,
+              color: HaloColors.violet,
+              onTap: linkedRole ? onPhone : onNewRoom,
+            ),
+            _HeadAction(
+              icon: Icons.add_rounded,
+              label: l10n.homeNew,
+              color: HaloColors.amber,
+              onTap: linkedRole ? onPhone : onNewGroup,
+            ),
           ],
         ),
         GrowSwap(

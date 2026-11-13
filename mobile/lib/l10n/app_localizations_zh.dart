@@ -10662,6 +10662,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkedAddOnPhone => '在手机上添加联系人。他们也会出现在这里。';
 
   @override
+  String get linkedGroupOnPhone => '在手机上创建群组。它们也会出现在这里。';
+
+  @override
   String get linkedLinkOnPhone => '在手机上打开这个链接。';
 
   @override
@@ -22117,6 +22120,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkedAddOnPhone => '在手機上新增聯絡人。他們也會出現在這裡。';
+
+  @override
+  String get linkedGroupOnPhone => '在手機上建立群組。它們也會出現在這裡。';
 
   @override
   String get linkedLinkOnPhone => '在手機上開啟這個連結。';

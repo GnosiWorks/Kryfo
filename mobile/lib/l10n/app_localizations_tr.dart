@@ -10718,6 +10718,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get linkedAddOnPhone => 'Kişileri telefonundan ekle. Burada da görünürler.';
 
   @override
+  String get linkedGroupOnPhone => 'Grupları telefonundan oluştur. Burada da görünürler.';
+
+  @override
   String get linkedLinkOnPhone => 'Bu bağlantıyı telefonunda aç.';
 
   @override

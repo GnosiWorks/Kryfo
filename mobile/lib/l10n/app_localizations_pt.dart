@@ -10726,6 +10726,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get linkedAddOnPhone => 'Adicione pessoas no seu celular. Elas aparecem aqui também.';
 
   @override
+  String get linkedGroupOnPhone => 'Crie grupos no seu celular. Eles aparecem aqui também.';
+
+  @override
   String get linkedLinkOnPhone => 'Abra este link no seu celular.';
 
   @override
