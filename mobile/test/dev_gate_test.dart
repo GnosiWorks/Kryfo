@@ -557,7 +557,12 @@ void main() {
         "'HaloRoomSendFirstContact'",
       ],
       'void roomSubscribeBg(': ['.roomListen(', "'HaloRoomSubscribe'"],
-      'void deviceListenBg(': ['devGate.names(xPub:', '_subscribeOnIsolate('],
+      'void deviceListenBg(': ['devPairRefused(', '_subscribeOnIsolate('],
+      'Future<String> nostrSendDevice(': [
+        'devPairRefused(',
+        "'HaloNostrSendDeviceOpener'",
+        "'HaloNostrSend'",
+      ],
     };
     for (final e in doors.entries) {
       final b = body(e.key);
@@ -565,12 +570,19 @@ void main() {
         expect(b, contains(need), reason: '${e.key} lacks $need');
       }
       // the gate is asked before anything leaves
-      final gate = b.indexOf('devGate');
+      final gate = b.indexOf(RegExp('devGate|devPairRefused'));
       expect(gate, isNonNegative, reason: e.key);
       for (final raw in e.value.skip(1)) {
         expect(gate, lessThan(b.indexOf(raw)), reason: e.key);
       }
     }
+    // the device doors' question goes to the gate
+    final pair = src.indexOf('bool devPairRefused(');
+    expect(pair, isNonNegative);
+    expect(
+      src.substring(pair, src.indexOf('\n}\n', pair)),
+      contains('devGate.names(xPub:'),
+    );
     int count(String s) => s.allMatches(src).length;
     // the doors above, plus each helper's own definition
     expect(count('_sendOnIsolate('), 3);
@@ -580,5 +592,6 @@ void main() {
     expect(count("'HaloRoomSend'"), 1);
     expect(count("'HaloRoomSendFirstContact'"), 1);
     expect(count("'HaloRoomSubscribe'"), 1);
+    expect(count("'HaloNostrSendDeviceOpener'"), 1);
   });
 }
