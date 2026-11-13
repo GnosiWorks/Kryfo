@@ -881,10 +881,10 @@ class HaloEngine {
 
   // listening on a device pair (device_receive.dart): [arg] "x/their/my"
   // for its opener address, "x/their/my.seed" for the seeded pair
-  // a device pair is never the dev chat's: a pinned key is not listened on
+  // a contact's device pair is never the dev chat's (devPairRefused)
   // [hidden]: a hidden chat's contact's device pair, on a lane of its own
   void deviceListenBg(int ident, String arg, {bool hidden = false}) {
-    if (devGate.names(xPub: arg.split('/').first)) return;
+    if (devPairRefused(ident, arg)) return;
     deviceTagStep(
       ident,
       arg,
@@ -901,14 +901,14 @@ class HaloEngine {
 
   // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
   // on the seeded pair, or with [opener] to the receiver's opener address.
-  // a device pair is never the dev chat's, so a pinned key is refused
+  // a contact's device pair is never the dev chat's (devPairRefused)
   Future<String> nostrSendDevice(
     int ident,
     String arg,
     String b64Cipher, {
     bool opener = false,
   }) {
-    if (devGate.names(xPub: arg.split('/').first)) {
+    if (devPairRefused(ident, arg)) {
       return Future.value(kDevRefused);
     }
     return _identFfiOnIsolate(
@@ -1515,6 +1515,15 @@ class _KnockWaits implements Exception {
 // a stranger's opener that did not file and may later: not acked
 class _FirstWaits implements Exception {
   const _FirstWaits();
+}
+
+/// a device pair [arg] the dev gate turns down: one naming a pinned key
+/// that is not my identity [ident]. the dev chat has no devices, but the
+/// developer's own phone and computers pair like anyone's
+bool devPairRefused(int ident, String arg) {
+  final x = arg.split('/').first;
+  if (!devGate.names(xPub: x)) return false;
+  return !(_deviceState?.isMine(ident, x) ?? false);
 }
 
 // the listens and unlistens of one engine tag (a device pair's opener

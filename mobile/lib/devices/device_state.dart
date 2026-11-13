@@ -126,6 +126,14 @@ class DeviceState {
   /// last call that said: the alarm goes on them
   List<String> claimants = const [];
 
+  // my identities as the load named them, in hex as a device pair arg has
+  // them
+  Map<int, String> _mine = const {};
+
+  /// whether [xPub] is my identity [ident]: a device pair naming it is one
+  /// between my own devices
+  bool isMine(int ident, String xPub) => _mine[ident] == xPub.toLowerCase();
+
   Map<String, dynamic> _answer(String raw) {
     final j = jsonDecode(raw) as Map<String, dynamic>;
     final c = j['claimants'];
@@ -147,6 +155,12 @@ class DeviceState {
     final err = j['err'] as String?;
     if (err != null) throw DevRefused(err, j);
     skipped = (j['skipped'] as num?)?.toInt() ?? 0;
+    _mine = {
+      for (final m in mine)
+        m.ident: devHex(
+          m.identity.length == 33 ? m.identity.sublist(1) : m.identity,
+        ),
+    };
   }
 
   /// a call that names no session remote. its rows are written in [db]
