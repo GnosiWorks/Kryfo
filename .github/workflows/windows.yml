@@ -221,7 +221,10 @@ jobs:
 
       - name: installer
         run: |
-          C:\inno\ISCC.exe /Q "/DOutputDir=$env:K\packaging\build\windows" "$env:K\packaging\windows\kryfo.iss"
+          # iscc's own pubspec read takes crlf lines only, this checkout has lf
+          $v = (Select-String -Path "$env:K\mobile\pubspec.yaml" -Pattern '^version: (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value
+          if (-not $v) { throw "no version: line in mobile\pubspec.yaml" }
+          C:\inno\ISCC.exe /Q "/DOutputDir=$env:K\packaging\build\windows" "/DAppVersion=$v" "$env:K\packaging\windows\kryfo.iss"
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: release files and sums
