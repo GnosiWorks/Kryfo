@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'home_screen.dart' show ContactPreview;
 import '../container.dart' show HaloContainer;
-import '../devices/own_answer.dart' show kAnswerBurns;
+import '../devices/own_answer.dart' show kAnswerBurns, kAnswerPhoneLate;
 import '../drafts.dart';
 import '../heal.dart'
     show
@@ -1309,9 +1309,44 @@ class _ChatScreenState extends State<ChatScreen>
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
-  // an answer of mine here that waits for the phone to send it
-  bool get _answersWait =>
-      _messages.any((m) => m.direction == 'out' && m.parked && !m.failed);
+  // an answer of mine here the phone has not sent after kAnswerPhoneLate.
+  // a younger one shows only its clock; the timer's turn marks the next
+  // ones late, so the line comes without a rebuild from elsewhere
+  final _answersLate = <String>{};
+  var _answersNext = <String>{};
+  Timer? _answersLateTimer;
+
+  bool _answersWait() {
+    final now = DateTime.now();
+    var late = false;
+    Duration? next;
+    final young = <String, Duration>{};
+    for (final m in _messages) {
+      final uid = m.msgUid;
+      if (m.direction != 'out' || !m.parked || m.failed || uid == null) {
+        continue;
+      }
+      final left = kAnswerPhoneLate - now.difference(m.when);
+      if (left <= Duration.zero || _answersLate.contains(uid)) {
+        late = true;
+        continue;
+      }
+      young[uid] = left;
+      if (next == null || left < next) next = left;
+    }
+    if (next != null && !(_answersLateTimer?.isActive ?? false)) {
+      final at = next;
+      _answersNext = {
+        for (final e in young.entries)
+          if (e.value - at < const Duration(seconds: 1)) e.key,
+      };
+      _answersLateTimer = Timer(at, () {
+        if (!mounted) return;
+        setState(() => _answersLate.addAll(_answersNext));
+      });
+    }
+    return late;
+  }
 
   // a linked device answers only a contact whose app reads its copies, and
   // never a chat with screenshots blocked: the phone does
@@ -6827,6 +6862,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _find.detach();
     _helloWaitTimer?.cancel();
+    _answersLateTimer?.cancel();
     _unwatchCaptures?.call();
     // the row stays with the chat for its next opening
     _tray.removeListener(_trayMoved);
@@ -8403,7 +8439,7 @@ class _ChatScreenState extends State<ChatScreen>
               ),
               // answers handed to the phone, not sent by it yet
               _Fold(
-                _viaPhone && _answersWait
+                _viaPhone && _answersWait()
                     ? Padding(
                         key: const ValueKey('answers-wait'),
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),

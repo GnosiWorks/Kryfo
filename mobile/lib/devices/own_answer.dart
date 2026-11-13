@@ -26,6 +26,10 @@ const kAnswerDropped = {
 /// computer's answer never vanishes before anyone saw it
 const kAnswerBurns = [3600, 86400];
 
+/// how long an answer waits for the phone's copy before the chat says the
+/// phone sends it: tor alone takes seconds
+const kAnswerPhoneLate = Duration(seconds: 30);
+
 final _uidShape = RegExp(r'^[A-Za-z0-9_\-]{1,64}$');
 
 enum AnswerKind { text, reaction, edit, takeBack }
