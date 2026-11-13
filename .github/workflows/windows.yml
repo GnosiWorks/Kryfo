@@ -219,6 +219,15 @@ jobs:
           $out
           if ($out -match 'FAIL') { exit 1 }
 
+      - name: tor.exe before the installer
+        run: |
+          $t = "$env:K\packaging\build\windows\tor\tor.exe"
+          if (Test-Path $t) { (Get-FileHash -Algorithm SHA256 $t).Hash.ToLowerInvariant() } else { "no $t" }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:K\packaging\windows\check-tor.ps1" -Path $t -Sha256 1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074
+          "check-tor.ps1 exit $LASTEXITCODE"
+          Get-MpThreatDetection -ErrorAction SilentlyContinue | Select-Object -Property InitialDetectionTime, Resources | Format-List
+          exit 0
+
       - name: installer
         run: |
           # iscc's own pubspec read takes crlf lines only, this checkout has lf
