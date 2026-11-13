@@ -106,11 +106,13 @@ func TestAddrCaughtWantsEveryStore(t *testing.T) {
 		r.mu.Unlock()
 	}
 	useStandIns(t, modeFast, nil, a, b, pub)
-	old := secondRelayHost.get()
+	old, oldSpread := secondRelayHost.get(), secondFirstSpread
 	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
+	secondFirstSpread = 0
 	t.Cleanup(func() {
 		runnersGone(t)
 		secondRelayHost.put(old)
+		secondFirstSpread = oldSpread
 	})
 	w := newDevWorld(t)
 	freshInbox(t)
@@ -134,11 +136,40 @@ func TestAddrCaughtWantsEveryStore(t *testing.T) {
 	waitFor(t, "the first store walked", 20*time.Second, func() bool {
 		return addrCaughtOf(dvA5, opener) == "p"
 	})
-	// the second too: caught
-	b.mu.Lock()
-	b.down = false
-	b.mu.Unlock()
-	waitFor(t, "the second store walked", 30*time.Second, func() bool {
+	// the second store down: one store stays one store
+	time.Sleep(2 * time.Second)
+	if got := addrCaughtOf(dvA5, opener); got != "p" {
+		t.Fatalf("the second store down: %s", got)
+	}
+}
+
+// both stores walked, a public relay beside them: caught
+func TestAddrCaughtBothStores(t *testing.T) {
+	a, b, pub := newRelayStandIn(t, 0), newRelayStandIn(t, 0), newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, a, b, pub)
+	old, oldSpread := secondRelayHost.get(), secondFirstSpread
+	secondRelayHost.put(strings.TrimPrefix(b.url(), "ws://"))
+	secondFirstSpread = 0
+	t.Cleanup(func() {
+		runnersGone(t)
+		secondRelayHost.put(old)
+		secondFirstSpread = oldSpread
+	})
+	w := newDevWorld(t)
+	freshInbox(t)
+	addrCaughtClear()
+	t.Cleanup(addrCaughtClear)
+	opener := w.aHex + "/1/5"
+	if res := nostrSubscribe(dvA5, opener, false); res != "ok" {
+		t.Fatal(res)
+	}
+	defer nostrUnsubscribe(dvA5, opener)
+	waitFor(t, "both stores walked", 20*time.Second, func() bool {
 		return addrCaughtOf(dvA5, opener) == "1"
 	})
+	for _, st := range []string{storeFirst, storeSecond} {
+		if _, ok := addrsCaught.Load(w.aHex + "|" + st); ok {
+			t.Fatal("keyed by the arg, not the address")
+		}
+	}
 }
