@@ -1,80 +1,56 @@
-
-# editors
 # flutter
-# go engine artifacts
-# ios
-# local-only, keep out of the repo (mockups, backups, logs, patches)
-# os
-# secrets
-# signing, never commit
-**/*.iml
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 **/.fvm/
 **/.packages
+**/build/
+**/*.iml
+
+# ios
 **/.symlinks/
 **/Flutter.framework
 **/Pods/
-**/build/
-**/fcm.json
-**/google-services.json
+
+# built libraries, never committed
 **/jniLibs/**/*.so
 **/jniLibs/**/*.stamp
-**/local.properties
-mobile/android/app/src/play/google-services.json
-*.bak
-*.jks
-*.key
-*.keystore
-*.log
-*.pem
-*.swp
-*service-account*.json
-box.key
-*~
-.DS_Store
-.env
-.idea/
-.vscode/
-08_complete_spec.html
-CONTEXT*.md
-Halo.html
-Thumbs.db
-apply_all.py
-burnfix_*.py
-chatfix.py
-diag_engine.py
-engine/e*.py
 engine/engine
 engine/libhalo.h
 engine/libhalo.so
-fix2.py
-icon-backup-*/
-mobile/*.py
-mobile/android/key.properties
+engine/vendor/**/builddeps/**/*.a
+engine/vendor/**/builddeps/**/*.la
 mobile/linux/out/
 mobile/windows/out/
-onionfix.py
-patch*.py
-patch_*.py
-pillfix.py
-polish*.py
-repro/Dockerfile.public.bak
-repro/verify_offline.sh
-statusfix.py
-subfix.py
 
-# relay and handle service source is public - the binaries are not
+# server binaries and data: the sources are public, the builds are not
+relay-live/halo-relay
+relay-live/data/
+server/dmrelay/dmrelay
 server/dmrelay/halo-relay
 server/dmrelay/dmrelay-data/
 server/handle/kryfo-handles
-server/dmrelay/dmrelay
-server/handle/kryfo-handles
-relay-live/halo-relay
-relay-live/data/
-relay-live/halo-relay
-relay-live/data/
-engine/vendor/**/builddeps/**/*.a
-engine/vendor/**/builddeps/**/*.la
+
+# secrets and signing
+**/fcm.json
+**/google-services.json
+**/local.properties
+*service-account*.json
+mobile/android/key.properties
+.env
+box.key
+*.jks
+*.key
+*.keystore
 *.p12
+*.pem
+
+# editors and os
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+*.bak
+*.log
