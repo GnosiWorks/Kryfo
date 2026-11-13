@@ -98,7 +98,7 @@ fresh() {
 	mkdir -p "$FAKE/ssh" "$FAKE/home/kryfo/.ssh"
 	echo "ssh-ed25519 AAAAhostkeyone root@box" >"$FAKE/ssh/ssh_host_ed25519_key.pub"
 	echo "ssh-rsa AAAAhostkeytwo root@box" >"$FAKE/ssh/ssh_host_rsa_key.pub"
-	echo "ssh-ed25519 AAAAmariokey mario" >"$FAKE/home/kryfo/.ssh/authorized_keys"
+	echo "ssh-ed25519 AAAAadminkey admin" >"$FAKE/home/kryfo/.ssh/authorized_keys"
 	routes '{"free":true}' 200 '{"free":true}' 200
 }
 
