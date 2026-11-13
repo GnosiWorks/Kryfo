@@ -45,6 +45,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';
+import 'package:kryfo/widgets/count_badge.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MenuSheet;
 import 'package:kryfo/widgets/page_head.dart' show HeadLine;
 import 'package:kryfo/widgets/room_countdown.dart';
@@ -1050,9 +1051,13 @@ void main() {
       // the old words are gone, the @ stands by the count
       expect(find.text(l10n.homeMentionedYou), findsNothing);
       expect(find.byKey(const ValueKey('at')), findsNothing);
+      // the count keeps its old gap, closer only beside the @
+      double lead() => t.widget<CountBadge>(find.byType(CountBadge).first).lead;
+      expect(lead(), 8);
       await t.pumpWidget(home(mentioned: true));
       await t.pump(const Duration(seconds: 1));
       expect(find.byKey(const ValueKey('at')), findsOneWidget);
+      expect(lead(), 6);
       expect(find.text(l10n.homeMentionedYou), findsNothing);
       final sem = t.ensureSemantics();
       await t.pump();

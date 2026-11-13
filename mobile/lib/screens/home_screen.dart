@@ -2987,8 +2987,12 @@ class _GroupRow extends StatelessWidget {
                   ),
                   // your three words came up in there: an @ by the count
                   MentionBadge(on: g.mentioned && !g.ended, lead: 8),
-                  // pops in, rolls to each new count, pops away once read
-                  CountBadge(count: g.unread, lead: 6),
+                  // pops in, rolls to each new count, pops away once read.
+                  // closer only beside the @
+                  CountBadge(
+                    count: g.unread,
+                    lead: g.mentioned && !g.ended ? 6 : 8,
+                  ),
                 ],
               ),
             ),
