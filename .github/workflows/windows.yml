@@ -225,6 +225,10 @@ jobs:
           if (Test-Path $t) { (Get-FileHash -Algorithm SHA256 $t).Hash.ToLowerInvariant() } else { "no $t" }
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:K\packaging\windows\check-tor.ps1" -Path $t -Sha256 1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074
           "check-tor.ps1 exit $LASTEXITCODE"
+          Push-Location "$env:K\packaging\windows"
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:K\packaging\windows\check-tor.ps1" -Path "$env:K\packaging\windows\..\build\windows\tor\tor.exe" -Sha256 1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074
+          "check-tor.ps1 with the .. path, from packaging\windows: exit $LASTEXITCODE"
+          Pop-Location
           Get-MpThreatDetection -ErrorAction SilentlyContinue | Select-Object -Property InitialDetectionTime, Resources | Format-List
           exit 0
 
@@ -233,7 +237,7 @@ jobs:
           # iscc's own pubspec read takes crlf lines only, this checkout has lf
           $v = (Select-String -Path "$env:K\mobile\pubspec.yaml" -Pattern '^version: (\d+\.\d+\.\d+)').Matches[0].Groups[1].Value
           if (-not $v) { throw "no version: line in mobile\pubspec.yaml" }
-          C:\inno\ISCC.exe /Q "/DOutputDir=$env:K\packaging\build\windows" "/DAppVersion=$v" "$env:K\packaging\windows\kryfo.iss"
+          C:\inno\ISCC.exe /Q "/DOutputDir=$env:K\packaging\build\windows" "/DAppVersion=$v" "/DTorDir=$env:K\packaging\build\windows\tor" "$env:K\packaging\windows\kryfo.iss"
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: release files and sums
