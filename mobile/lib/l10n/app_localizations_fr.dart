@@ -10592,6 +10592,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceNotNow => 'Pas maintenant';
 
   @override
+  String get linkCheckTitle => 'On vérifie que cet ordinateur est toujours associé';
+
+  @override
+  String get linkCheckLine => 'Kryfo lit d’abord la dernière liste d’appareils de votre téléphone. Vos discussions s’ouvrent juste après.';
+
+  @override
+  String get linkCheckWaitLine => 'L’envoi attend la confirmation que cet ordinateur est associé.';
+
+  @override
   String get unlinkedTitle => 'Cet appareil est dissocié';
 
   @override

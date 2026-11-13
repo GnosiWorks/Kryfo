@@ -10528,6 +10528,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceNotNow => 'Để sau';
 
   @override
+  String get linkCheckTitle => 'Đang kiểm tra máy tính này vẫn được liên kết';
+
+  @override
+  String get linkCheckLine => 'Kryfo đọc danh sách thiết bị mới nhất từ điện thoại của bạn trước. Các cuộc trò chuyện mở ngay sau đó.';
+
+  @override
+  String get linkCheckWaitLine => 'Việc gửi sẽ chờ đến khi xác nhận máy tính này vẫn được liên kết.';
+
+  @override
   String get unlinkedTitle => 'Thiết bị này đã hủy liên kết';
 
   @override

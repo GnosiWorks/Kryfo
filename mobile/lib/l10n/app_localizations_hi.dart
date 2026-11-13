@@ -10581,6 +10581,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceNotNow => 'अभी नहीं';
 
   @override
+  String get linkCheckTitle => 'जाँच रहे हैं कि यह कंप्यूटर अब भी जुड़ा है';
+
+  @override
+  String get linkCheckLine => 'Kryfo पहले आपके फ़ोन की सबसे नई डिवाइस सूची पढ़ता है। उसके ठीक बाद आपकी चैट खुलती हैं।';
+
+  @override
+  String get linkCheckWaitLine => 'भेजना तब तक रुका है जब तक पुष्टि न हो जाए कि यह कंप्यूटर जुड़ा है।';
+
+  @override
   String get unlinkedTitle => 'यह डिवाइस अलग हो गया है';
 
   @override

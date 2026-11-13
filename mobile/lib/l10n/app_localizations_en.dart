@@ -10587,6 +10587,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceNotNow => 'Not now';
 
   @override
+  String get linkCheckTitle => 'Checking this computer is still linked';
+
+  @override
+  String get linkCheckLine => 'Kryfo reads your phone\'s latest list of devices first. Your chats open right after.';
+
+  @override
+  String get linkCheckWaitLine => 'Sending waits until this computer is confirmed as linked.';
+
+  @override
   String get unlinkedTitle => 'This device is unlinked';
 
   @override

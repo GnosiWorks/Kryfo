@@ -18358,6 +18358,24 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get voiceNotNow;
 
+  /// screens/link_check_screen.dart: the title while a linked computer checks at its start that its phone still lists it
+  ///
+  /// In en, this message translates to:
+  /// **'Checking this computer is still linked'**
+  String get linkCheckTitle;
+
+  /// screens/link_check_screen.dart: the line under the title: what it waits for, and that the chats open next
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo reads your phone\'s latest list of devices first. Your chats open right after.'**
+  String get linkCheckLine;
+
+  /// widgets/link_wait_strip.dart: shown in place of the composer and on the chat list while a linked computer is not confirmed as linked yet
+  ///
+  /// In en, this message translates to:
+  /// **'Sending waits until this computer is confirmed as linked.'**
+  String get linkCheckWaitLine;
+
   /// screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself
   ///
   /// In en, this message translates to:

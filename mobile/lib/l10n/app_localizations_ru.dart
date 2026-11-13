@@ -10717,6 +10717,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceNotNow => 'Не сейчас';
 
   @override
+  String get linkCheckTitle => 'Проверяем, что этот компьютер всё ещё связан';
+
+  @override
+  String get linkCheckLine => 'Kryfo сначала читает последний список устройств с вашего телефона. Сразу после этого откроются ваши чаты.';
+
+  @override
+  String get linkCheckWaitLine => 'Отправка ждёт, пока не подтвердится, что этот компьютер связан.';
+
+  @override
   String get unlinkedTitle => 'Это устройство отвязано';
 
   @override

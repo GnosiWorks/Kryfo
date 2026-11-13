@@ -10818,6 +10818,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNotNow => 'ليس الآن';
 
   @override
+  String get linkCheckTitle => 'نتحقق من أن هذا الحاسوب ما زال مرتبطًا';
+
+  @override
+  String get linkCheckLine => 'يقرأ Kryfo أولًا أحدث قائمة أجهزة من هاتفك، ثم تفتح محادثاتك مباشرة.';
+
+  @override
+  String get linkCheckWaitLine => 'ينتظر الإرسال حتى يتأكد أن هذا الحاسوب ما زال مرتبطًا.';
+
+  @override
   String get unlinkedTitle => 'فُصل هذا الجهاز';
 
   @override

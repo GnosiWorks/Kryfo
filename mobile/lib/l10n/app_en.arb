@@ -14344,6 +14344,18 @@
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
   },
+  "linkCheckTitle": "Checking this computer is still linked",
+  "@linkCheckTitle": {
+    "description": "screens/link_check_screen.dart: the title while a linked computer checks at its start that its phone still lists it"
+  },
+  "linkCheckLine": "Kryfo reads your phone's latest list of devices first. Your chats open right after.",
+  "@linkCheckLine": {
+    "description": "screens/link_check_screen.dart: the line under the title: what it waits for, and that the chats open next"
+  },
+  "linkCheckWaitLine": "Sending waits until this computer is confirmed as linked.",
+  "@linkCheckWaitLine": {
+    "description": "widgets/link_wait_strip.dart: shown in place of the composer and on the chat list while a linked computer is not confirmed as linked yet"
+  },
   "unlinkedTitle": "This device is unlinked",
   "@unlinkedTitle": {
     "description": "screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself"
