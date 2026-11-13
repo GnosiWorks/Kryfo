@@ -229,6 +229,24 @@ jobs:
           powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:K\packaging\windows\check-tor.ps1" -Path "$env:K\packaging\windows\..\build\windows\tor\tor.exe" -Sha256 1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074
           "check-tor.ps1 with the .. path, from packaging\windows: exit $LASTEXITCODE"
           Pop-Location
+          $iss = @'
+          #define C "C:\kryfo\packaging\windows\check-tor.ps1"
+          #define T "C:\kryfo\packaging\build\windows\tor\tor.exe"
+          #define PIN "1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074"
+          #define A '-NoProfile -ExecutionPolicy Bypass -File "' + C + '" -Path "' + T + '" -Sha256 ' + PIN
+          #pragma message "probe cmd exit0: " + Str(Exec("cmd.exe", "/c exit 0", "", 1, SW_HIDE))
+          #pragma message "probe ps exit0: " + Str(Exec("powershell.exe", "-NoProfile -Command exit 0", "", 1, SW_HIDE))
+          #pragma message "probe ps check: " + Str(Exec("powershell.exe", A, "", 1, SW_HIDE))
+          #pragma message "probe ps check fullpath: " + Str(Exec("C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe", A, "", 1, SW_HIDE))
+          #pragma message "probe ps check in srcdir: " + Str(Exec("powershell.exe", A, "C:\kryfo\packaging\windows\", 1, SW_HIDE))
+          [Setup]
+          AppName=t
+          AppVersion=1
+          DefaultDirName=C:\t
+          OutputDir=C:\t
+          '@
+          $iss -split "`n" | ForEach-Object { $_.Trim() } | Out-File -Encoding ascii "$env:RUNNER_TEMP\exec-test.iss"
+          C:\inno\ISCC.exe "$env:RUNNER_TEMP\exec-test.iss" 2>&1 | Select-String 'probe|Error'
           Get-MpThreatDetection -ErrorAction SilentlyContinue | Select-Object -Property InitialDetectionTime, Resources | Format-List
           exit 0
 
