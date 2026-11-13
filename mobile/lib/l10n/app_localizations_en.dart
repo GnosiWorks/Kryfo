@@ -10721,6 +10721,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkedAddOnPhone => 'Add people on your phone. They show up here too.';
 
   @override
+  String get linkedGroupOnPhone => 'Create groups on your phone. They show up here too.';
+
+  @override
   String get linkedLinkOnPhone => 'Open this link on your phone.';
 
   @override

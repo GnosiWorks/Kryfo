@@ -10726,6 +10726,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get linkedAddOnPhone => 'Ajoutez des personnes depuis votre téléphone. Elles apparaissent aussi ici.';
 
   @override
+  String get linkedGroupOnPhone => 'Créez des groupes depuis votre téléphone. Ils apparaissent aussi ici.';
+
+  @override
   String get linkedLinkOnPhone => 'Ouvrez ce lien sur votre téléphone.';
 
   @override

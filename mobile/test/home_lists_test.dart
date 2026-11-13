@@ -30,6 +30,7 @@ import 'package:kryfo/main.dart'
         appState,
         useDatabasesForTest,
         useEngineForTest,
+        linkedRoleForTest,
         AppStateRoute,
         AppStateBridges,
         AppStateDelivery,
@@ -589,6 +590,42 @@ void main() {
     expect(find.text(l10n.homeNoKryfosYet), findsNothing);
     expect(find.text(l10n.homeGroups), findsOneWidget);
     expect(find.text(l10n.homeRoom), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('a linked computer keeps the groups row with room and + new, '
+      'and a tap says groups are made on the phone', (t) async {
+    phone(t);
+    linkedRoleForTest = true;
+    addTearDown(() => linkedRoleForTest = false);
+    final asked = <String>[];
+    Widget home(List<ContactPreview> contacts) => framed(
+      _home(
+        contacts: contacts,
+        onNewGroup: () => asked.add('group'),
+        onNewRoom: () => asked.add('room'),
+      ),
+    );
+    // empty, and with a chat but no group: the heading stays for its buttons
+    for (final contacts in [
+      <ContactPreview>[],
+      [_chat('wren-oak-lamp')],
+    ]) {
+      await t.pumpWidget(home(contacts));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.homeGroups), findsOneWidget);
+      expect(find.text(l10n.homeRoom), findsOneWidget);
+      expect(find.text(l10n.homeNew), findsOneWidget);
+    }
+    await t.tap(find.text(l10n.homeRoom));
+    await t.pump();
+    expect(find.text(l10n.linkedGroupOnPhone), findsOneWidget);
+    await t.pump(const Duration(seconds: 5));
+    await t.tap(find.text(l10n.homeNew));
+    await t.pump();
+    expect(find.text(l10n.linkedGroupOnPhone), findsOneWidget);
+    expect(asked, isEmpty);
+    await t.pump(const Duration(seconds: 5));
     await drain(t);
   });
 

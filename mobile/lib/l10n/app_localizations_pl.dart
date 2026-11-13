@@ -10885,6 +10885,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get linkedAddOnPhone => 'Dodawaj osoby na telefonie. Pojawią się też tutaj.';
 
   @override
+  String get linkedGroupOnPhone => 'Twórz grupy na telefonie. Pojawią się też tutaj.';
+
+  @override
   String get linkedLinkOnPhone => 'Otwórz ten link na telefonie.';
 
   @override
