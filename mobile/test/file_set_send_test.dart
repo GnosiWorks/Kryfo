@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/media_progress.dart';
+import 'package:kryfo/picture_lock.dart' show picturesShut;
+import 'package:kryfo/screens/contact_screen.dart'
+    show contactInfoWarmIds, keepContactInfoWarmForTest;
 import 'package:kryfo/widgets/file_bubble.dart' show docGlanceHeight;
 import 'package:kryfo/widgets/send_sheet.dart';
 
@@ -106,5 +109,25 @@ void main() {
       sourceOf('lib/screens/contact_screen.dart'),
       contains('final warm = _infoWarm.remove(widget.haloId);'),
     );
+  });
+
+  test("a person's page read ahead goes at the lock, one person at a time", () {
+    expect(
+      bodyOf(
+        sourceOf('lib/screens/contact_screen.dart'),
+        'Future<void> warmContactInfo(',
+      ),
+      contains('_keepWarm(haloId, await _readInfo(haloId).timeout(most));'),
+    );
+    picturesShut.value = false;
+    keepContactInfoWarmForTest('a');
+    keepContactInfoWarmForTest('b');
+    expect(contactInfoWarmIds, {'b'});
+    picturesShut.value = true;
+    expect(contactInfoWarmIds, isEmpty);
+    // a read that lands under the lock is not kept
+    keepContactInfoWarmForTest('c');
+    expect(contactInfoWarmIds, isEmpty);
+    picturesShut.value = false;
   });
 }

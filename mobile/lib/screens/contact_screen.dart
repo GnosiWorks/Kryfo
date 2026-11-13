@@ -33,6 +33,7 @@ import '../main.dart'
         nameCheckOf;
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../photo_pick.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../profile_photo.dart' show photoAddOffered, photoBook;
 import '../theme.dart';
 import '../widgets/face_view.dart';
@@ -192,8 +193,40 @@ Future<_InfoRead> _readInfo(String id) async {
   );
 }
 
-// read just before the page slides in, taken by it on its first frame
+// read just before the page slides in, taken by it on its first frame.
+// one person at a time, and gone at the lock with the pictures
 final Map<String, (_InfoRead, DateTime)> _infoWarm = {};
+bool _warmHooked = false;
+
+void _forgetWarmAtLock() {
+  if (picturesShut.value) _infoWarm.clear();
+}
+
+// kept for the page about to open, unless the lock went up meanwhile
+void _keepWarm(String haloId, _InfoRead r) {
+  if (picturesShut.value) return;
+  if (!_warmHooked) {
+    _warmHooked = true;
+    picturesShut.addListener(_forgetWarmAtLock);
+  }
+  _infoWarm
+    ..clear()
+    ..[haloId] = (r, DateTime.now());
+}
+
+@visibleForTesting
+Set<String> get contactInfoWarmIds => _infoWarm.keys.toSet();
+
+@visibleForTesting
+void keepContactInfoWarmForTest(String haloId) => _keepWarm(haloId, (
+  c: null,
+  vs: const [],
+  shared: const SharedLists(),
+  since: null,
+  held: false,
+  mine: false,
+  heal: null,
+));
 
 /// a person's page read before it opens, so it is drawn as it is from its
 /// first frame and nothing on it moves after. given up on after [most]:
@@ -203,8 +236,7 @@ Future<void> warmContactInfo(
   Duration most = const Duration(milliseconds: 450),
 }) async {
   try {
-    final r = await _readInfo(haloId).timeout(most);
-    _infoWarm[haloId] = (r, DateTime.now());
+    _keepWarm(haloId, await _readInfo(haloId).timeout(most));
   } catch (_) {
     // slow or unreadable: the page reads it as it opens
   }
