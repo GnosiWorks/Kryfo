@@ -13,6 +13,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/own_answer.dart' show kAnswerPhoneLate;
 import 'package:kryfo/devices/own_sync.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
@@ -28,8 +29,10 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
+        AppStateMessages,
         AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/widgets/chat_parts.dart' show SentTick;
 import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
@@ -184,6 +187,7 @@ void main() {
   Future<void> open(
     WidgetTester t, {
     Locale locale = const Locale('en'),
+    bool still = false,
   }) async {
     await devOpen(
       t,
@@ -197,6 +201,7 @@ void main() {
       ),
       size: const Size(640, 1280),
       locale: locale,
+      still: still,
     );
     await settle(t);
   }
@@ -245,9 +250,139 @@ void main() {
     expect(phone.handed, hasLength(1));
     expect(phone.handed.single, contains('from my desk'));
     expect(phone.handed.single, isNot(contains('"pw"')));
-    expect(find.text(l10n.chatInboxSendsWhenPhoneOnline), findsOneWidget);
+    // tor takes seconds: a young answer shows its clock, no line
+    expect(find.text(l10n.chatInboxSendsWhenPhoneOnline), findsNothing);
     await devClose(t);
   });
+
+  for (final still in [false, true]) {
+    testWidgets('files from the phone: a small toast above the composer'
+        '${still ? ' (reduced motion)' : ''}', (t) async {
+      await setUpWith(state: 'open');
+      devInboxForTest = true;
+      devAnswersForTest = true;
+      ownSyncForTest(_Phone());
+      await open(t, still: still);
+      final toast = find.byKey(const ValueKey('composer-toast'));
+      expect(toast, findsNothing);
+      for (final icon in [
+        Icons.add_photo_alternate_outlined,
+        Icons.photo_camera_outlined,
+      ]) {
+        final tap = find.byIcon(icon);
+        if (tap.evaluate().isEmpty) continue;
+        await t.tap(tap);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        expect(toast, findsOneWidget);
+        expect(find.text(l10n.chatInboxFilesFromPhone), findsOneWidget);
+        // above the composer, narrower than the window, not by the header
+        final box = t.getRect(toast);
+        final bar = t.getRect(composer);
+        expect(box.bottom, lessThanOrEqualTo(bar.top));
+        expect(box.width, lessThanOrEqualTo(360));
+        expect(
+          box.top,
+          greaterThan(t.getSize(find.byType(ChatScreen)).height / 2),
+        );
+        // it leaves on its own
+        await t.pump(const Duration(seconds: 4));
+        await t.pump(const Duration(milliseconds: 400));
+        expect(find.text(l10n.chatInboxFilesFromPhone), findsNothing);
+      }
+      await devClose(t);
+    });
+  }
+
+  // an answer handed to the phone, the composer's way
+  Future<_Phone> answer(WidgetTester t, {bool still = false}) async {
+    await setUpWith(state: 'open');
+    devInboxForTest = true;
+    devAnswersForTest = true;
+    final phone = _Phone();
+    ownSyncForTest(phone);
+    await open(t, still: still);
+    await t.enterText(find.byType(TextField).last, 'from my desk');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t, 10);
+    expect(phone.handed, hasLength(1));
+    return phone;
+  }
+
+  Finder lateLine() => find.text(l10n.chatInboxSendsWhenPhoneOnline);
+  final clock = find.byIcon(Icons.schedule_rounded);
+
+  // the phone's copy came: its row is sent
+  Future<void> confirm(WidgetTester t) async {
+    await t.runAsync(() async {
+      final n = await mem.update(
+        'messages',
+        {'sent': 1},
+        where: "direction = 'out' AND peer_id = ?",
+        whereArgs: [_peer],
+      );
+      expect(n, 1);
+    });
+    appState.chatChanged(_peer);
+    await settle(t);
+  }
+
+  for (final still in [false, true]) {
+    final how = still ? ' (reduced motion)' : '';
+
+    testWidgets('under ${kAnswerPhoneLate.inSeconds} s an answer shows its '
+        'clock and no line$how', (t) async {
+      await answer(t, still: still);
+      expect(clock, findsWidgets);
+      expect(find.byType(SentTick), findsNothing);
+      await t.pump(kAnswerPhoneLate - const Duration(seconds: 3));
+      await t.pump();
+      expect(lateLine(), findsNothing);
+      expect(clock, findsWidgets);
+      await devClose(t);
+    });
+
+    testWidgets('past ${kAnswerPhoneLate.inSeconds} s unconfirmed the line '
+        'shows and stays$how', (t) async {
+      await answer(t, still: still);
+      await t.pump(kAnswerPhoneLate);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(lateLine(), findsOneWidget);
+      expect(clock, findsWidgets);
+      // the phone never takes it: the line does not go on its own
+      for (var i = 0; i < 10; i++) {
+        await t.pump(const Duration(minutes: 1));
+      }
+      expect(lateLine(), findsOneWidget);
+      await devClose(t);
+    });
+
+    testWidgets('confirmed by the phone: the tick, and the line goes$how', (
+      t,
+    ) async {
+      await answer(t, still: still);
+      await t.pump(kAnswerPhoneLate);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(lateLine(), findsOneWidget);
+      await confirm(t);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(lateLine(), findsNothing);
+      expect(find.byType(SentTick), findsWidgets);
+      await devClose(t);
+    });
+
+    testWidgets('confirmed in time: the tick, and no line ever$how', (t) async {
+      await answer(t, still: still);
+      await confirm(t);
+      expect(find.byType(SentTick), findsWidgets);
+      await t.pump(kAnswerPhoneLate * 2);
+      await t.pump(const Duration(milliseconds: 300));
+      expect(lateLine(), findsNothing);
+      await devClose(t);
+    });
+  }
 
   testWidgets('an ordinary chat on his computer keeps its composer', (t) async {
     await setUpWith();
