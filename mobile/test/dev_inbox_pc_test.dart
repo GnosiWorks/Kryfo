@@ -730,7 +730,7 @@ void main() {
         expect(app.devInbox, isFalse);
         expect(app.devRow, isNotNull);
         // the phone's profile comes later, and nothing else refreshes home
-        await op('profile', null, {'h': 'element-wisdom-balance', 'dv': true});
+        await op('profile', null, {'h': 'quiet-harbor-lamp', 'dv': true});
         expect(app.devInbox, isTrue);
         expect(app.devRow, isNull);
         expect(app.supportWaiting, 1);
