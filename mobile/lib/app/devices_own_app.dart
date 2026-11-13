@@ -1510,9 +1510,13 @@ extension AppStateOwn on AppState {
     final bg = a['bg'];
     if (bg is Map) await _ownBadgeTake(bg);
     // the developer's phone: its inbox shows here, answered from here
+    final had = _ownDevInbox;
     await _ownDevInboxPut(d, a['dv']);
     await _ownDevAnswersPut(d, a['oa']);
     await _ownMarkPass(null);
+    // the word often lands after the history copy's last refresh: home
+    // swaps the developer row for the inbox now, not at the next start
+    if (_ownDevInbox != had) await refreshContacts();
     return true;
   }
 

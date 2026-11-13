@@ -40,6 +40,7 @@ import 'package:kryfo/main.dart'
         devInboxForTest;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -698,5 +699,44 @@ void main() {
       await op('profile', null, {'h': 'scare-raven-rare'});
       expect(devInboxHere, isFalse);
     }, skip: skip);
+
+    test(
+      'a linked computer of the dev card\'s phone shows the inbox as soon '
+      'as the phone\'s word lands, after the copy\'s last refresh too',
+      () async {
+        // the card pins the phone's identity; this computer keeps its own key
+        devPhone();
+        app.myXPub = _x;
+        linkedRoleForTest = true;
+        await devChatTables(s);
+        // the copy brought one waiting chat with two messages, then refreshed
+        await inbox('waiting', 'open', accepted: 0);
+        for (final u in ['w-1', 'w-2']) {
+          await s.insert('messages', {
+            'msg_uid': u,
+            'peer_id': 'waiting',
+            'direction': 'in',
+            'plaintext': 'help',
+            'sent_at': 1,
+          });
+        }
+        await s.update(
+          'contacts',
+          {'unread': 2},
+          where: 'halo_id = ?',
+          whereArgs: ['waiting'],
+        );
+        await app.refreshContacts();
+        expect(app.devInbox, isFalse);
+        expect(app.devRow, isNotNull);
+        // the phone's profile comes later, and nothing else refreshes home
+        await op('profile', null, {'h': 'element-wisdom-balance', 'dv': true});
+        expect(app.devInbox, isTrue);
+        expect(app.devRow, isNull);
+        expect(app.supportWaiting, 1);
+        expect(app.contacts.map((c) => c.haloId), isNot(contains('waiting')));
+      },
+      skip: skip,
+    );
   });
 }
