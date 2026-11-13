@@ -21,7 +21,7 @@ f="${1:?usage: check-pe.sh [--exports] <file>}"
 dump="$(TZ=UTC "$OBJDUMP_W" -p "$f")" || die "$OBJDUMP_W cannot read $f"
 
 if [ $exports = 1 ]; then
-  awk '/^\[Ordinal\/Name Pointer\] Table/{on=1; next} on && /^\s*\[/{print $NF} on && /^$/{on=0}' <<<"$dump"
+  awk '/^\[Ordinal\/Name Pointer\] Table/{on=1; next} on && /^[[:space:]]*\[/{print $NF} on && /^$/{on=0}' <<<"$dump"
   exit 0
 fi
 
