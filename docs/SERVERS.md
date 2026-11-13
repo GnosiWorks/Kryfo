@@ -75,6 +75,27 @@ the app never talks to it. the relay's endpoint table and the gateway's key
 are on different boxes, so tying a phone's sixteen endpoints together takes
 both. we run both.
 
+## logs
+
+since 13 november 2026 neither box keeps logs:
+
+- the system journal stores nothing, not even in ram.
+- the web servers keep no access or error logs.
+- no login records (wtmp, btmp, lastlog, auth.log) and no shell history.
+- package logs (apt, dpkg, unattended upgrades) live in ram and are emptied every hour.
+- no core dumps.
+- no traffic statistics (sysstat is off).
+- the push gateway counts nothing.
+- the handle registry keeps no claim time. the time of a handle's last signed change
+  and of its last search switch are needed only to refuse replays inside the ten
+  minute clock window, so they are blanked once 20 minutes old.
+
+the one thing kept is on the donation server (btcpay): its invoice records, because
+payments need them, and an error file it writes only on a crash.
+
+the old logs were deleted. a check runs after every change to a box and goes
+through each item above, one by one, and fails if any of them is back.
+
 ## watching them
 
 `server/watch/` checks every service from outside every two minutes and
