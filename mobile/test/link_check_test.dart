@@ -13,6 +13,8 @@ class _World {
   var now = DateTime(2026, 11, 13, 9);
   LinkedEnd? standing;
   var caught = false;
+  // one store of two walked
+  var some = false;
   var drained = true;
   var online = true;
   var routeUp = false;
@@ -28,7 +30,11 @@ class _World {
   LinkCheck check() => LinkCheck(
     stage: stage,
     standing: () async => standing,
-    caught: () async => caught,
+    caught: () async => caught
+        ? LinkCaught.all
+        : some
+        ? LinkCaught.some
+        : LinkCaught.none,
     drained: () async => drained,
     removed: (why) async {
       removed.add(why);
@@ -165,7 +171,7 @@ void main() {
       standing: () async => null,
       caught: () async {
         if (++n < 3) throw StateError('not read');
-        return true;
+        return LinkCaught.all;
       },
       drained: () async => true,
       removed: (_) async {},
@@ -178,6 +184,30 @@ void main() {
     );
     await c.run();
     expect(w.confirmed, 1);
+  });
+
+  test('one store walked, the other not: still checking until its time, '
+      'and the removal it brings then still wipes', () async {
+    final w = _World()
+      ..routeUp = true
+      ..some = true;
+    await w.check().run();
+    // read only at the gate's most, sending held until two minutes
+    expect(w.confirmed, 1);
+    expect(w.since, kLinkOneStore);
+    expect(w.seen.indexOf(LinkCheckStage.readOnly), 20);
+
+    // the second store brings the removal before that
+    final r = _World()
+      ..routeUp = true
+      ..some = true;
+    r.at[30] = () {
+      r.caught = true;
+      r.standing = LinkedEnd.removed;
+    };
+    await r.check().run();
+    expect(r.confirmed, 0);
+    expect(r.removed, [LinkedEnd.removed]);
   });
 
   test('the gate\'s time', () {

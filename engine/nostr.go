@@ -2313,7 +2313,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				caught := func() {
 					covered.Store(true)
 					noteHeard(conn, u, rcvPk, time.Now(), true)
-					noteAddrCaught(rcvPk)
+					if ownEntry {
+						noteAddrCaught(rcvPk, anchorKey, tag)
+					}
 				}
 				// a walk's pages reach back below the first answer
 				walked := func(ev nostr.Event) bool {

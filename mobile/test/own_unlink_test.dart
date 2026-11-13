@@ -2362,7 +2362,7 @@ void main() {
     linkCheck.value = LinkCheckStage.checking;
     expect(linkSendsHeld, isTrue);
     await linkCheckForTest(
-      caught: () async => true,
+      caught: () async => LinkCaught.all,
       drained: () async => true,
       clock: () => clock,
       wait: tick,
@@ -2408,10 +2408,10 @@ void main() {
     final seen = <LinkCheckStage?>[];
     await linkCheckForTest(
       caught: () async {
-        if (++turns < 5) return false;
+        if (++turns < 5) return LinkCaught.none;
         // the walk is in: what it brought is opened as the poll opens it
         await recv.receive('${anaHex.substring(2)}/1/4/opn', word.cipher);
-        return true;
+        return LinkCaught.all;
       },
       drained: () async => true,
       clock: () => clock,

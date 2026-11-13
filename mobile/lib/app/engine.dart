@@ -842,17 +842,19 @@ class HaloEngine {
   Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
       _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
-  // whether a relay walked the address [arg] names (a device pair's as
-  // deviceListenBg takes it) to the bottom of its window in this process.
-  // false before, and for an engine without the call
+  // how far our stores walked the address [arg] names (a device pair's as
+  // deviceListenBg takes it) in this process: '1' every store to the bottom
+  // with nothing of it waiting for the app, 'p' one store, '0' none, and
+  // for an engine without the call
   late final IdentOneFnDart _addrCaught = _lib
       .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloAddrCaught');
-  bool addrCaught(int ident, String arg) {
+  String addrCaught(int ident, String arg) {
     final p = arg.toNativeUtf8();
     try {
-      return engineTake(_addrCaught(ident, p)) == '1';
+      final r = engineTake(_addrCaught(ident, p));
+      return r == '1' || r == 'p' ? r : '0';
     } catch (_) {
-      return false;
+      return '0';
     } finally {
       malloc.free(p);
     }

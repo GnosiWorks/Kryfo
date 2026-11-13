@@ -27,6 +27,15 @@ const kLinkGateFetch = Duration(seconds: 20);
 /// the longest the gate shows: tor's start and the fetch together
 const kLinkGateMost = Duration(seconds: 45);
 
+/// how far my phone's pair was walked: by none of our stores, by some, or
+/// by all of them with every line it brought opened
+enum LinkCaught { none, some, all }
+
+/// one store walked counts only after this: the phone's send ends at the
+/// first store that took it, so the other may hold its last word while
+/// this one is down or slow
+const kLinkOneStore = Duration(minutes: 2);
+
 /// whether the gate gives way to the chats, read only: never before
 /// [kLinkGateLeast], at once then with no network, else once the route
 /// was up [kLinkGateFetch], and at [kLinkGateMost] whatever happens
@@ -62,8 +71,8 @@ class LinkCheck {
   /// removed once my phone's list without this device was taken
   final Future<LinkedEnd?> Function() standing;
 
-  /// my phone's pair walked to the bottom on a relay, every address of it
-  final Future<bool> Function() caught;
+  /// how far my phone's pair was walked, every address of it
+  final Future<LinkCaught> Function() caught;
 
   /// what the walk brought was opened; false when that did not finish
   final Future<bool> Function() drained;
@@ -96,7 +105,12 @@ class LinkCheck {
       try {
         final end = await standing();
         if (end != null) return await removed(end);
-        if (await caught() && await drained()) {
+        final c = await caught();
+        final enough =
+            c == LinkCaught.all ||
+            (c == LinkCaught.some &&
+                clock().difference(start) >= kLinkOneStore);
+        if (enough && await drained()) {
           // the walk may have brought the removal
           final after = await standing();
           if (after != null) return await removed(after);

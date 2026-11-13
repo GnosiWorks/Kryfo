@@ -82,7 +82,7 @@ LinkCheck _linkCheckOf() => LinkCheck(
 /// the check as the app runs it, for a test's stand-ins
 @visibleForTesting
 LinkCheck linkCheckForTest({
-  Future<bool> Function()? caught,
+  Future<LinkCaught> Function()? caught,
   Future<bool> Function()? drained,
   DateTime Function()? clock,
   Future<void> Function(Duration)? wait,
@@ -127,11 +127,14 @@ Future<List<String>> _phonePairArgs() async {
   ];
 }
 
-Future<bool> _phonePairCaught() async {
-  if (!_devicesBooted || _deviceReceive == null) return false;
+Future<LinkCaught> _phonePairCaught() async {
+  if (!_devicesBooted || _deviceReceive == null) return LinkCaught.none;
   final args = await _phonePairArgs();
-  if (args.isEmpty) return false;
-  return args.every((a) => engine.addrCaught(kMainIdent, a));
+  if (args.isEmpty) return LinkCaught.none;
+  final got = [for (final a in args) engine.addrCaught(kMainIdent, a)];
+  if (got.every((g) => g == '1')) return LinkCaught.all;
+  if (got.every((g) => g == '1' || g == 'p')) return LinkCaught.some;
+  return LinkCaught.none;
 }
 
 // two full passes of the relay poll that began after this: the first
