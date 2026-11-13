@@ -1,3 +1,3 @@
 Novo: mensagens de voz em texto, reconhecidas no seu celular. Arquivos abrem dentro do Kryfo, vários arquivos vão em uma só mensagem e você pode buscar em uma conversa inteira. GIFs favoritos, áudios em 1,5x ou 2x, toque duplo para reagir, segure enviar para mandar sem som, rascunhos na lista de conversas.
 
-Melhor: traduza vários idiomas ao mesmo tempo, hora e tique na última linha, e o Tor se recupera sozinho depois de uma queda de rede.
+Melhor: traduza vários idiomas ao mesmo tempo e o Tor se recupera sozinho depois de uma queda de rede.

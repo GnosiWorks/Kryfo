@@ -1,3 +1,3 @@
 Baru: pesan suara jadi teks, dikenali di ponselmu. File terbuka langsung di Kryfo, beberapa file terkirim sebagai satu pesan, dan kamu bisa mencari di seluruh obrolan. GIF favorit, pesan suara 1,5x atau 2x, ketuk dua kali untuk bereaksi, tahan kirim untuk mengirim tanpa suara, draf di daftar obrolan.
 
-Lebih baik: terjemahkan beberapa bahasa sekaligus, jam dan centang di baris terakhir, dan Tor pulih sendiri setelah jaringan putus.
+Lebih baik: terjemahkan beberapa bahasa sekaligus, dan Tor pulih sendiri setelah jaringan putus.

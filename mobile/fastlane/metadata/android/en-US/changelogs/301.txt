@@ -1,3 +1,3 @@
 New: see voice notes as text, worked out on your phone. Files open inside Kryfo, several files go as one message, and you can search a whole chat. Favourite GIFs, voice notes at 1.5x or 2x, double tap to react, hold send for no sound, drafts in the chat list.
 
-Better: translate several languages at once, time and tick on the last line, and Tor that gets back on its feet by itself after a network drop.
+Better: translate several languages at once, and Tor that gets back on its feet by itself after a network drop.

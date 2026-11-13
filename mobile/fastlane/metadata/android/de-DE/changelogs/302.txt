@@ -1,3 +1,3 @@
 Neu: Sprachnachrichten als Text, direkt auf dem Handy erkannt. Dateien öffnen sich in Kryfo, mehrere Dateien gehen als eine Nachricht, und du kannst einen ganzen Chat durchsuchen. Lieblings-GIFs, Sprachnachrichten mit 1,5x oder 2x, doppelt tippen zum Reagieren, Senden gedrückt halten für ohne Ton, Entwürfe in der Chatliste.
 
-Besser: mehrere Sprachen gleichzeitig übersetzen, Uhrzeit und Haken in der letzten Zeile, und Tor fängt sich nach einem Netzausfall von selbst.
+Besser: mehrere Sprachen gleichzeitig übersetzen, und Tor fängt sich nach einem Netzausfall von selbst.

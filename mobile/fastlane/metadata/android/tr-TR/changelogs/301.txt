@@ -1,3 +1,3 @@
 Yeni: sesli mesajlar metin olarak, telefonunda çözülür. Dosyalar Kryfo'nun içinde açılır, birden çok dosya tek mesaj olarak gider ve bir sohbetin tamamında arama yapabilirsin. Favori GIF'ler, 1,5x veya 2x sesli mesajlar, tepki için çift dokunma, sessiz göndermek için gönder tuşunu basılı tutma, sohbet listesinde taslaklar.
 
-Daha iyi: aynı anda birkaç dilden çeviri, son satırda saat ve onay işareti, ve ağ kesintisinden sonra kendi kendine toparlanan Tor.
+Daha iyi: aynı anda birkaç dilden çeviri ve ağ kesintisinden sonra kendi kendine toparlanan Tor.

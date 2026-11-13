@@ -1,3 +1,3 @@
 Nuevo: notas de voz como texto, reconocidas en tu móvil. Los archivos se abren dentro de Kryfo, varios archivos van en un solo mensaje y puedes buscar en todo un chat. GIF favoritos, notas de voz a 1,5x o 2x, doble toque para reaccionar, mantén enviar para enviar sin sonido, borradores en la lista de chats.
 
-Mejor: traduce varios idiomas a la vez, hora y marca en la última línea, y Tor se recupera solo tras un corte de red.
+Mejor: traduce varios idiomas a la vez y Tor se recupera solo tras un corte de red.

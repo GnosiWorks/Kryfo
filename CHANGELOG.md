@@ -43,7 +43,7 @@
 - offline translation handles several languages at once, closes what you don't use after two minutes, and a download that stops picks up where it left off.
 - the offer to translate shows once per language, and an x stops it for that language.
 - short messages in similar languages are told apart better.
-- the time and tick sit on the last line of a message when they fit, and the tick is drawn instead of a glyph.
+- the tick is drawn instead of a glyph, at the same size and place.
 - group rows in the chat list say who wrote last and when, with an @ when you're mentioned.
 - tor finds its feet by itself after a network drop or when the same wi-fi comes back, and reconnects when a message is waiting on it.
 - the chat you have open gets its messages first when Kryfo reconnects.
