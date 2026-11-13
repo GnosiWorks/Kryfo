@@ -1,0 +1,93 @@
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Marios (GnosiWorks)",
+    "email": "gnosiworks@proton.me",
+    "description": "I'm a solo developer in Berlin and I build Kryfo, a free and open source messenger for people under censorship. I design, decide, test on real phones and own all of the work. Volunteers help with translations and testing.",
+    "webpageUrl": {
+      "url": "https://kryfo.app",
+      "wellKnown": "https://kryfo.app/.well-known/funding-manifest-urls"
+    }
+  },
+  "projects": [
+    {
+      "guid": "kryfo",
+      "name": "Kryfo",
+      "description": "Kryfo is a free, open source messenger for Android, Windows and Linux. It runs over Tor by default, with automatic bridges (Snowflake, WebTunnel, obfs4) when Tor is blocked, and sends messages through Nostr relays as sealed envelopes. It needs no phone number or email: an identity is three words. Chats use libsignal, post-quantum since 0.6 (PQXDH and SPQR). It has a decoy PIN, hidden chats and a wipe PIN, and comes in 17 languages. Our servers keep no logs, no IP addresses and no contact lists. Releases are reproducible and on F-Droid, GitHub, kryfo.app and Google Play. Kryfo's automatic bridges were tested in heavily censored countries. Kryfo is not audited yet: donations for a Cure53 audit are open, and the report will be public.",
+      "webpageUrl": {
+        "url": "https://kryfo.app",
+        "wellKnown": "https://kryfo.app/.well-known/funding-manifest-urls"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/GnosiWorks/Kryfo"
+      },
+      "licenses": [
+        "spdx:GPL-3.0-or-later"
+      ],
+      "tags": [
+        "messenger",
+        "privacy",
+        "tor",
+        "nostr",
+        "encryption",
+        "censorship-circumvention",
+        "signal-protocol",
+        "android",
+        "desktop",
+        "post-quantum"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "opencollective",
+        "type": "payment-provider",
+        "address": "https://opencollective.com/kryfo",
+        "description": "Open Collective, fiscally hosted by Open Source Europe (a Belgian nonprofit). All spending is public. Money goes to the security audit first."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "security-audit",
+        "status": "active",
+        "name": "Independent security audit (Cure53)",
+        "description": "Kryfo's first independent security audit, quoted by Cure53 at EUR 15,470 including VAT. It is booked once the money is raised. The report and the fixes will be public.",
+        "amount": 15470,
+        "currency": "EUR",
+        "frequency": "one-time",
+        "channels": [
+          "opencollective"
+        ]
+      },
+      {
+        "guid": "development",
+        "status": "active",
+        "name": "Full-time development",
+        "description": "One developer, full-time (40 hours a week): releases, security fixes, the field reports from censored networks, and the next versions (communities and iPhone, then calls and payments).",
+        "amount": 4500,
+        "currency": "EUR",
+        "frequency": "monthly",
+        "channels": [
+          "opencollective"
+        ]
+      },
+      {
+        "guid": "any-amount",
+        "status": "active",
+        "name": "Any amount",
+        "description": "Give what you like, once or monthly. It goes to the audit first, then to security work and running the relays.",
+        "amount": 0,
+        "currency": "EUR",
+        "frequency": "one-time",
+        "channels": [
+          "opencollective"
+        ]
+      }
+    ],
+    "history": []
+  }
+}
