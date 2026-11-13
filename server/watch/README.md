@@ -8,8 +8,16 @@ alone when the service itself still answers, at most once every 15 minutes.
 The registry is up when it answers the name it is asked about, free or
 taken, and busy, not down, when it answers "slow down"; either way it is left
 alone.
-Every change of state is one journal line; `/var/lib/kryfo-watch/status`
-holds the last run.
+It also alerts when the box's ssh host keys (`/etc/ssh/ssh_host_*_key.pub`,
+by key, not comment) or any `authorized_keys` file of root or a user change.
+The first run takes them as they are; the reference is one hash per kind in
+`/var/lib/kryfo-watch`, with no key in it. A change is one alert ("authkeys
+changed") and stays changed until it is undone or taken with
+`sudo /opt/kryfo-watch/kryfo-watch.sh accept-keys` after a planned change.
+`WATCH_ONLY=keys` in the env file runs this check alone, for a box without
+the first box's services.
+Every change of state is one journal line (the journal keeps nothing on our
+boxes); `/var/lib/kryfo-watch/status` holds the last run, nothing older.
 
 It runs every two minutes from `kryfo-watch.timer`, as root (it restarts
 units). Settings go in `/etc/kryfo-watch.env`: `BADGE_UNIT` to let it restart
