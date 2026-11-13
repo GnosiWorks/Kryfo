@@ -275,8 +275,7 @@ class _WideHomeState extends State<WideHome> {
       children: [
         Row(
           children: [
-            // pinned to the top: a row would centre the rail's short column
-            SizedBox(height: box.maxHeight, child: rail),
+            rail,
             // the whole height: a row centres a child it leaves loose, and a
             // short tab (tools) would sit in the middle of the list
             SizedBox(

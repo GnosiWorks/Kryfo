@@ -126,6 +126,9 @@ void main() {
     final rail = _rect(t, find.byType(WideRail));
     expect(rail.left, 0);
     expect(rail.width, kRailWidth);
+    // as tall as its tabs, in the middle of the window's height
+    expect(rail.height, lessThan(800));
+    expect(rail.center.dy, closeTo(400, 0.5));
     // the list at its starting width, the pane the rest
     final pane = _rect(t, find.byType(WideEmpty));
     expect(pane.left, kRailWidth + kListStart + 1);
