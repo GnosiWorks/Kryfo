@@ -152,6 +152,8 @@ extension AppStateFiles on AppState {
   /// service lets it go on its own a week on, so a miss here costs nothing
   /// but that week
   Future<void> takeDropBack(String path, String uid) async {
+    // a linked computer not confirmed as linked sends nothing
+    if (linkSendsHeld) return;
     try {
       final r = await withNativeFiles(
         [path],
@@ -172,6 +174,7 @@ extension AppStateFiles on AppState {
   /// back itself goes after. one that went as slices is not on the service
   /// and the take back finds nothing
   Future<void> takeDropBackOf(String uid) async {
+    if (linkSendsHeld) return;
     try {
       // the hidden chats' rows first while they are open, as the delete
       // finds them

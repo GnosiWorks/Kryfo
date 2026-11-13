@@ -192,7 +192,9 @@ void main() {
     expect(await wire.relaySend(0, 'x', 'c'), 'error: held');
     expect(await wire.onionSend('o', 'c'), 'error: held');
     expect(await wire.typingSend('o', 'c'), 'error: held');
+    expect(await wire.firstContactSend(0, 'x', 'f', 'c'), 'error: held');
     linkCheck.value = LinkCheckStage.readOnly;
+    expect(await wire.firstContactSend(0, 'x', 'f', 'c'), 'error: held');
     expect(await wire.relaySend(0, 'x', 'c'), 'error: held');
   });
 

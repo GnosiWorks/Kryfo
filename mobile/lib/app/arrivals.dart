@@ -140,7 +140,9 @@ class AppIo {
     String xPub,
     String fc,
     String cipher,
-  ) => sendFirstContactNoted(ident, xPub, fc, cipher);
+  ) async => linkSendsHeld
+      ? 'error: held'
+      : sendFirstContactNoted(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it
