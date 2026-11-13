@@ -64,7 +64,7 @@ missed goes to them at once. while senders on 0.5.x matter, each address
 also reads the backups once an hour with the first store up, then lets
 them go: a copy an old sender left only there still arrives.
 
-## `dmrelay/`: next, not deployable yet
+## `server/dmrelay/`: next, not deployable yet
 
 badger instead of sqlite, expiration checks, a kind allow-list, and nip-42
 gated reads, so you only get wraps for an address you proved you own. the

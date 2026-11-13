@@ -2,9 +2,9 @@ package main
 
 // the relay is a post box, not an archive. wraps go at fourteen days, file
 // slices at seven days after they came.
-// dmrelay/ is not a drop-in: it gates reads with nip-42, which the app does
-// not speak yet. no delivery tracking either, wrapping the store's channel
-// leaves its iterator open when khatru stops draining early.
+// server/dmrelay/ is not a drop-in: it gates reads with nip-42, which the app
+// does not speak yet. no delivery tracking either, wrapping the store's
+// channel leaves its iterator open when khatru stops draining early.
 
 import (
 	"context"

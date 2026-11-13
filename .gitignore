@@ -66,10 +66,10 @@ statusfix.py
 subfix.py
 
 # relay and handle service source is public - the binaries are not
-dmrelay/halo-relay
-dmrelay/dmrelay-data/
+server/dmrelay/halo-relay
+server/dmrelay/dmrelay-data/
 server/handle/kryfo-handles
-dmrelay/dmrelay
+server/dmrelay/dmrelay
 server/handle/kryfo-handles
 relay-live/halo-relay
 relay-live/data/
