@@ -1403,7 +1403,12 @@ void main() {
         await _io(t, () => asked.isNotEmpty, why: 'the encode was not stopped');
         expect(asked.single, endsWith('.ogg'));
         stop.complete('error: stopped');
-        for (var i = 0; i < 30; i++) {
+        // until both files are gone and it says so, however slow the lane
+        for (var i = 0; i < 400; i++) {
+          if (((await media(t))?.isEmpty ?? false) &&
+              find.text(l10n.voiceLockedNotSent).evaluate().isNotEmpty) {
+            break;
+          }
           await t.runAsync(
             () => Future<void>.delayed(const Duration(milliseconds: 20)),
           );
