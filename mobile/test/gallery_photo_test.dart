@@ -166,7 +166,8 @@ void main() {
   ]) {
     test('$fn cleans before anything touches disk', () {
       final body = bodyOf(sourceOf(file), fn);
-      final clean = body.indexOf('await photoToSendOffUi(raw)');
+      // cleaned as it is, or drawn again as a jpeg (photoLaneBytes)
+      final clean = body.indexOf('await photoLaneBytes(raw)');
       expect(clean, greaterThan(0));
       expect(body.indexOf('await writeMadeCopy('), greaterThan(clean));
       // the raw bytes go nowhere else

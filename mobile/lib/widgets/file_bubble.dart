@@ -24,7 +24,7 @@ import '../theme.dart';
 import '../doc_read.dart' show DocPara;
 import 'decode_px.dart' show screenPx;
 import 'doc_viewer.dart' show kDocViewExts, readDocFile;
-import 'file_actions.dart' show fileFactsOrName, fileViewOf, pdfViewHere;
+import 'file_actions.dart' show fileFactsOrName, fileViewAt, pdfViewHere;
 import 'sealed_picture.dart' show mediaImage;
 import 'ease_size.dart';
 import 'file_badge.dart';
@@ -314,7 +314,7 @@ class _FileCardState extends State<FileCard> {
               : going != null
               ? null
               // a pdf, a text or a sound opens in kryfo's own viewer
-              : fileViewOf(facts) != null
+              : fileViewAt(path, facts) != null
               ? l10n.fileViewInKryfo
               : l10n.fileOpenHint,
           excludeSemantics: going == null || widget.onCancel == null,

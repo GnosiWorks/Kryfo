@@ -22,6 +22,7 @@ import '../widgets/sealed_picture.dart';
 import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
+import '../picture_convert.dart' show photoLaneBytes;
 import '../album.dart';
 import '../widgets/file_stack.dart';
 import '../widgets/preview_bleed.dart' show BubbleWidth;
@@ -64,6 +65,7 @@ import '../widgets/file_actions.dart'
         canForwardFile,
         fileHeroTag,
         fileFactsOrName,
+        fileViewAt,
         fileViewOf,
         forwardFile,
         openFileOutside,
@@ -3058,7 +3060,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // a photo cleaned of what the gallery's re-encode copied across and
   // written under its own uid: nothing shows or leaves yet
   Future<_GReady?> _readyGroupPhoto(Uint8List raw, {String? uid}) async {
-    final bytes = await photoToSendOffUi(raw);
+    // a jpeg, png or gif as it is; any other kind drawn again as a jpeg
+    final bytes = await photoLaneBytes(raw);
     if (bytes == null) {
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
       return null;
@@ -3067,7 +3070,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    // a png, gif, webp or heic keeps its own kind, and its name says so
+    // a png or a gif keeps its own kind, and its name says so
     final f = File('${mediaDir.path}/$made.${pictureExt(bytes)}');
     if (!await writeMadeCopy(f, bytes)) {
       if (mounted) showHaloToast(context, l10n.cleanFreeSomeSpaceAnd);
@@ -4192,7 +4195,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         fileAt != null &&
         fileAt.filePath != null &&
         !isVoiceName(fileAt.fileName) &&
-        fileViewOf(fileFactsOrName(fileAt.filePath!, fileAt.fileName)) != null;
+        fileViewAt(
+              fileAt.filePath!,
+              fileFactsOrName(fileAt.filePath!, fileAt.fileName),
+            ) !=
+            null;
     // a gif, anyone's, can be kept in the favourites, never one under the
     // group's rules
     final gifPath = shareOn?.mediaPath;

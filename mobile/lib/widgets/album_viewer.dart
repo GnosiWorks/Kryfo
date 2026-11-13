@@ -6,7 +6,6 @@
 // fades instead. on a computer the arrow keys and the round buttons at its
 // sides go back and forth, as a mouse cannot swipe.
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +15,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
+import '../picture_gate.dart' show pictureOf;
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'album_grid.dart' show albumFlight, albumHeroTag;
@@ -84,7 +84,7 @@ Future<void> openAlbum(
         ResizeImage.resizeIfNeeded(
           screenPx(context, times: 2),
           null,
-          FileImage(File(first.path)),
+          pictureOf(first.path),
         ),
         context,
         onError: (_, _) {},
@@ -647,7 +647,7 @@ class _PhotoPageState extends State<_PhotoPage>
     final image = ResizeImage.resizeIfNeeded(
       px,
       null,
-      FileImage(File(widget.path)),
+      pictureOf(widget.path),
     );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

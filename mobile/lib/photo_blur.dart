@@ -17,6 +17,7 @@ import 'image_strip.dart' show PictureKind, pictureKind;
 import 'desktop/desktop_trace.dart' show tracing;
 import 'media_trace.dart' show mediaKindOf, mediaTraceOnce;
 import 'open_file.dart' show nameSaysVideo, videoInfoFor;
+import 'picture_gate.dart' show pictureFromPath, pictureMayDecode;
 import 'picture_lock.dart' show picturesShut;
 import 'shred.dart' show kBlurLeaf;
 
@@ -327,9 +328,16 @@ Future<PhotoBlur?> makeBlur(String media, {Uint8List? bytes, int? gen}) async {
     }
   }
   if (picture == null || stale()) return null;
+  // theirs only as a jpeg, png or gif, as the bubble draws it
+  // (picture_gate.dart). a video's frame is the platform's own jpeg
+  if (!pictureMayDecode(picture, pictureFromPath(media))) {
+    if (ours) picture.fillRange(0, picture.length, 0);
+    _blurMissing(media, 'refused');
+    return null;
+  }
   PhotoBlur? blur;
   try {
-    blur = await blurOfPicture(picture);
+    blur = await (blurDecodeForTest ?? blurOfPicture)(picture);
   } finally {
     if (ours) picture.fillRange(0, picture.length, 0);
   }
@@ -372,6 +380,10 @@ Future<bool> _looksLikePicture(String media) async {
     return false;
   }
 }
+
+/// stands in for the decode in tests, to see what reaches it
+@visibleForTesting
+Future<PhotoBlur?> Function(Uint8List picture)? blurDecodeForTest;
 
 /// the blur of an encoded picture: decoded small, its waves read, the
 /// pixels zeroed. null when it does not decode

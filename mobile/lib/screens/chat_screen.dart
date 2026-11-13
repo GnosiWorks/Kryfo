@@ -25,6 +25,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
+import '../picture_convert.dart' show photoLaneBytes;
 import '../share_files.dart';
 import 'share_files_sheet.dart' show askSendSharedFiles, landFiles;
 import '../album.dart';
@@ -85,6 +86,7 @@ import '../widgets/file_actions.dart'
         canForwardFile,
         fileHeroTag,
         fileFactsOrName,
+        fileViewAt,
         fileViewOf,
         forwardFile,
         openFileOutside,
@@ -2807,7 +2809,11 @@ class _ChatScreenState extends State<ChatScreen>
         fileAt != null &&
         fileAt.filePath != null &&
         !isVoiceName(fileAt.fileName) &&
-        fileViewOf(fileFactsOrName(fileAt.filePath!, fileAt.fileName)) != null;
+        fileViewAt(
+              fileAt.filePath!,
+              fileFactsOrName(fileAt.filePath!, fileAt.fileName),
+            ) !=
+            null;
     // a gif, theirs or mine, can be kept in the favourites. nothing kept
     // to this chat leaves it, so not one under its rules
     final gifPath = shareOn?.mediaPath;
@@ -5292,7 +5298,8 @@ class _ChatScreenState extends State<ChatScreen>
   // a photo made ready the same way: cleaned of what the gallery's
   // re-encode copied across, and written under its own uid
   Future<_Ready?> _readyPhoto(Uint8List raw, {String? uid}) async {
-    final bytes = await photoToSendOffUi(raw);
+    // a jpeg, png or gif as it is; any other kind drawn again as a jpeg
+    final bytes = await photoLaneBytes(raw);
     if (bytes == null) {
       if (mounted) showHaloToast(context, l10n.cameraCouldNotStripThat);
       return null;
@@ -5301,7 +5308,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return null;
     final msgUid = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
-    // a png, gif, webp or heic keeps its own kind, and its name says so
+    // a png or a gif keeps its own kind, and its name says so
     final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
     if (!await writeMadeCopy(mediaFile, bytes)) {
       if (mounted) showHaloToast(context, l10n.cleanFreeSomeSpaceAnd);

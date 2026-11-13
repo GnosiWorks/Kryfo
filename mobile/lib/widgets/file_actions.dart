@@ -14,6 +14,7 @@ import '../l10n/l10n.dart';
 import '../lock_state.dart';
 import '../main.dart' show session;
 import '../open_file.dart';
+import '../picture_gate.dart' show arrivedHere, fileMayDecode;
 import '../screens/dev_about_sheet.dart' show devForwardTarget;
 import '../screens/forward_sheet.dart' show pickWordsChat;
 import '../screens/share_files_sheet.dart' show landFiles;
@@ -72,6 +73,25 @@ FileView? fileViewOf(FileFacts facts) {
   return null;
 }
 
+/// the viewer for the file at [path]: a picture of theirs that no decoder
+/// here may see (picture_gate.dart) has none, and goes to another app
+FileView? fileViewAt(String path, FileFacts facts) {
+  final v = fileViewOf(facts);
+  if (v == FileView.picture &&
+      arrivedHere(path) &&
+      !const {'jpg', 'jpeg', 'png', 'gif'}.contains(facts.ext)) {
+    return null;
+  }
+  return v;
+}
+
+/// the same, told by the file's first bytes: what a tap opens
+Future<FileView?> fileViewFor(String path, FileFacts facts) async {
+  final v = fileViewAt(path, facts);
+  if (v == FileView.picture && !await fileMayDecode(path)) return null;
+  return v;
+}
+
 /// opens [path] in kryfo's viewer for it. false when none shows it. [kept]:
 /// theirs in a chat that blocks, shown with screenshots blocked
 Future<bool> viewInKryfo(
@@ -87,8 +107,9 @@ Future<bool> viewInKryfo(
   List<SoundItem> Function()? upNext,
 }) async {
   final facts = await readFileFacts(path, name);
+  final view = await fileViewFor(path, facts);
   if (!context.mounted) return false;
-  switch (fileViewOf(facts)) {
+  switch (view) {
     case FileView.picture:
       await openPhoto(context, path, secure: kept);
     case FileView.video:

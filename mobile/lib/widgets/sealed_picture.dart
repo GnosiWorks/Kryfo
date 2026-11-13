@@ -4,7 +4,6 @@
 // it lifts the blur is there in the first frame, at the photo's shape, and
 // the photo fades up over it when decoded; under reduced motion it swaps
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -17,15 +16,17 @@ import '../devices/history_files.dart' show historyFilesComing;
 import '../l10n/l10n.dart';
 import '../media_trace.dart' show traceDecode;
 import '../photo_blur.dart';
+import '../picture_gate.dart' show pictureOf;
 import '../picture_lock.dart';
 import '../theme.dart';
 import 'motion.dart' show motionStill;
 
 const kPictureFade = Duration(milliseconds: 200);
 
-/// a media file decoded [width] pixels across at most
+/// a media file decoded [width] pixels across at most. one of theirs only
+/// as a jpeg, png or gif (picture_gate.dart)
 ImageProvider mediaImage(String path, [int? width]) =>
-    ResizeImage.resizeIfNeeded(width, null, FileImage(File(path)));
+    ResizeImage.resizeIfNeeded(width, null, pictureOf(path));
 
 /// a video's first frame (640 across at most) decoded [width] pixels across
 /// at most: a grid tile needs a quarter of its pixels

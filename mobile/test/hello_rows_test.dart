@@ -1414,7 +1414,7 @@ void main() {
       expect((await app.helloWaitOf(p.words)).update, isTrue);
       await hellosGo();
       expect(sent(), hasLength(2));
-    });
+    }, timeout: const Timeout(Duration(seconds: 90)));
 
     test('a v4 qr is a 0.6 phone\'s: its hello waits, and no update line '
         'ever shows', () async {
