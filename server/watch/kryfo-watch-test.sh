@@ -95,6 +95,10 @@ fresh() {
 	: >"$FAKE/restarts.log"
 	: >"$FAKE/alerts.log"
 	echo $((10 << 30)) >"$FAKE/avail"
+	mkdir -p "$FAKE/ssh" "$FAKE/home/kryfo/.ssh"
+	echo "ssh-ed25519 AAAAhostkeyone root@box" >"$FAKE/ssh/ssh_host_ed25519_key.pub"
+	echo "ssh-rsa AAAAhostkeytwo root@box" >"$FAKE/ssh/ssh_host_rsa_key.pub"
+	echo "ssh-ed25519 AAAAmariokey mario" >"$FAKE/home/kryfo/.ssh/authorized_keys"
 	routes '{"free":true}' 200 '{"free":true}' 200
 }
 
@@ -113,7 +117,8 @@ EOF
 watch() {
 	PATH=$bin:$PATH WATCH_ENV=/dev/null STATE=$FAKE/state SITE=http://site.test/ \
 		RELAY=http://relay.test/ ALERT_CMD=$bin/alert RELAY_DATA=/srv/relay/data \
-		HEAL_GAP=$gap DRY=0 "$here/kryfo-watch.sh" >/dev/null 2>&1
+		HOSTKEYS="$FAKE/ssh/ssh_host_*_key.pub" AUTHKEYS="$FAKE/home/*/.ssh/authorized_keys*" \
+		HEAL_GAP=$gap DRY=0 "$here/kryfo-watch.sh" "$@" >/dev/null 2>&1
 }
 
 status() { grep -qx "$1" "$FAKE/state/status" || fail "status has no \"$1\""; }
@@ -280,6 +285,74 @@ fresh no_answer_from_df_is_unreadable
 rm "$FAKE/avail"
 watch
 status "disk unreadable"
+
+fresh the_first_run_takes_the_keys_as_they_are
+watch
+status "hostkeys up"
+status "authkeys up"
+alerted ""
+
+fresh a_new_authorized_key_is_one_alert
+watch
+echo "ssh-ed25519 AAAAsomeoneelse x" >>"$FAKE/home/kryfo/.ssh/authorized_keys"
+watch
+watch
+status "authkeys changed"
+status "hostkeys up"
+alerted "authkeys changed"
+
+fresh a_new_authorized_keys_file_is_a_change
+watch
+mkdir -p "$FAKE/home/other/.ssh"
+echo "ssh-ed25519 AAAAother x" >"$FAKE/home/other/.ssh/authorized_keys2"
+watch
+status "authkeys changed"
+
+fresh a_host_key_comment_is_no_change
+watch
+echo "ssh-ed25519 AAAAhostkeyone root@renamed" >"$FAKE/ssh/ssh_host_ed25519_key.pub"
+watch
+status "hostkeys up"
+alerted ""
+
+fresh a_new_host_key_alerts_until_accepted
+watch
+echo "ssh-ed25519 AAAAhostkeythree root@box" >"$FAKE/ssh/ssh_host_ed25519_key.pub"
+watch
+status "hostkeys changed"
+watch accept-keys
+watch
+status "hostkeys up"
+alerted "hostkeys changed
+hostkeys up"
+
+fresh a_key_put_back_is_up_again
+watch
+cp "$FAKE/home/kryfo/.ssh/authorized_keys" "$FAKE/keep"
+echo "ssh-ed25519 AAAAsomeoneelse x" >>"$FAKE/home/kryfo/.ssh/authorized_keys"
+watch
+cp "$FAKE/keep" "$FAKE/home/kryfo/.ssh/authorized_keys"
+watch
+status "authkeys up"
+alerted "authkeys changed
+authkeys up"
+
+fresh keys_only_checks_nothing_else
+routes '' 0 '' 0
+WATCH_ONLY=keys watch
+status "hostkeys up"
+grep -q '^site\|^relay\|^handles' "$FAKE/state/status" && fail "keys only checked a service"
+restarted ""
+echo "ssh-ed25519 AAAAsomeoneelse x" >>"$FAKE/home/kryfo/.ssh/authorized_keys"
+WATCH_ONLY=keys watch
+alerted "authkeys changed"
+
+fresh the_reference_holds_one_hash_per_kind
+watch
+for k in hostkeys authkeys; do
+	grep -qxE '[0-9a-f]{64}' "$FAKE/state/$k.ref" || fail "$k.ref is not one hash"
+	grep -q AAAA "$FAKE/state/$k.ref" && fail "$k.ref holds a key"
+done
 
 if [ "$failed" -gt 0 ]; then
 	echo "$failed failed"

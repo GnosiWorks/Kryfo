@@ -66,14 +66,35 @@ table on disk and writes no file; in ram it holds a keyed hash of a token with t
 times of its last pushes for an hour, to keep one push per phone every 45
 seconds and thirty an hour, a keyed hash of a token fcm calls no phone's for
 a day, short hashes of the seals each token was knocked on, up to a day
-each, to refuse copies, and a held-back push's token for up to 45 seconds. once an hour it
-logs counts. google sees the install and when it
+each, to refuse copies, and a held-back push's token for up to 45 seconds. it logs
+nothing but its start, no counts either. google sees the install and when it
 is woken, never by whom or with what. it has no public route: only our relay
 posts to it, on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`, 127.0.0.1:3340 by
 default), which on the first box is a tunnel to the gateway on the second.
 the app never talks to it. the relay's endpoint table and the gateway's key
 are on different boxes, so tying a phone's sixteen endpoints together takes
 both. we run both.
+
+## logs
+
+since 13 november 2026 neither box keeps logs:
+
+- the system journal stores nothing, not even in ram.
+- the web servers keep no access or error logs.
+- no login records (wtmp, btmp, lastlog, auth.log) and no shell history.
+- package logs (apt, dpkg, unattended upgrades) live in ram and are emptied every hour.
+- no core dumps.
+- no traffic statistics (sysstat is off).
+- the push gateway counts nothing.
+- the handle registry keeps no claim time. the time of a handle's last signed change
+  and of its last search switch are needed only to refuse replays inside the ten
+  minute clock window, so they are blanked once 20 minutes old.
+
+the one thing kept is on the donation server (btcpay): its invoice records, because
+payments need them, and an error file it writes only on a crash.
+
+the old logs were deleted. a check runs after every change to a box and goes
+through each item above, one by one, and fails if any of them is back.
 
 ## watching them
 

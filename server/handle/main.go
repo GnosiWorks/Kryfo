@@ -68,17 +68,17 @@ var (
 )
 
 type entry struct {
-	Handle    string `json:"handle"`
-	Invite    string `json:"invite"`
-	Bio       string `json:"bio"`
-	Pubkey    string `json:"pubkey"`
-	ClaimedAt int64  `json:"claimed_at"`
+	Handle string `json:"handle"`
+	Invite string `json:"invite"`
+	Bio    string `json:"bio"`
+	Pubkey string `json:"pubkey"`
 	// the time on its last v2 claim. a handle that has one takes only v2
-	// from then on, and nothing signed before it
+	// from then on, and nothing signed before it. once that time is past
+	// the clock window it is settled to 1 (settle below)
 	SignedAt int64 `json:"signed_at,omitempty"`
 	// in search only when the owner opts in, under a name they chose.
 	// ListedAt is the time on their last signed change, so an older one
-	// cannot be replayed
+	// cannot be replayed, settled to 1 the same way
 	Listed   bool   `json:"listed,omitempty"`
 	Name     string `json:"name,omitempty"`
 	ListedAt int64  `json:"listed_at,omitempty"`
@@ -98,6 +98,9 @@ type store struct {
 	// one file write at a time, and the last change it holds
 	wmu   sync.Mutex
 	saved uint64
+
+	// the file still has the claim times older registries wrote
+	legacy bool
 }
 
 // the store as the file holds it. only a file that is not there yet starts
@@ -115,7 +118,53 @@ func loadStore(path string) (*store, error) {
 	if err := json.Unmarshal(b, &s.m); err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+	s.legacy = bytes.Contains(b, []byte(`"claimed_at"`))
 	return s, nil
+}
+
+// what a signed time turns into once it is past the clock window. it still
+// says "signed" (a v2 handle stays v2 only) and still loses to every change
+// the window lets in
+const settled = 1
+
+// a signed time is kept only while a change inside the clock window could
+// be compared with it. past twice the window every change that is let in
+// is newer anyway, so the exact time says nothing the registry needs and
+// is settled. true when anything changed
+func (s *store) settle(now int64) bool {
+	old := now - 2*max(signSkew, listingSkew)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	changed := false
+	for h, e := range s.m {
+		c := false
+		if e.SignedAt > settled && e.SignedAt < old {
+			e.SignedAt, c = settled, true
+		}
+		if e.ListedAt > settled && e.ListedAt < old {
+			e.ListedAt, c = settled, true
+		}
+		if c {
+			s.m[h] = e
+			changed = true
+		}
+	}
+	if changed || s.legacy {
+		s.legacy = false
+		s.gen++
+		return true
+	}
+	return false
+}
+
+// settles old times and writes the file when that or anything before it
+// is not on disk yet, also when it still has claim times from before
+func (s *store) tidy(now time.Time) error {
+	s.settle(now.Unix())
+	s.mu.RLock()
+	gen := s.gen
+	s.mu.RUnlock()
+	return s.save(gen)
 }
 
 func (s *store) get(h string) (entry, bool) {
@@ -516,6 +565,17 @@ func main() {
 		acceptV1 = false
 	}
 
+	// the first tidy also drops the claim times an older registry kept. one
+	// that cannot write leaves it for the next change or the next tidy
+	go func() {
+		for {
+			if err := st.tidy(time.Now()); err != nil {
+				log.Printf("handles: settled times not written: %v", err)
+			}
+			time.Sleep(10 * time.Minute)
+		}
+	}()
+
 	log.Printf("handles: listening on %s, store in %s", addr, dir)
 	log.Fatal(newServer(addr, st, newLimiter(2, 20)).ListenAndServe())
 }
@@ -654,7 +714,6 @@ func routes(st *store, lim *limiter) http.Handler {
 			if v2 {
 				in.SignedAt = ts
 			}
-			in.ClaimedAt = time.Now().Unix()
 			t.put(in)
 			return nil
 		})

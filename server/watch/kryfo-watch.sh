@@ -2,7 +2,11 @@
 # checks every service the way a phone reaches it, through the front proxy,
 # and restarts what is down. the registry went dark twice with every unit
 # "active": a bridge was down, and only a request from outside shows that.
+# it also alerts when the box's ssh host keys or any authorized_keys change.
 # run by kryfo-watch.timer. DRY=1 checks and restarts nothing.
+# kryfo-watch.sh accept-keys takes the keys as they are now, after a planned
+# change. WATCH_ONLY=keys runs the key check alone (a box with no services
+# of the first box's to watch).
 set -u
 
 ENV=${WATCH_ENV:-/etc/kryfo-watch.env}
@@ -25,6 +29,9 @@ NTFY_URL=${NTFY_URL:-}
 # one sender, and a hosting provider's /64 can be over its limit already
 NTFY_OPTS=${NTFY_OPTS:-}
 DRY=${DRY:-0}
+WATCH_ONLY=${WATCH_ONLY:-}
+HOSTKEYS=${HOSTKEYS:-/etc/ssh/ssh_host_*_key.pub}
+AUTHKEYS=${AUTHKEYS:-/root/.ssh/authorized_keys* /home/*/.ssh/authorized_keys*}
 mkdir -p "$STATE"
 now=$(date +%s)
 report=()
@@ -84,6 +91,50 @@ mark() {
 	return 0
 }
 
+# one hash over the keys of a kind, so the reference says nothing about
+# them. host keys by their key alone (a comment may change), authorized_keys
+# whole: an option or a removed line counts too
+keyhash() {
+	local f
+	# shellcheck disable=SC2086
+	case $1 in
+	hostkeys) for f in $HOSTKEYS; do [ -f "$f" ] && printf '%s %s\n' "$f" "$(awk '{print $2}' "$f")"; done ;;
+	authkeys) for f in $AUTHKEYS; do [ -f "$f" ] && printf '%s %s\n' "$f" "$(sha256sum <"$f" | cut -c1-64)"; done ;;
+	esac | sha256sum | cut -c1-64
+}
+
+if [ "${1:-}" = accept-keys ]; then
+	for kind in hostkeys authkeys; do keyhash $kind >"$STATE/$kind.ref"; done
+	echo "watch: the keys as they are now are the reference"
+	exit 0
+fi
+
+# the first run takes the keys as the reference. a change is one alert, and
+# stays "changed" until it is undone or accept-keys takes it
+check_keys() {
+	local kind cur
+	for kind in hostkeys authkeys; do
+		cur=$(keyhash $kind)
+		if [ ! -s "$STATE/$kind.ref" ]; then
+			[ "$DRY" = 1 ] || echo "$cur" >"$STATE/$kind.ref"
+			mark $kind up
+		elif [ "$cur" = "$(cat "$STATE/$kind.ref")" ]; then
+			mark $kind up
+		else
+			mark $kind changed
+		fi
+	done
+}
+
+if [ "$WATCH_ONLY" = keys ]; then
+	check_keys
+	{
+		date -u +%FT%TZ
+		printf '%s\n' "${report[@]}"
+	} >"$STATE/status.tmp" && mv "$STATE/status.tmp" "$STATE/status"
+	exit 0
+fi
+
 # the site
 if [ "$(get "$SITE")" = 200 ]; then mark site up; else mark site down; fi
 
@@ -142,6 +193,8 @@ for host in kryfo.app relay.kryfo.app; do
 	days=$((($(date -d "$end" +%s) - now) / 86400))
 	if [ "$days" -ge "$CERT_DAYS" ]; then mark "cert-$host" up; else mark "cert-$host" "ending-in-${days}d"; fi
 done
+
+check_keys
 
 {
 	date -u +%FT%TZ

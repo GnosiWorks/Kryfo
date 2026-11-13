@@ -9,7 +9,7 @@ package main
 // the sealed token is a phone's fcm token sealed to this gateway's key
 // (seal.go), sealed afresh for each of its sixteen endpoints, so a relay
 // holds sixteen strings with nothing in common. the gateway opens one in
-// memory and keeps nothing: no table, no file, no log line per token. in
+// memory and keeps nothing: no table, no file, no log line, no counts. in
 // ram, gone with a restart, is a keyed hash of a token with the times of
 // its last pushes, kept an hour (the floor below), a keyed hash of a token
 // fcm said is no phone's, kept a day, and for a knock folded into the next
@@ -34,7 +34,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -103,7 +102,7 @@ func main() {
 		log.Fatal("push: ", err)
 	}
 	g := newGateway(k, f)
-	go g.hourly()
+	go g.sweeper()
 	log.Printf("push: listening on %s", addr)
 	log.Fatal(newServer(addr, g).ListenAndServe())
 }
@@ -127,10 +126,6 @@ func credential(envName, file string) string {
 	return filepath.Join("/etc/kryfo-push", file)
 }
 
-type stats struct {
-	sent, folded, gone, refused, failed, limited atomic.Int64
-}
-
 type gateway struct {
 	key  hpke.PrivateKey
 	fcm  pusher
@@ -148,7 +143,6 @@ type gateway struct {
 	gone      map[[16]byte]time.Time
 	goneOrder [][16]byte
 	swept     time.Time
-	st        stats
 }
 
 // what is held for one token, under its keyed hash
@@ -231,7 +225,6 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	sealed, ok := strings.CutPrefix(r.URL.Path, "/push/")
 	if !ok || r.URL.RawQuery != "" || strings.Contains(sealed, "/") {
-		g.st.refused.Add(1)
 		http.Error(w, "not here", http.StatusNotFound)
 		return
 	}
@@ -242,18 +235,15 @@ func (g *gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// a knock has no body; a few bytes are let through and dropped unread
 	if r.ContentLength > maxBody {
-		g.st.refused.Add(1)
 		http.Error(w, "too big", http.StatusRequestEntityTooLarge)
 		return
 	}
 	if n, _ := io.Copy(io.Discard, io.LimitReader(r.Body, maxBody+1)); n > maxBody {
-		g.st.refused.Add(1)
 		http.Error(w, "too big", http.StatusRequestEntityTooLarge)
 		return
 	}
 	token, err := open(g.key, sealed)
 	if err != nil {
-		g.st.refused.Add(1)
 		http.Error(w, "no such endpoint", http.StatusNotFound)
 		return
 	}
@@ -277,7 +267,6 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 	if until, ok := g.gone[h]; ok {
 		if now.Before(until) {
 			g.mu.Unlock()
-			g.st.gone.Add(1)
 			return http.StatusGone, 0
 		}
 		delete(g.gone, h)
@@ -286,7 +275,6 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 	if p != nil {
 		if !p.sealOK(sh, now) {
 			g.mu.Unlock()
-			g.st.refused.Add(1)
 			return http.StatusNotFound, 0
 		}
 		if now.Sub(p.hourStart) >= time.Hour || now.Before(p.hourStart) {
@@ -295,13 +283,11 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 		if p.trailing {
 			// one is already waiting for the floor: this one goes with it
 			g.mu.Unlock()
-			g.st.folded.Add(1)
 			return http.StatusCreated, 0
 		}
 		if p.inHour >= floorHour {
 			wait := p.hourStart.Add(time.Hour).Sub(now)
 			g.mu.Unlock()
-			g.st.limited.Add(1)
 			return http.StatusTooManyRequests, wait
 		}
 		if !p.last.IsZero() && now.Sub(p.last) < floorGap && !now.Before(p.last) {
@@ -309,7 +295,6 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 			p.inHour++
 			wait := p.last.Add(floorGap).Sub(now)
 			g.mu.Unlock()
-			g.st.folded.Add(1)
 			g.after(wait, func() { g.trail(h, token) })
 			// as a push sent now answers: a fold says nothing of the phone
 			return http.StatusCreated, 0
@@ -320,7 +305,6 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 		}
 		if len(g.floor) >= floorKept {
 			g.mu.Unlock()
-			g.st.limited.Add(1)
 			return http.StatusTooManyRequests, 10 * time.Second
 		}
 	}
@@ -341,14 +325,12 @@ func (g *gateway) knock(token, sealed string) (int, time.Duration) {
 // the global pace and a free slot, taken together or not at all
 func (g *gateway) admit() (int, time.Duration, bool) {
 	if !everyone.allow() {
-		g.st.limited.Add(1)
 		return http.StatusTooManyRequests, 2 * time.Second, false
 	}
 	select {
 	case g.slot <- struct{}{}:
 		return 0, 0, true
 	default:
-		g.st.limited.Add(1)
 		return http.StatusTooManyRequests, 2 * time.Second, false
 	}
 }
@@ -412,14 +394,12 @@ func (g *gateway) send(h [16]byte, token string) (int, time.Duration) {
 func (g *gateway) noted(h [16]byte, o outcome) {
 	switch o {
 	case sent:
-		g.st.sent.Add(1)
 		g.mu.Lock()
 		if p := g.floor[h]; p != nil {
 			p.fresh = false
 		}
 		g.mu.Unlock()
 	case gone:
-		g.st.gone.Add(1)
 		// asked again only after a day: the relay drops the endpoint anyway.
 		// it leaves the phones' table for the gone one, which has its own cap
 		g.mu.Lock()
@@ -427,9 +407,8 @@ func (g *gateway) noted(h [16]byte, o outcome) {
 		g.addGoneLocked(h, g.now())
 		g.mu.Unlock()
 	case busy:
-		g.st.limited.Add(1)
+		// a full slot, nothing to note
 	default:
-		g.st.failed.Add(1)
 		// a token never pushed to, whose first push failed, holds no row
 		g.mu.Lock()
 		if p := g.floor[h]; p != nil && p.fresh && !p.trailing {
@@ -475,22 +454,14 @@ func (g *gateway) sweepLocked(now time.Time) {
 	}
 }
 
-// counts only, never a token, an address or a hash
-func (g *gateway) hourly() {
+// drops what has not pushed for an hour. nothing is counted or logged
+func (g *gateway) sweeper() {
 	t := time.NewTicker(time.Minute)
 	defer t.Stop()
-	for n := 1; ; n++ {
-		<-t.C
+	for range t.C {
 		g.mu.Lock()
 		g.sweepLocked(g.now())
-		held := len(g.floor)
 		g.mu.Unlock()
-		if n%60 != 0 {
-			continue
-		}
-		s := &g.st
-		log.Printf("push: last hour %d sent, %d folded, %d gone, %d refused, %d failed, %d limited, %d held",
-			s.sent.Swap(0), s.folded.Swap(0), s.gone.Swap(0), s.refused.Swap(0), s.failed.Swap(0), s.limited.Swap(0), held)
 	}
 }
 

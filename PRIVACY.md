@@ -46,7 +46,7 @@ a bridge is your first tor hop. whoever runs it sees your ip address and when yo
 
 a handle (@name) is optional. without one, nothing about you sits anywhere central. if you claim one, the handle registry on relay.kryfo.app holds the handle, the invite it points to (already public), a bio if you write one, and the key that claimed it. anyone who knows the handle can open its page and message you.
 
-people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
+people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days. the registry does not store when a handle was claimed. the time of a handle's last change is kept for 20 minutes, to refuse a replayed change, and then cleared.
 
 the app reaches the registry, people search and the badge service over tor on every route, also in fast mode. the registry keeps no record of who looked anyone up or what was searched for.
 
@@ -98,7 +98,7 @@ Kryfo talks to tor relays and nostr relays, to our files service for big files, 
 
 ## law enforcement and data requests
 
-we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over, except, for google push users, what the google push section says our two servers together could link.
+we have no account records, no message store, and no logs of who talks to whom. our servers keep no logs at all: no system or web server logs, no login records, no traffic statistics. the one exception is the donation server, which keeps its invoices because payments need them, and writes an error file only when it crashes. a check runs after every change to a server and confirms each of these. if someone asks us to hand over your data, there is nothing to hand over, except, for google push users, what the google push section says our two servers together could link.
 
 ## children
 
