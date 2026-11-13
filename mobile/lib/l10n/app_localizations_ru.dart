@@ -1426,7 +1426,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatFile2 => 'Файл';
 
   @override
-  String get chatSendThis => 'Отправить файл?';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Отправить эти файлы?',
+      one: 'Отправить файл?',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => 'Отправить';

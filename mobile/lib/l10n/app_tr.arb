@@ -482,7 +482,7 @@
   "chatGifFromPhone": "Telefondan gif",
   "chatGifFromPhoneDesk": "Bilgisayardan gif",
   "chatFile2": "Dosya",
-  "chatSendThis": "Bu dosya gönderilsin mi?",
+  "chatSendThis": "{count, plural, =1{Bu dosya gönderilsin mi?} other{Bu dosyalar gönderilsin mi?}}",
   "chatSendIt": "Gönder",
   "chatCouldNotReadThat": "Bu dosya okunamadı",
   "chatCouldNotCleanThat": "Bu video temizlenemedi",

@@ -482,7 +482,7 @@
   "chatGifFromPhone": "GIF с телефона",
   "chatGifFromPhoneDesk": "GIF с компьютера",
   "chatFile2": "Файл",
-  "chatSendThis": "Отправить файл?",
+  "chatSendThis": "{count, plural, =1{Отправить файл?} other{Отправить эти файлы?}}",
   "chatSendIt": "Отправить",
   "chatCouldNotReadThat": "Не удалось прочитать файл",
   "chatCouldNotCleanThat": "Не удалось очистить видео",

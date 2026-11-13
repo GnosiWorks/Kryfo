@@ -482,7 +482,7 @@
   "chatGifFromPhone": "手机里的 GIF",
   "chatGifFromPhoneDesk": "电脑里的 GIF",
   "chatFile2": "文件",
-  "chatSendThis": "要发送这个文件吗？",
+  "chatSendThis": "{count, plural, =1{要发送这个文件吗？} other{要发送这些文件吗？}}",
   "chatSendIt": "发送",
   "chatCouldNotReadThat": "无法读取这个文件",
   "chatCouldNotCleanThat": "无法清理这个视频",

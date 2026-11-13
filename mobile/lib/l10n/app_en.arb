@@ -1844,9 +1844,14 @@
   "@chatFile2": {
     "description": "screens/chat_screen.dart"
   },
-  "chatSendThis": "Send this file?",
+  "chatSendThis": "{count, plural, =1{Send this file?} other{Send these files?}}",
   "@chatSendThis": {
-    "description": "screens/chat_screen.dart"
+    "description": "screens/chat_screen.dart: the confirm before a big send, one file or several",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "chatSendIt": "Send it",
   "@chatSendIt": {

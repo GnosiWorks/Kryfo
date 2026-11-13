@@ -364,6 +364,22 @@ void main() {
       final ask = bodyOf(chat, 'Future<bool> _askSheet(');
       expect(ask, contains('_confirmSend('));
       expect(ask, contains('r.total,'));
+      // two or more read as these files, not this file
+      expect(ask, contains('count: r.picks.length,'));
+      expect(
+        bodyOf(chat, 'Future<bool> _askBig('),
+        contains('count: items.length'),
+      );
+      expect(l10n.chatSendThis(1), 'Send this file?');
+      expect(l10n.chatSendThis(2), 'Send these files?');
+      // 21 reads as one in russian: the title gets 1 or 2, never the count
+      expect(
+        bodyOf(chat, 'Future<bool> _confirmSend('),
+        contains('l10n.chatSendThis(count > 1 ? 2 : 1)'),
+      );
+      final ru = lookupAppLocalizations(const Locale('ru'));
+      expect(ru.chatSendThis(21), ru.chatSendThis(1));
+      expect(ru.chatSendThis(2), 'Отправить эти файлы?');
       final send = bodyOf(chat, 'Future<void> _sendFromSheet(');
       expect(send, contains('if (!await _askSheet(r) || !mounted) break;'));
       expect(send, isNot(contains('_askBig')));

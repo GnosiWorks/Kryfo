@@ -2368,11 +2368,11 @@ abstract class AppLocalizations {
   /// **'File'**
   String get chatFile2;
 
-  /// screens/chat_screen.dart
+  /// screens/chat_screen.dart: the confirm before a big send, one file or several
   ///
   /// In en, this message translates to:
-  /// **'Send this file?'**
-  String get chatSendThis;
+  /// **'{count, plural, =1{Send this file?} other{Send these files?}}'**
+  String chatSendThis(int count);
 
   /// screens/chat_screen.dart
   ///

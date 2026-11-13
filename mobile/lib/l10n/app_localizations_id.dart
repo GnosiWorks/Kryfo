@@ -1381,7 +1381,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatFile2 => 'File';
 
   @override
-  String get chatSendThis => 'Kirim file ini?';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kirim file-file ini?',
+      one: 'Kirim file ini?',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => 'Kirim';

@@ -5088,18 +5088,32 @@ class _ChatScreenState extends State<ChatScreen>
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out: a dialog on a 40kb photo is noise.
   // [asItIs]: a kind the send lane does not clean, which it says
-  Future<bool> _confirmBigSend(int bytes, {bool asItIs = false}) async {
+  Future<bool> _confirmBigSend(
+    int bytes, {
+    bool asItIs = false,
+    int count = 1,
+  }) async {
     if (bytes < kBigSendBytes) return true;
-    return _confirmSend(bytes, line: asItIs ? l10n.fileGoesAsItIs : '');
+    return _confirmSend(
+      bytes,
+      line: asItIs ? l10n.fileGoesAsItIs : '',
+      count: count,
+    );
   }
 
   // the question itself: [bytes] and the time over tor the sending sheet
-  // gives for them, by the same guess (torTimeLine)
-  Future<bool> _confirmSend(int bytes, {String line = ''}) async {
+  // gives for them, by the same guess (torTimeLine). [count]: how many
+  // go, so two or more read as these files. only 1 or 2 goes into the
+  // plural: russian and ukrainian file 21 or 31 under one, the single form
+  Future<bool> _confirmSend(
+    int bytes, {
+    String line = '',
+    int count = 1,
+  }) async {
     if (!mounted) return false;
     final ok = await showConfirmSheet(
       context,
-      title: l10n.chatSendThis,
+      title: l10n.chatSendThis(count > 1 ? 2 : 1),
       figure: appState.sendMode == 'private'
           ? '${_humanBytes(bytes)} · ${torTimeLine(bytes)}'
           : _humanBytes(bytes),
@@ -5520,6 +5534,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     return _confirmSend(
       r.total,
+      count: r.picks.length,
       line: asIs == 0
           ? ''
           : files.length == 1
@@ -5540,7 +5555,7 @@ class _ChatScreenState extends State<ChatScreen>
         // one that cannot be read is told so when it is made ready
       }
     }
-    return _confirmBigSend(bytes);
+    return _confirmBigSend(bytes, count: items.length);
   }
 
   // the send preview: null when the person backed out. what it was handed

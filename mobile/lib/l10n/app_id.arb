@@ -482,7 +482,7 @@
   "chatGifFromPhone": "Gif dari ponsel",
   "chatGifFromPhoneDesk": "Gif dari komputer",
   "chatFile2": "File",
-  "chatSendThis": "Kirim file ini?",
+  "chatSendThis": "{count, plural, =1{Kirim file ini?} other{Kirim file-file ini?}}",
   "chatSendIt": "Kirim",
   "chatCouldNotReadThat": "Gagal membaca file itu",
   "chatCouldNotCleanThat": "Gagal membersihkan video itu",

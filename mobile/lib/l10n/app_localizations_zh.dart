@@ -1381,7 +1381,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatFile2 => '文件';
 
   @override
-  String get chatSendThis => '要发送这个文件吗？';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '要发送这些文件吗？',
+      one: '要发送这个文件吗？',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => '发送';
@@ -12939,7 +12947,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatFile2 => '檔案';
 
   @override
-  String get chatSendThis => '要傳送這個檔案嗎？';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '要傳送這些檔案嗎？',
+      one: '要傳送這個檔案嗎？',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => '傳送';

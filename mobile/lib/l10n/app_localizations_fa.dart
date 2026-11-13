@@ -1396,7 +1396,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatFile2 => 'فایل';
 
   @override
-  String get chatSendThis => 'این فایل فرستاده شود؟';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'این فایل‌ها فرستاده شوند؟',
+      one: 'این فایل فرستاده شود؟',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => 'ارسال';

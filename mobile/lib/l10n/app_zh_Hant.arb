@@ -482,7 +482,7 @@
   "chatGifFromPhone": "手機裡的 GIF",
   "chatGifFromPhoneDesk": "電腦裡的 GIF",
   "chatFile2": "檔案",
-  "chatSendThis": "要傳送這個檔案嗎？",
+  "chatSendThis": "{count, plural, =1{要傳送這個檔案嗎？} other{要傳送這些檔案嗎？}}",
   "chatSendIt": "傳送",
   "chatCouldNotReadThat": "無法讀取那個檔案",
   "chatCouldNotCleanThat": "無法清理那段影片",

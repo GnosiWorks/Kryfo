@@ -697,7 +697,8 @@ void main() {
     expect(l.chatVideo, "Video");
     expect(l.chatGifFromPhone, "Gif from phone");
     expect(l.chatFile2, "File");
-    expect(l.chatSendThis, "Send this file?");
+    expect(l.chatSendThis(1), "Send this file?");
+    expect(l.chatSendThis(2), "Send these files?");
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");
     expect(l.chatCouldNotCleanThat, "Could not clean that video");

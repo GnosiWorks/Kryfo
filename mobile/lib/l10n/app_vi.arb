@@ -482,7 +482,7 @@
   "chatGifFromPhone": "Gif từ điện thoại",
   "chatGifFromPhoneDesk": "Gif từ máy tính",
   "chatFile2": "Tệp",
-  "chatSendThis": "Gửi tệp này?",
+  "chatSendThis": "{count, plural, =1{Gửi tệp này?} other{Gửi các tệp này?}}",
   "chatSendIt": "Gửi",
   "chatCouldNotReadThat": "Không đọc được tệp đó",
   "chatCouldNotCleanThat": "Không làm sạch được video đó",

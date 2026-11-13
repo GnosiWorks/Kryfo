@@ -1381,7 +1381,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatFile2 => 'Tệp';
 
   @override
-  String get chatSendThis => 'Gửi tệp này?';
+  String chatSendThis(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gửi các tệp này?',
+      one: 'Gửi tệp này?',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get chatSendIt => 'Gửi';

@@ -374,7 +374,7 @@
   "chatGifFromPhone": "फ़ोन से GIF",
   "chatGifFromPhoneDesk": "कंप्यूटर से GIF",
   "chatFile2": "फ़ाइल",
-  "chatSendThis": "यह फ़ाइल भेजें?",
+  "chatSendThis": "{count, plural, =1{यह फ़ाइल भेजें?} other{ये फ़ाइलें भेजें?}}",
   "chatSendIt": "भेजें",
   "chatCouldNotReadThat": "वह फ़ाइल पढ़ी नहीं जा सकी",
   "chatCouldNotCleanThat": "उस वीडियो को साफ़ नहीं कर पाए",

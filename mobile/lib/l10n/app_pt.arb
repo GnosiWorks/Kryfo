@@ -482,7 +482,7 @@
   "chatGifFromPhone": "Gif do celular",
   "chatGifFromPhoneDesk": "Gif do computador",
   "chatFile2": "Arquivo",
-  "chatSendThis": "Enviar este arquivo?",
+  "chatSendThis": "{count, plural, =1{Enviar este arquivo?} other{Enviar estes arquivos?}}",
   "chatSendIt": "Enviar",
   "chatCouldNotReadThat": "Não foi possível ler esse arquivo",
   "chatCouldNotCleanThat": "Não foi possível limpar esse vídeo",
