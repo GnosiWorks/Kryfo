@@ -925,13 +925,7 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_image == null && !_failed) {
-      _ask();
-    } else if (_image != null && !picturesShut.value) {
-      // its page was drawn before: the strip's pages follow behind it
-      final dpr = MediaQuery.devicePixelRatioOf(context);
-      unawaited(warmPdfThumbs(widget.path, (64 * dpr).round()));
-    }
+    if (_image == null && !_failed) _ask();
   }
 
   @override
@@ -964,11 +958,9 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
 
   Future<void> _ask() async {
     if (picturesShut.value) return;
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    final px = (kFilePreviewWidth * dpr).round();
+    final px = (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context))
+        .round();
     final g = await pdfGlance(widget.path, px);
-    // the viewer's strip, drawn behind it at the strip's size
-    if (g != null) unawaited(warmPdfThumbs(widget.path, (64 * dpr).round()));
     if (!mounted || picturesShut.value) return;
     setState(() {
       if (g == null) {

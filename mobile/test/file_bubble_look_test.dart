@@ -188,6 +188,21 @@ void main() {
     );
   });
 
+  test('a bubble draws only its first page; the strip draws on opening', () {
+    final bubble = sourceOf('lib/widgets/file_bubble.dart');
+    final pages = sourceOf('lib/pdf_pages.dart');
+    for (final s in [bubble, pages]) {
+      expect(s, isNot(contains('warmPdfThumbs')));
+      expect(s, isNot(contains('kThumbsAhead')));
+    }
+    expect(bubble, contains('await pdfGlance(widget.path, px);'));
+    // the open viewer keeps what it drew for the next look
+    expect(
+      sourceOf('lib/widgets/pdf_viewer.dart'),
+      contains('if (sharp == 0) keepPdfThumb(widget.path, page, img);'),
+    );
+  });
+
   testWidgets('in a bubble a preview reaches its edges; elsewhere it keeps '
       'its card', (t) async {
     const key = ValueKey('preview');
