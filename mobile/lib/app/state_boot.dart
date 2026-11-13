@@ -205,6 +205,8 @@ extension AppStateBoot on AppState {
     // a decoy left open by the run before: held until a pin says otherwise.
     // read once the store has answered for the database key
     await readDecoyMark();
+    // a linked computer: held, and its gate up, before the home paints
+    await _linkHoldAtStart();
     // the hidden chats' list, before anything can arrive: without it an
     // arrival for one would land in the everyday container
     await _router.load();
@@ -560,6 +562,8 @@ extension AppStateBoot on AppState {
       if (_polling) return;
       _polling = true;
       _beat();
+      // a linked computer's start check waits on whole passes
+      final waiting = _pollBegins();
       try {
         final batch = engine.nostrPoll();
         if (batch.token.isEmpty) return;
@@ -583,6 +587,7 @@ extension AppStateBoot on AppState {
         desk_trace.trace('relay frames done (${failed.length} failed)');
       } finally {
         _polling = false;
+        _pollEnds(waiting);
       }
     });
     final stored = await secureStore.read(key: 'onboarding_done');
@@ -632,6 +637,8 @@ extension AppStateBoot on AppState {
       }
       // linked devices, before any message opens (switch off: nothing)
       await bootDevices();
+      // a linked computer whose role the boot's first read missed
+      _linkCheckStart();
       // a history copy under way goes on where it was
       resumeHistoryCopies();
     } catch (e, st) {

@@ -465,7 +465,7 @@ func topupPurgeLane(lane string) {
 // u answered: what waits for its store goes there now, one flush per store.
 // nothing here touches the disk: an answer is never held up by the queue
 func topupKick(u string) {
-	if currentMode() != modeBalanced || savedDataDir() == "" {
+	if sendHeld.Load() || currentMode() != modeBalanced || savedDataDir() == "" {
 		return
 	}
 	nostrMu.Lock()
@@ -510,7 +510,7 @@ func topupFlush(st, u string) bool {
 	sent := 0
 	for _, it := range items {
 		routeC := routeEnded()
-		if currentMode() != modeBalanced || !relayListedNow(u) || routeGone(routeC) {
+		if sendHeld.Load() || currentMode() != modeBalanced || !relayListedNow(u) || routeGone(routeC) {
 			return false
 		}
 		ev := it.Ev

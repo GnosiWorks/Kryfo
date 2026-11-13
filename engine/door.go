@@ -267,6 +267,9 @@ func (s *doorStream) send(line string) error {
 // late ack ends the stream; without it the line just stops waiting and the
 // ack, when it comes, is read off in its turn
 func (s *doorStream) sendWithin(line string, write, ack time.Duration, giveUp bool) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	ch := make(chan error, 1)
 	s.wmu.Lock()
 	s.mu.Lock()
@@ -425,6 +428,9 @@ func sendTo(t *tor.Tor, onion, line string) error {
 
 // sendTo with the line's place in the queue (doorq.go)
 func sendToAs(t *tor.Tor, onion, line string, pri int) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), doorLineBudget)
 	defer cancel()
 	pri = doorPlaceNow(onion, pri)
@@ -467,6 +473,9 @@ func sendToAs(t *tor.Tor, onion, line string, pri int) error {
 
 // a stream of its own: dial, one line, the ack, close
 func sendOneLine(ctx context.Context, t *tor.Tor, onion, line string, pri int) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	conn, slot, err := doorDialQueued(ctx, t, onion, pri)
 	if err != nil {
 		return err
@@ -531,6 +540,9 @@ var (
 // the door shut under it, as it does each doorLife, so steady typing does
 // not go dark
 func sendTyping(t *tor.Tor, onion, line string) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	if currentMode() != modePrivate {
 		return errTypingRoute
 	}
@@ -589,6 +601,9 @@ func deadlineOf(ctx context.Context) time.Time {
 
 // sendOneLine held to the deadline of ctx
 func sendOneLineBy(ctx context.Context, t *tor.Tor, onion, line string) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	conn, slot, err := doorDialQueued(ctx, t, onion, doorOpenChat)
 	if err != nil {
 		return err

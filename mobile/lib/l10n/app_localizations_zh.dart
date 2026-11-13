@@ -10528,6 +10528,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNotNow => '暂不';
 
   @override
+  String get linkCheckTitle => '正在确认这台电脑仍已关联';
+
+  @override
+  String get linkCheckLine => 'Kryfo 会先读取你手机上最新的设备列表，随后立即打开你的聊天。';
+
+  @override
+  String get linkCheckWaitLine => '确认这台电脑仍已关联后，才会发送。';
+
+  @override
   String get unlinkedTitle => '这台设备已解除关联';
 
   @override
@@ -21974,6 +21983,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotNow => '以後再說';
+
+  @override
+  String get linkCheckTitle => '正在確認這台電腦仍已連結';
+
+  @override
+  String get linkCheckLine => 'Kryfo 會先讀取你手機上最新的裝置列表，隨後立即打開你的聊天。';
+
+  @override
+  String get linkCheckWaitLine => '確認這台電腦仍已連結後，才會傳送。';
 
   @override
   String get unlinkedTitle => '這台裝置已解除連結';

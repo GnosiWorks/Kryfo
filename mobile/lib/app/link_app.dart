@@ -39,6 +39,8 @@ Future<void> torAsLinked({required String at}) async {
     }
   }
   if (!linkedRole) return;
+  // held before tor carries anything, the boot's first read missed or not
+  if (at == 'boot') _linkCheckStart();
   appState.myOnion = '';
   try {
     final r = await engine.torClientOnly();

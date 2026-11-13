@@ -1671,6 +1671,8 @@ extension AppStateArrivals on AppState {
     required String body,
     String? msgUid,
   }) async {
+    // a linked computer's gate is up: no chat shows yet, here either
+    if (linkCheck.value == LinkCheckStage.checking) return;
     try {
       if (answered) {
         await _bell.chat(

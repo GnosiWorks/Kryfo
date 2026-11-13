@@ -10576,6 +10576,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotNow => 'فعلاً نه';
 
   @override
+  String get linkCheckTitle => 'در حال بررسی اینکه این رایانه هنوز پیوند خورده است';
+
+  @override
+  String get linkCheckLine => 'Kryfo اول تازه‌ترین فهرست دستگاه‌های گوشی‌تان را می‌خواند. گفتگوهایتان بلافاصله بعد از آن باز می‌شوند.';
+
+  @override
+  String get linkCheckWaitLine => 'ارسال منتظر می‌ماند تا پیوند این رایانه تأیید شود.';
+
+  @override
   String get unlinkedTitle => 'این دستگاه جدا شد';
 
   @override

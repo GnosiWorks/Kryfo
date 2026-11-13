@@ -842,6 +842,37 @@ class HaloEngine {
   Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
       _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
+  // how far our stores walked the address [arg] names (a device pair's as
+  // deviceListenBg takes it) in this process: '1' every store to the bottom
+  // with nothing of it waiting for the app, 'p' one store, '0' none, and
+  // for an engine without the call
+  late final IdentOneFnDart _addrCaught = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloAddrCaught');
+  String addrCaught(int ident, String arg) {
+    final p = arg.toNativeUtf8();
+    try {
+      final r = engineTake(_addrCaught(ident, p));
+      return r == '1' || r == 'p' ? r : '0';
+    } catch (_) {
+      return '0';
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  // a linked computer not confirmed as linked, or removed: the engine
+  // sends nothing, what it would send again on its own included
+  late final IdentFnDart _sendHold = _lib.lookupFunction<IdentFn, IdentFnDart>(
+    'HaloSendHold',
+  );
+  void sendHold(bool on) {
+    try {
+      engineTake(_sendHold(on ? 1 : 0));
+    } catch (e) {
+      dlog('engine: send hold not set (${e.runtimeType})');
+    }
+  }
+
   // linked devices: device-pair args ("x/their/my") on or off in the
   // engine. off refuses every one, as today
   late final IdentFnDart _devicePairsOn = _lib

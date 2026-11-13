@@ -114,27 +114,35 @@ class AppIo {
 
   String xPub() => engine.myXPubkey();
 
-  Future<String> relaySend(int ident, String xPub, String cipher) =>
-      engine.nostrSend(ident, xPub, cipher);
+  // a linked computer that is not confirmed as linked sends nothing, here
+  // too
+  Future<String> relaySend(int ident, String xPub, String cipher) async =>
+      linkSendsHeld ? 'error: held' : engine.nostrSend(ident, xPub, cipher);
 
   // [rest]: no message, so it waits behind messages for a dial
-  Future<String> onionSend(String onion, String cipher, {bool rest = false}) =>
-      engine.sendTo(onion, cipher, rest: rest);
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async =>
+      linkSendsHeld ? 'error: held' : engine.sendTo(onion, cipher, rest: rest);
 
   // a typing frame: sealed only on a session past its opener, and sent
   // straight to the peer's door, never anywhere else (typing.dart)
   Future<String> typingSeal(String peer, String plain) =>
       signalEncrypt(peer, plain, onlySettled: true);
 
-  Future<String> typingSend(String onion, String cipher) =>
-      engine.sendTyping(onion, cipher);
+  Future<String> typingSend(String onion, String cipher) async =>
+      linkSendsHeld ? 'error: held' : engine.sendTyping(onion, cipher);
 
   Future<String> firstContactSend(
     int ident,
     String xPub,
     String fc,
     String cipher,
-  ) => sendFirstContactNoted(ident, xPub, fc, cipher);
+  ) async => linkSendsHeld
+      ? 'error: held'
+      : sendFirstContactNoted(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it
@@ -150,6 +158,8 @@ class AppIo {
     bool request = false,
   }) async {
     if (await quietNow()) return;
+    // a linked computer's gate is up: no chat shows yet, here either
+    if (linkCheck.value == LinkCheckStage.checking) return;
     final id = await showMessageNotification(
       request: request,
       title: title,
@@ -183,6 +193,7 @@ class AppIo {
   }) async {
     // a message request pops up only with its switch on, here too
     if (request && !await loadRequestPopups()) return false;
+    if (linkCheck.value == LinkCheckStage.checking) return false;
     final fits = bannerFits(
       inFront:
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,

@@ -170,21 +170,27 @@ class _LockGate extends StatefulWidget {
 
 class _LockGateState extends State<_LockGate> {
   // a linked device that unlinked shows only what happened, over the lock
-  // too: nothing behind it opens any more
+  // too: nothing behind it opens any more. one that starts shows its
+  // check the same way: nothing behind it is built until it gives way
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<LinkedEnd?>(
     valueListenable: deviceUnlinked,
-    builder: (context, why, _) => AnimatedSwitcher(
-      duration: motionStill(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 320),
-      child: why == null
-          ? KeyedSubtree(key: const ValueKey('app'), child: _gate(context))
-          : UnlinkedScreen(
-              key: const ValueKey('unlinked'),
-              why: why,
-              onClose: () => unawaited(_closeUnlinked()),
-            ),
+    builder: (context, why, _) => ValueListenableBuilder<LinkCheckStage?>(
+      valueListenable: linkCheck,
+      builder: (context, stage, _) => AnimatedSwitcher(
+        duration: motionStill(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 320),
+        child: why != null
+            ? UnlinkedScreen(
+                key: const ValueKey('unlinked'),
+                why: why,
+                onClose: () => unawaited(_closeUnlinked()),
+              )
+            : stage == LinkCheckStage.checking
+            ? const LinkCheckScreen(key: ValueKey('checking'))
+            : KeyedSubtree(key: const ValueKey('app'), child: _gate(context)),
+      ),
     ),
   );
 

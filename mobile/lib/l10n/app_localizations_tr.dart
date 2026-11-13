@@ -10584,6 +10584,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceNotNow => 'Şimdi değil';
 
   @override
+  String get linkCheckTitle => 'Bu bilgisayarın hâlâ bağlı olduğu kontrol ediliyor';
+
+  @override
+  String get linkCheckLine => 'Kryfo önce telefonunun en yeni cihaz listesini okur. Sohbetlerin hemen ardından açılır.';
+
+  @override
+  String get linkCheckWaitLine => 'Gönderme, bu bilgisayarın bağlı olduğu doğrulanana kadar bekler.';
+
+  @override
   String get unlinkedTitle => 'Bu cihazın bağlantısı kesildi';
 
   @override

@@ -239,6 +239,7 @@ export '../atmosphere.dart'
         AtmosphereWash;
 import '../atmosphere.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/link_wait_strip.dart';
 import '../widgets/moved_strip.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -11503,6 +11504,11 @@ class _Composer extends StatelessWidget {
     // a phone whose identity has moved has no engine running: a message
     // typed here would sit in the outbox for good. nowhere to type it.
     if (appState.movedAway) return const MovedStrip();
+    // a linked computer not confirmed as linked yet sends nothing
+    return LinkHeldSwap(child: Builder(builder: _composer));
+  }
+
+  Widget _composer(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: onDesktop

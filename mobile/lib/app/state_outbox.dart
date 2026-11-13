@@ -31,8 +31,9 @@ extension AppStateOutbox on AppState {
 
   // a decoy open, here or in the run before that the lock still holds:
   // nothing of the everyday account leaves. what arrives still lands,
-  // unseen, and what waits goes once a pin opens the everyday side
-  bool get everydayHeld => sessionQuiet || _quietMarked;
+  // unseen, and what waits goes once a pin opens the everyday side. a
+  // linked computer holds the same until its phone's list names it
+  bool get everydayHeld => sessionQuiet || _quietMarked || linkSendsHeld;
 
   @visibleForTesting
   set quietMarkedForTest(bool v) => _quietMarked = v;

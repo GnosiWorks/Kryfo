@@ -10528,6 +10528,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceNotNow => 'Nanti saja';
 
   @override
+  String get linkCheckTitle => 'Memeriksa komputer ini masih tertaut';
+
+  @override
+  String get linkCheckLine => 'Kryfo membaca daftar perangkat terbaru dari ponselmu dulu. Obrolanmu terbuka tepat setelahnya.';
+
+  @override
+  String get linkCheckWaitLine => 'Pengiriman menunggu sampai komputer ini dipastikan tertaut.';
+
+  @override
   String get unlinkedTitle => 'Perangkat ini sudah terlepas';
 
   @override
