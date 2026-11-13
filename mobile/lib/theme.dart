@@ -784,37 +784,43 @@ class _ToastState extends State<_Toast> with SingleTickerProviderStateMixin {
           child: Semantics(
             container: true,
             liveRegion: true,
-            child: Material(
-              type: MaterialType.transparency,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: HaloColors.amber.withValues(alpha: 0.4),
-                    width: 0.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: HaloColors.ink.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  widget.message,
-                  style: HaloType.sans(size: 13, color: HaloColors.text),
-                ),
-              ),
-            ),
+            child: HaloToastBox(widget.message),
           ),
         ),
       ),
     );
   }
+}
+
+/// a toast's card: its words on the raised surface, a thin amber edge
+class HaloToastBox extends StatelessWidget {
+  final String message;
+  const HaloToastBox(this.message, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: HaloColors.amber.withValues(alpha: 0.4),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: HaloColors.ink.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Text(
+        message,
+        style: HaloType.sans(size: 13, color: HaloColors.text),
+      ),
+    ),
+  );
 }

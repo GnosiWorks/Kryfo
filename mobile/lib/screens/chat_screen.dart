@@ -37,6 +37,7 @@ import '../widgets/select_parts.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth, warmSentPreview;
 import '../widgets/preview_bleed.dart' show BubbleWidth;
 import '../widgets/composer_hint.dart';
+import '../widgets/composer_toast.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
@@ -1593,9 +1594,17 @@ class _ChatScreenState extends State<ChatScreen>
   // said wherever media was reached for in a request still waiting
   bool _sayMediaLater() {
     if (!_mediaWaits) return false;
-    if (mounted) showHaloToast(context, _mediaLaterLine);
+    if (!mounted) return true;
+    // on a computer answering through the phone it rises from the composer
+    if (_viaPhone) {
+      _composerToast.say(_mediaLaterLine);
+    } else {
+      showHaloToast(context, _mediaLaterLine);
+    }
     return true;
   }
+
+  final _composerToast = ComposerToastLine();
 
   // what a file reached for where only words go says
   String get _mediaLaterLine =>
@@ -6863,6 +6872,7 @@ class _ChatScreenState extends State<ChatScreen>
     _find.detach();
     _helloWaitTimer?.cancel();
     _answersLateTimer?.cancel();
+    _composerToast.dispose();
     _unwatchCaptures?.call();
     // the row stays with the chat for its next opening
     _tray.removeListener(_trayMoved);
@@ -8431,6 +8441,15 @@ class _ChatScreenState extends State<ChatScreen>
                               ),
                             ),
                           ),
+                        ),
+                      ),
+                      // a tap the composer cannot take here says so above it
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 12,
+                        child: Center(
+                          child: ComposerToast(line: _composerToast),
                         ),
                       ),
                     ],

@@ -255,6 +255,45 @@ void main() {
     await devClose(t);
   });
 
+  for (final still in [false, true]) {
+    testWidgets('files from the phone: a small toast above the composer'
+        '${still ? ' (reduced motion)' : ''}', (t) async {
+      await setUpWith(state: 'open');
+      devInboxForTest = true;
+      devAnswersForTest = true;
+      ownSyncForTest(_Phone());
+      await open(t, still: still);
+      final toast = find.byKey(const ValueKey('composer-toast'));
+      expect(toast, findsNothing);
+      for (final icon in [
+        Icons.add_photo_alternate_outlined,
+        Icons.photo_camera_outlined,
+      ]) {
+        final tap = find.byIcon(icon);
+        if (tap.evaluate().isEmpty) continue;
+        await t.tap(tap);
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 400));
+        expect(toast, findsOneWidget);
+        expect(find.text(l10n.chatInboxFilesFromPhone), findsOneWidget);
+        // above the composer, narrower than the window, not by the header
+        final box = t.getRect(toast);
+        final bar = t.getRect(composer);
+        expect(box.bottom, lessThanOrEqualTo(bar.top));
+        expect(box.width, lessThanOrEqualTo(360));
+        expect(
+          box.top,
+          greaterThan(t.getSize(find.byType(ChatScreen)).height / 2),
+        );
+        // it leaves on its own
+        await t.pump(const Duration(seconds: 4));
+        await t.pump(const Duration(milliseconds: 400));
+        expect(find.text(l10n.chatInboxFilesFromPhone), findsNothing);
+      }
+      await devClose(t);
+    });
+  }
+
   // an answer handed to the phone, the composer's way
   Future<_Phone> answer(WidgetTester t, {bool still = false}) async {
     await setUpWith(state: 'open');
