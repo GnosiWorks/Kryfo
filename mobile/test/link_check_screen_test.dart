@@ -54,7 +54,7 @@ void main() {
         // sentence case, no dash
         for (final w in words) {
           expect(w[0], w[0].toUpperCase());
-          expect(w.contains('—'), isFalse);
+          expect(w.contains('\u2014'), isFalse);
         }
       } else {
         for (final w in words) {
