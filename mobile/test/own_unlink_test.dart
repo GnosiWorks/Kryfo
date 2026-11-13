@@ -26,6 +26,7 @@ import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/own_device_store.dart';
 import 'package:kryfo/devices/device_store.dart' show applyDevRows;
+import 'package:kryfo/devices/link_check.dart';
 import 'package:kryfo/devices/linked_lock.dart' show LinkedEnd, LinkedLock;
 import 'package:kryfo/devices/own_devices.dart'
     show DeviceKind, DeviceUse, deviceUseOf;
@@ -53,6 +54,10 @@ import 'package:kryfo/main.dart'
         bootDevices,
         deviceReceive,
         deviceUnlinked,
+        devicesBootedForTest,
+        linkCheckForTest,
+        linkCheckResetForTest,
+        linkSendsHeld,
         linkedEndResetForTest,
         linkedLockForTest,
         linkedRoleForTest,
@@ -2281,6 +2286,147 @@ void main() {
     expect(wipes, 2);
     expect(deviceUnlinked.value, LinkedEnd.removed);
     expect(await linkedStandingForTest(), LinkedEnd.removed);
+  });
+
+  test('a computer removed while it was closed: its start check takes my '
+      'phone\'s last word as the walk brings it and wipes before the gate '
+      'gives way; one still listed opens', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final w = await phone();
+    final anaHex = devHex(w.ana.identity.public);
+    final shimPath = KryfoSignal.loadedFrom!;
+    final phoneList = await currentList(w);
+    final deskHome = HaloDb(HaloContainer.decoy);
+    opened.add(deskHome);
+    final deskDb = await deskHome.open();
+    await putMainIdentity(deskDb, w.deskKp.privateKey.serialize());
+    final deskState = DeviceState(DeviceEngine());
+    await deskState.load(deskDb, [
+      (
+        ident: kMainIdent,
+        identity: w.ana.identity.public,
+        key: w.desk.identity.public,
+        dev: 4,
+      ),
+    ], shimPath: shimPath);
+    List<dynamic> linkRows = const [];
+    try {
+      await deskDb.transaction((t) async {
+        final j = await deskState.session(t, 'own_set', {
+          'ident': kMainIdent,
+          'identity': anaHex,
+          'list': base64Encode(phoneList),
+        }, SessionRemote.opened(w.ana.identity.public));
+        linkRows = j['rows'] as List;
+        throw StateError('kept for the join');
+      });
+    } on StateError {
+      // rolled back: the join writes them
+    }
+    await joinedRows(
+      deskDb,
+      identity: w.ana.identity.public,
+      device: 4,
+      rows: linkRows,
+      stream: Uint8List(32),
+    );
+    useDatabasesForTest(deskHome, Session(deskHome));
+    linkedRoleForTest = true;
+    final lockDir = Directory('${docs.path}/lock')..createSync();
+    final keys = <String, String>{};
+    linkedLockForTest = LinkedLock(
+      dir: () async => lockDir.path,
+      readKey: (k) async => keys[k],
+      writeKey: (k, v) async => keys[k] = v,
+    );
+    await linkedLock.start();
+    var wipes = 0;
+    linkedWipeForTest = () async => wipes++;
+    linkedEndResetForTest();
+    linkCheckResetForTest();
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedWipeForTest = null;
+      linkedLockForTest = null;
+      linkedEndResetForTest();
+      linkCheckResetForTest();
+    });
+    // the start: the state loaded, the check held from the first frame
+    await bootDevices();
+    devicesBootedForTest = true;
+    var clock = DateTime(2026, 11, 13, 9);
+    Future<void> tick(Duration d) async => clock = clock.add(d);
+
+    // still on my phone's list: the walk brings nothing, and it opens
+    linkCheck.value = LinkCheckStage.checking;
+    expect(linkSendsHeld, isTrue);
+    await linkCheckForTest(
+      caught: () async => true,
+      drained: () async => true,
+      clock: () => clock,
+      wait: tick,
+    ).run();
+    expect(linkCheck.value, isNull);
+    expect(linkSendsHeld, isFalse);
+    expect(wipes, 0);
+
+    // closed now: my phone removes it, and its last word waits on the relay
+    await DeviceState(
+      DeviceEngine(),
+    ).load(w.db, await devMineOf(w.db, lib), shimPath: shimPath);
+    expect(await w.unlink.remove(['u4'], why: kGoneRemoved), ['u4']);
+    await w.send.pump();
+    final word = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
+    expect(word.arg, w.wire.openers.last);
+
+    // the next start: held, nothing shown, the walk not in for a while
+    await DeviceState(
+      DeviceEngine(),
+    ).load(deskDb, await devMineOf(deskDb, lib), shimPath: shimPath);
+    linkCheck.value = LinkCheckStage.checking;
+    final recv = DeviceReceive(
+      state: deskState,
+      db: () async => deskDb,
+      sessions: (_) async => w.deskDs,
+      send: DeviceSend(
+        state: deskState,
+        db: () async => deskDb,
+        sessions: (_) async => w.deskDs,
+        wire: _Wire(),
+      ),
+      listener: _Listen(),
+      open: deviceOpenAt,
+      me: (_) async =>
+          (ident: kMainIdent, identity: w.ana.identity.public, device: 4),
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+    );
+    recv.ownRemoved = deviceReceive!.ownRemoved;
+    var turns = 0;
+    final seen = <LinkCheckStage?>[];
+    await linkCheckForTest(
+      caught: () async {
+        if (++turns < 5) return false;
+        // the walk is in: what it brought is opened as the poll opens it
+        await recv.receive('${anaHex.substring(2)}/1/4/opn', word.cipher);
+        return true;
+      },
+      drained: () async => true,
+      clock: () => clock,
+      wait: (d) async {
+        seen.add(linkCheck.value);
+        await tick(d);
+      },
+    ).run();
+    expect(wipes, 1);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
+    // the gate stood until the wipe, and nothing was let go
+    expect(seen, everyElement(LinkCheckStage.checking));
+    expect(linkCheck.value, LinkCheckStage.checking);
+    expect(linkSendsHeld, isTrue);
   });
 
   test('a removal whose phone has no relay for hours is tried on, goes once '

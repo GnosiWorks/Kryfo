@@ -842,6 +842,22 @@ class HaloEngine {
   Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
       _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
 
+  // whether a relay walked the address [arg] names (a device pair's as
+  // deviceListenBg takes it) to the bottom of its window in this process.
+  // false before, and for an engine without the call
+  late final IdentOneFnDart _addrCaught = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloAddrCaught');
+  bool addrCaught(int ident, String arg) {
+    final p = arg.toNativeUtf8();
+    try {
+      return engineTake(_addrCaught(ident, p)) == '1';
+    } catch (_) {
+      return false;
+    } finally {
+      malloc.free(p);
+    }
+  }
+
   // linked devices: device-pair args ("x/their/my") on or off in the
   // engine. off refuses every one, as today
   late final IdentFnDart _devicePairsOn = _lib

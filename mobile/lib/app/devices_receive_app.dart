@@ -96,6 +96,7 @@ Future<({DevMe me, DevContact c})?> _devBlockedByKey(
 
 // a frame of mine to [c]'s phone alone, on the identity pair
 Future<bool> _devPhoneSend(DevMe me, DevContact c, String frame) async {
+  if (linkSendsHeld) return false;
   try {
     final p = _devicePushPhone(me.ident, c.peer);
     final cipher = await p.seal(frame, await p.measure(frame) ?? 0);

@@ -299,7 +299,7 @@ Future<String> deviceReplyLine(
 /// the copies owed to devices and the list pushes due, with the outbox:
 /// the everyday side's, and the open vault's
 Future<void> pumpDeviceSends() async {
-  if (!linkedDevicesOn) return;
+  if (!linkedDevicesOn || linkSendsHeld) return;
   await _pumpDevices(_deviceSend, live);
   final v = _vaultDevOf;
   if (v != null) await _pumpDevices(_vaultDevSend, v);

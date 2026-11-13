@@ -57,8 +57,12 @@ void _bootUnlink(DeviceState ds, DeviceSend send, DeviceReceive recv) {
   );
   recv.ownLeft = (ident, device, key, why) async =>
       _ownUnlink?.left(ident, device, key);
-  // the callbacks run inside a receive: the wipe goes on beside it
-  recv.ownRemoved = (_) async => unawaited(_linkedEnds(LinkedEnd.removed));
+  // the callbacks run inside a receive: the wipe goes on beside it, and
+  // nothing leaves from this moment
+  recv.ownRemoved = (_) async {
+    if (linkedRole) _linkRemoved = true;
+    unawaited(_linkedEnds(LinkedEnd.removed));
+  };
   recv.ownGoneHere = (ident, gone) async {
     final db = await live.open();
     final uids = await ownDevicesWithKeys(db, ident, [
@@ -218,6 +222,7 @@ Future<void> linkedTickForTest() => _quietTick();
 /// a linked device that ended, as before it did
 @visibleForTesting
 void linkedEndResetForTest() {
+  _linkRemoved = false;
   _linkedEnding = false;
   _linkedWipe = null;
   deviceUnlinked.value = null;
@@ -278,6 +283,8 @@ const kLinkedWordMost = Duration(seconds: 2);
 /// for a removal, which the phone made), then everything erased, then the
 /// word handed to the relay, and the page says what happened
 Future<void> _linkedEnds(LinkedEnd why) async {
+  // a removal holds every send at once, a second end too
+  if (why == LinkedEnd.removed && linkedRole) _linkRemoved = true;
   if (!linkedRole || haloWiping || deviceUnlinked.value != null) return;
   if (_linkedEnding) return;
   _linkedEnding = true;

@@ -83,6 +83,8 @@ Future<void> bootDevices() async {
   } catch (e) {
     dlog('devices: the lock state not checked (${e.runtimeType})');
   }
+  // and its start check reads from here on
+  _devicesBooted = true;
 }
 
 @visibleForTesting

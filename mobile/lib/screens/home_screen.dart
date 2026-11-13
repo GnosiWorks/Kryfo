@@ -5,6 +5,7 @@ import 'history_copy_screen.dart';
 import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/desk_menu.dart';
+import '../widgets/link_wait_strip.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/entrance.dart';
 import '../widgets/ease_size.dart' show EaseSize;
@@ -585,6 +586,7 @@ class _ChatsTab extends StatelessWidget {
             ),
           ),
           const _OfflineStrip(),
+          const LinkHeldSwap(list: true, child: SizedBox.shrink()),
           const _AutoStrip(),
           const _AutoOffer(),
           const _BridgeHint(),
