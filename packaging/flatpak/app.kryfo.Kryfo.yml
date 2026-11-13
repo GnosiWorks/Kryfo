@@ -133,7 +133,7 @@ modules:
       - ln -s ../lib/kryfo/kryfo ${FLATPAK_DEST}/bin/kryfo
       - install -Dm644 app.kryfo.Kryfo.desktop ${FLATPAK_DEST}/share/applications/app.kryfo.Kryfo.desktop
       - install -Dm644 app.kryfo.Kryfo.metainfo.xml ${FLATPAK_DEST}/share/metainfo/app.kryfo.Kryfo.metainfo.xml
-      - install -Dm644 icon.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png
+      - install -Dm644 bundle/data/kryfo.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png
     sources:
       # the checked bundle from BUILDING.md's desktop section
       - type: dir
@@ -143,6 +143,3 @@ modules:
         path: app.kryfo.Kryfo.desktop
       - type: file
         path: app.kryfo.Kryfo.metainfo.xml
-      - type: file
-        path: ../../ic_launcher-playstore.png
-        dest-filename: icon.png

@@ -47,7 +47,7 @@ st="$(sed -n 's/^T=//p' "$sb")"
 R="$tmp/repo"
 mkdir -p "$R/packaging" "$R/engine/out/windows-x64" "$R/mobile/windows/runner/resources"
 cp -a "$HERE/flatpak" "$HERE/windows" "$HERE/check_packaging.py" "$R/packaging/"
-cp "$ROOT/LICENSE" "$ROOT/ic_launcher-playstore.png" "$R/"
+cp "$ROOT/LICENSE" "$R/"
 cp "$ROOT/mobile/pubspec.yaml" "$R/mobile/"
 mkdir -p "$R/mobile/linux" && cp "$ROOT/mobile/linux/build-sqlcipher.sh" "$R/mobile/linux/"
 cp "$ROOT/mobile/windows/runner/resources/app_icon.ico" "$R/mobile/windows/runner/resources/"
@@ -61,7 +61,7 @@ else
   mkdir -p "$LB/lib" "$LB/data/flutter_assets"
   printf '#!/bin/sh\n' > "$LB/kryfo" && chmod +x "$LB/kryfo"
   touch "$LB/lib/libapp.so" "$LB/lib/libflutter_linux_gtk.so" "$LB/lib/libhalo.so" "$LB/lib/libsqlcipher.so.0" \
-    "$LB/lib/libkryfo_signal.so" "$LB/lib/libflutter_zxing.so" "$LB/data/icudtl.dat" \
+    "$LB/lib/libkryfo_signal.so" "$LB/lib/libflutter_zxing.so" "$LB/data/icudtl.dat" "$LB/data/kryfo.png" \
     "$LB/data/flutter_assets/AssetManifest.bin"
 fi
 # what flutter build windows leaves
