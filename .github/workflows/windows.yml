@@ -237,15 +237,17 @@ jobs:
           $base = $setup.Name -replace '-setup\.exe$', ''
           Compress-Archive -Path "$env:K\mobile\build\windows\x64\runner\Release\*" -DestinationPath "$o\$base.zip"
           Push-Location $o
-          Get-ChildItem -File | Sort-Object Name | ForEach-Object {
-            "$((Get-FileHash -Algorithm SHA256 $_.Name).Hash.ToLowerInvariant())  $($_.Name)"
+          # the list first: Out-File opens SHA256SUMS before the listing, and a hash of it fails
+          $files = @(Get-ChildItem -File | Sort-Object Name)
+          $files | ForEach-Object {
+            "$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())  $($_.Name)"
           } | Out-File -Encoding ascii SHA256SUMS
           Pop-Location
           # every file of the app folder, as the installer puts it there
           Push-Location "$env:K\mobile\build\windows\x64\runner\Release"
           Get-ChildItem -File -Recurse | Sort-Object FullName | ForEach-Object {
             $rel = Resolve-Path -Relative $_.FullName
-            "$((Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant())  $($rel.TrimStart('.\').Replace('\','/'))"
+            "$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())  $($rel.TrimStart('.\').Replace('\','/'))"
           } | Out-File -Encoding ascii "$o\SHA256SUMS-files"
           Pop-Location
           Copy-Item "$env:GITHUB_WORKSPACE\natives\SHA256SUMS" "$o\SHA256SUMS-natives"
