@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.1] - unreleased
+## [0.6.1] - 2026-11-13
 
 ### Added
 - see a voice note as text: tap "See transcription" under it. the words are worked out on your phone, never on a server, and the speech model downloads once, over tor.
