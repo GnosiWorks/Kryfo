@@ -335,8 +335,7 @@ void main() {
         'Tor, of the same total', () {
       const mb = 1024 * 1024;
       expect(torTimeLine(500 * 1024), l10n.trayTimeSoon);
-      // the 0.6.1 check's 5 MB zip: no longer under a minute on one and
-      // three on the other
+      // a 5 MB zip: the sheet and the confirm agree on it
       expect(torTimeLine(5 * mb), l10n.trayTimeMinutes('2'));
       final r = SendSheetResult([
         SendPick(

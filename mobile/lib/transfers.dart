@@ -73,7 +73,7 @@ class TransferPace {
 }
 
 /// a careful pace for a send over tor, the files service's last stretch
-/// included: 5 MB took about a minute and a half on the 0.6.1 checks. slower
+/// included: 5 MB took about a minute and a half on a real phone. slower
 /// than most circuits manage, so the guess is seldom short
 const kTorBytesPerSecond = 64 * 1024;
 
