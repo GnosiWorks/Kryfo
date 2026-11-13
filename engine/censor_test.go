@@ -38,7 +38,7 @@ func TestCensorNeverInRelease(t *testing.T) {
 	}
 	// what a release is built with
 	for _, f := range []string{"build.sh", "../repro/build-repro.sh", "../repro/engine-only.sh",
-		"../repro/release.sh", "../repro/verify.sh", "../fdroiddata/app.kryfo.yml"} {
+		"../repro/release.sh", "../repro/verify.sh"} {
 		b, err := os.ReadFile(f)
 		if err != nil {
 			continue

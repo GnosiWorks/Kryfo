@@ -1,9 +1,7 @@
 # F-Droid
 
-the recipe is `fdroiddata/app.kryfo.yml`, a copy of what went to
-https://gitlab.com/fdroid/fdroiddata. it builds v0.2.10 (version codes
-121/122/123) and sets `AutoUpdateMode: Version` with `UpdateCheckMode: Tags`,
-so later tags are picked up without another merge request.
+the recipe is metadata/app.kryfo.yml in https://gitlab.com/fdroid/fdroiddata.
+RELEASING.md says what it has to agree with.
 
 ## tags
 

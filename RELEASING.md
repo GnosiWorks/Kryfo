@@ -139,10 +139,10 @@ universal apk, which is a harmless update to the same code.
 
 ## f-droid
 
-fdroiddata/app.kryfo.yml goes into the fdroiddata fork as
-metadata/app.kryfo.yml. one `Builds:` block per abi (version codes N*10+1,
-+2, +3) and `CurrentVersion` / `CurrentVersionCode` for the newest. it has to
-agree with the release:
+the recipe is metadata/app.kryfo.yml in https://gitlab.com/fdroid/fdroiddata,
+changed by a merge request. one `Builds:` block per abi (version codes
+N*10+1, +2, +3) and `CurrentVersion` / `CurrentVersionCode` for the newest.
+it has to agree with the release:
 
 - `ndk: r28c`, the one repro/Dockerfile pins
 - the build line has `--flavor foss` and `output:` is
