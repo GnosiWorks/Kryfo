@@ -288,7 +288,7 @@ Uint8List _bytes(String hex) => Uint8List.fromList([
 
 /// whether a dev chat started on a classic card goes over to pq on the
 /// pinned card. nothing runs
-/// until a card with a kyber prekey is pinned (RELEASING.md)
+/// until a card with a kyber prekey is pinned (docs/RELEASING.md)
 const kDevPqRestart = true;
 
 // the one lane. the app points it at the everyday container

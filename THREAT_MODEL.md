@@ -34,8 +34,8 @@ put you in danger, read all of it.
   relays, through tor, never directly.
 - recorded traffic and a future quantum computer. chats between 0.6 phones
   use post-quantum keys (pqxdh and spqr) from the first message, and older
-  chats move over once both phones run 0.6. FORWARD_SECRECY.md says what
-  that does not cover.
+  chats move over once both phones run 0.6. docs/FORWARD_SECRECY.md says
+  what that does not cover.
 - someone guessing a pair code. a pair code is eight digits: two find the
   other phone and six are the secret, checked with cpace, so a relay or a
   listener learns nothing it can try offline. a guess has to be made live
@@ -181,7 +181,7 @@ put you in danger, read all of it.
   sqlcipher, nip-44/59) but the way they are wired together here is new and
   has not had an independent review.
 
-FORWARD_SECRECY.md says what a key taken from a phone can open later.
+docs/FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 ## on a computer
 

@@ -11,7 +11,7 @@ if [ "$SRC" = - ]; then TEXT=$(cat); else TEXT=$(cat "$SRC"); fi
 PIN=$(printf '%s' "$TEXT" | tr -d '\n' |
   sed -n "s/.*const kVersionPubKeyB64 *= *'\([A-Za-z0-9+\/=]*\)'.*/\1/p")
 if [ -z "$PIN" ]; then
-  echo "the app pins no version key (the placeholder?): see RELEASING.md, update notice" >&2
+  echo "the app pins no version key (the placeholder?): see docs/RELEASING.md, update notice" >&2
   exit 2
 fi
 if [ "$(printf '%s' "$PIN" | openssl base64 -d -A 2>/dev/null | wc -c)" -ne 32 ]; then

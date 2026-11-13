@@ -181,7 +181,7 @@ void main() {
     ).allMatches(release).map((m) => m[1]!.split(' ')).expand((l) => l);
     expect(needs, contains('libkryfo_voice'));
     // nothing still says it is left out
-    for (final f in ['../RELEASING.md', '../repro/build-repro.sh']) {
+    for (final f in ['../docs/RELEASING.md', '../repro/build-repro.sh']) {
       expect(
         File(f).readAsStringSync(),
         isNot(
@@ -199,7 +199,7 @@ void main() {
       r'^WHISPER_COMMIT=(\w+)$',
       multiLine: true,
     ).firstMatch(lock)![1]!;
-    final releasing = File('../RELEASING.md').readAsStringSync();
+    final releasing = File('../docs/RELEASING.md').readAsStringSync();
     expect(releasing, contains('whisper.cpp@$commit'));
     expect(releasing, contains('KV_WHISPER_DIR=\$\$whisper.cpp\$\$'));
     expect(

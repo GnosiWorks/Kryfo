@@ -14,7 +14,7 @@ import 'package:kryfo/typing.dart' show kCapDevices, myCaps;
 const _buildPaths = [
   '../BUILDING.md',
   '../README.md',
-  '../RELEASING.md',
+  '../docs/RELEASING.md',
   '../.github',
   '../repro',
   '../packaging',

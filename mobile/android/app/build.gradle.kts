@@ -224,10 +224,10 @@ dependencies {
     // the photo picker check. the version image_picker_android brings
     implementation("androidx.activity:activity:1.12.4")
     // google push, the play build only: firebase's messaging and none of its
-    // other parts. foss never sees it (RELEASING.md checks the apk)
+    // other parts. foss never sees it (docs/RELEASING.md checks the apk)
     "playImplementation"("com.google.firebase:firebase-messaging:26.0.0")
     // the tip jar, the play build only: google play billing, nothing else
-    // of google's. foss never sees it (RELEASING.md checks the apk)
+    // of google's. foss never sees it (docs/RELEASING.md checks the apk)
     "playImplementation"("com.android.billingclient:billing:9.1.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16.1")

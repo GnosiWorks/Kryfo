@@ -58,7 +58,7 @@ I won't take legal action against good faith research that keeps to this page:
 
 If someone else takes action against you for research that kept to this page, I'll say publicly that it did.
 
-For heavy testing of the relay, run your own: the code is in `relay-live/`, see RELAYS.md.
+For heavy testing of the relay, run your own: the code is in `relay-live/`, see docs/RELAYS.md.
 
 ## In scope
 

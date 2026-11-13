@@ -69,8 +69,8 @@ repro/Dockerfile already pins, and builds with prefix maps, no build id,
 a release builds it: repro/build-repro.sh runs build.sh with
 `KV_JNI_LIBS_DIR` set to the app's jniLibs (release.sh keeps the tarball for
 `--offline`), and the f-droid recipe does the same from a whisper.cpp
-srclib (RELEASING.md). gradle leaves it out of the apk until transcripts are
-switched on, and that line goes in the same commit as the switch.
+srclib (docs/RELEASING.md). gradle leaves it out of the apk until transcripts
+are switched on, and that line goes in the same commit as the switch.
 `KV_JNI_LIBS_DIR` is not `JNI_LIBS_DIR`, which engine/build.sh reads for
 libhalo.
 

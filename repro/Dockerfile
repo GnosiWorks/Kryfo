@@ -91,7 +91,7 @@ ENV HOME=/home/vagrant
 ENV PUB_CACHE=/home/vagrant/.pub-cache
 ENV GRADLE_USER_HOME=/home/vagrant/.gradle
 
-# what the engine build wants, the same values RELEASING.md gives
+# what the engine build wants, the same values docs/RELEASING.md gives
 ENV CGO_ENABLED=1
 ENV SOURCE_DATE_EPOCH=1700000000
 

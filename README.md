@@ -11,9 +11,9 @@ People who don't want their messages tied to a phone number or a real name. Jour
 
 - **No phone number, email or account.** Your identity is three words, made on your phone. Nobody can look you up unless you pick a public @name, and that is off until you do.
 - **Tor by default.** Messages go phone to phone over Tor onion services. When Tor is blocked, automatic mode tries bridges (Snowflake, WebTunnel, obfs4) and keeps the first one that works. Tested in heavily censored countries. Fast mode skips Tor for speed, and THREAT_MODEL.md says what it gives up.
-- **Signal protocol, post-quantum.** Chats use libsignal. Between 0.6 phones a chat starts with PQXDH and runs SPQR, Signal's post-quantum ratchet, next to the double ratchet. Older chats move over once both sides have 0.6. FORWARD_SECRECY.md has the details.
+- **Signal protocol, post-quantum.** Chats use libsignal. Between 0.6 phones a chat starts with PQXDH and runs SPQR, Signal's post-quantum ratchet, next to the double ratchet. Older chats move over once both sides have 0.6. docs/FORWARD_SECRECY.md has the details.
 - **Decoy PIN and hidden chats.** A decoy PIN opens an empty Kryfo, as if just installed. Hidden chats open only with their own PIN and leave no trace in the everyday app. A wipe PIN removes Kryfo from the phone.
-- **Our servers keep no logs.** No accounts, no IP logs, no contact lists, no member lists. When the other side is offline, a message waits sealed on Nostr relays, ours and public ones, for up to 14 days. A relay can't read it and doesn't learn who sent it. SERVERS.md lists what each server could see.
+- **Our servers keep no logs.** No accounts, no IP logs, no contact lists, no member lists. When the other side is offline, a message waits sealed on Nostr relays, ours and public ones, for up to 14 days. A relay can't read it and doesn't learn who sent it. docs/SERVERS.md lists what each server could see.
 - **No contact upload, no analytics, no ads.**
 
 Optional push: a UnifiedPush app such as ntfy can wake Kryfo, off by default. Our relay sends it an empty knock and Kryfo still fetches over Tor. PRIVACY.md says what the helper's server learns. Google push exists only in the Google Play build, and stays off until you pick it.
@@ -68,11 +68,11 @@ The Windows build runs in public on GitHub Actions (.github/workflows/windows.ym
 
 - [THREAT_MODEL.md](THREAT_MODEL.md): what Kryfo protects against, and what it doesn't
 - [PRIVACY.md](PRIVACY.md): what each part of Kryfo sends and what our servers see
-- [FORWARD_SECRECY.md](FORWARD_SECRECY.md): what a key taken from a phone can open later
-- [SERVERS.md](SERVERS.md): every server we run, where it runs and what it could log
-- [RELAYS.md](RELAYS.md): the relay code and how it is deployed
+- [FORWARD_SECRECY.md](docs/FORWARD_SECRECY.md): what a key taken from a phone can open later
+- [SERVERS.md](docs/SERVERS.md): every server we run, where it runs and what it could log
+- [RELAYS.md](docs/RELAYS.md): the relay code and how it is deployed
 - [BUILDING.md](BUILDING.md): every build, for Android and the desktop
-- [RELEASING.md](RELEASING.md): the release checklist and the F-Droid recipe
+- [RELEASING.md](docs/RELEASING.md): the release checklist and the F-Droid recipe
 - [repro/README.md](repro/README.md): reproducible builds and how to verify one
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
 - [ABUSE.md](ABUSE.md): child safety, and what we can and can't do

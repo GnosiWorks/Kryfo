@@ -1,8 +1,8 @@
 #!/bin/bash
 # runs inside the image: builds the engine and the shim from scratch, then
 # the apks, and leaves the four apks (three per abi, one universal) in /out
-# for verify.sh to diff against the release. the same commands RELEASING.md
-# gives, run where f-droid runs them.
+# for verify.sh to diff against the release. the same commands
+# docs/RELEASING.md gives, run where f-droid runs them.
 set -e
 
 # where verify.sh mounted the checkout. it builds at f-droid's path and at

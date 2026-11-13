@@ -76,7 +76,7 @@ These hold for every change:
 - no Google or other closed code in the `foss` flavor, the build that F-Droid, GitHub and kryfo.app ship
 - no new Android permission without a reason in the pull request
 - no logging of message content, keys, contacts or addresses
-- anything new our servers could see is written down in SERVERS.md and PRIVACY.md before it ships
+- anything new our servers could see is written down in docs/SERVERS.md and PRIVACY.md before it ships
 
 ## Licence
 

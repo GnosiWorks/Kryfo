@@ -139,6 +139,8 @@ universal apk, which is a harmless update to the same code.
 
 ## f-droid
 
+[FDROID.md](FDROID.md) has the tags, go bumps and flavors.
+
 the recipe is metadata/app.kryfo.yml in https://gitlab.com/fdroid/fdroiddata,
 changed by a merge request. one `Builds:` block per abi (version codes
 N*10+1, +2, +3) and `CurrentVersion` / `CurrentVersionCode` for the newest.
