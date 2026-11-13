@@ -110,7 +110,7 @@ jobs:
 
       - name: halo.dll
         run: |
-          TOR_EXE=packaging/build/windows/tor/tor.exe engine/build-windows.sh
+          TOR_EXE="$PWD/packaging/build/windows/tor/tor.exe" engine/build-windows.sh
           packaging/windows/stage-tor.sh --check-dll engine/out/windows-x64/halo.dll
 
       - name: kryfo_signal.dll
