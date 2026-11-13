@@ -3,13 +3,13 @@
 // into it by a tap or a swipe down, and pinches to zoom. the dark behind it
 // thins as it is pulled, the way the video player's does.
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../main.dart' show appState, AppStateScreen;
+import '../picture_gate.dart' show fileMayDecode, pictureOf;
 import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_hero.dart';
@@ -17,6 +17,7 @@ import 'motion.dart' show houseSpring, motionStill;
 import 'pictures_gate.dart' show PicturesGate;
 import 'sealed_picture.dart';
 import 'text_ground.dart';
+import 'video_bubble.dart' show openReceivedFile;
 
 /// the tag a photo and the viewer share, so the photo flies between them.
 /// [id] tells the chat's copy from the shared photos' copy
@@ -30,9 +31,18 @@ Future<void> openPhoto(
   Object? tag,
   double radius = 0,
   bool secure = false,
-}) {
+}) async {
+  // one of theirs no decoder here may see: what another app can open it
+  // with, never the viewer
+  if (!await fileMayDecode(path)) {
+    if (context.mounted) {
+      await openReceivedFile(context, path, null, kept: secure);
+    }
+    return;
+  }
+  if (!context.mounted) return;
   final px = screenPx(context, times: 2);
-  final image = ResizeImage.resizeIfNeeded(px, null, FileImage(File(path)));
+  final image = ResizeImage.resizeIfNeeded(px, null, pictureOf(path));
   return openPhotoImage(
     context,
     image,

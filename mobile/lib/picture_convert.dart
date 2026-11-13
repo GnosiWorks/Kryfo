@@ -142,3 +142,26 @@ void _drawThere(
       : deskDrawJpeg(b, maxEdge: maxEdge, quality: quality);
   to.send(r == null ? null : TransferableTypedData.fromList([r]));
 }
+
+/// the kinds the photo lane sends as they are. any other is drawn again as
+/// a jpeg first: a receiver decodes no other (picture_gate.dart)
+bool photoLaneKeeps(PictureKind k) =>
+    k == PictureKind.jpeg || k == PictureKind.png || k == PictureKind.gif;
+
+/// stands in for the drawing in tests
+@visibleForTesting
+Future<Uint8List?> Function(Uint8List b)? photoLaneDrawForTest;
+
+/// a photo as the photo lane sends it: a jpeg, png or gif cleaned as it is;
+/// a webp, bmp, heic, avif, tiff or anything else drawn again as a clean
+/// jpeg, at the size a gallery pick gets. null: it does not go, and never
+/// as it came
+Future<Uint8List?> photoLaneBytes(Uint8List raw) async {
+  if (photoLaneKeeps(pictureKind(raw))) return photoToSendOffUi(raw);
+  final draw =
+      photoLaneDrawForTest ??
+      (Uint8List b) => cleanJpegOf(b, maxEdge: 1280, quality: 70);
+  final j = await draw(raw);
+  if (j == null || pictureKind(j) != PictureKind.jpeg) return null;
+  return j;
+}

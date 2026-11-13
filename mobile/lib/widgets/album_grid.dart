@@ -2,7 +2,6 @@
 // an album in a chat: its photos and videos in one grid (album.dart lays it
 // out). a place still on its way holds its tile, so nothing moves when it
 // lands. a tap opens the album viewer at that item.
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../media_progress.dart';
 import '../open_file.dart';
+import '../picture_gate.dart' show pictureOf;
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import '../transfers.dart';
@@ -576,7 +576,12 @@ Widget albumFlight(
               final j? => Image.memory(j, fit: BoxFit.cover),
               _ => const ColoredBox(color: Colors.black),
             }
-          : Image.file(File(path), fit: BoxFit.cover, gaplessPlayback: true),
+          : Image(
+              image: pictureOf(path),
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) => const ColoredBox(color: Colors.black),
+            ),
     ),
   ),
 );

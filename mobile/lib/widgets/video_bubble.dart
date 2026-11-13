@@ -13,7 +13,7 @@ import '../open_file.dart';
 import '../photo_blur.dart' show blurNow;
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
-import 'file_actions.dart' show fileViewOf, openFileOutside, viewInKryfo;
+import 'file_actions.dart' show fileViewFor, openFileOutside, viewInKryfo;
 import 'file_sheet.dart';
 import 'halo_hero.dart';
 import 'press_scale.dart';
@@ -44,8 +44,9 @@ Future<void> openReceivedFile(
   Object? heroTag,
 }) async {
   final facts = await readFileFacts(path, name);
+  final view = await fileViewFor(path, facts);
   if (!context.mounted) return;
-  if (fileViewOf(facts) != null) {
+  if (view != null) {
     await viewInKryfo(
       context,
       path,

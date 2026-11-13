@@ -13,7 +13,7 @@ import 'clean_media.dart';
 import 'dlog.dart';
 import 'file_drop.dart' show kFreeFileBytes;
 import 'file_kind.dart' show fileFits, readFileFactsFresh;
-import 'image_strip.dart' show photoToSendOffUi, pictureExt, stripPictureBytes;
+import 'image_strip.dart' show pictureExt, pictureKind, stripPictureBytes;
 import 'l10n/l10n.dart';
 import 'main.dart'
     show
@@ -27,6 +27,7 @@ import 'main.dart'
 import 'devices/own_sync.dart' show kOwnNotes;
 import 'photo_blur.dart' show makeBlurSoon;
 import 'picked.dart' show placeVoice;
+import 'picture_convert.dart' show photoLaneBytes, photoLaneKeeps;
 import 'sent_name.dart' show sentFileName;
 import 'shred.dart' show shredFile;
 import 'stickers/sticker_wire.dart' show StickerWire;
@@ -87,8 +88,9 @@ Future<NoteReady> readyNoteFile(String src, String picked) async {
 }
 
 /// a photo's bytes made ready: cleaned of what rode along, kept as its kind
+/// when a jpeg, png or gif, else drawn again as a jpeg
 Future<NoteReady> readyNotePhoto(Uint8List raw) async {
-  final bytes = await photoToSendOffUi(raw);
+  final bytes = await photoLaneBytes(raw);
   if (bytes == null) return _say(l10n.cameraCouldNotStripThat);
   return _keepPicture(bytes);
 }
@@ -96,6 +98,8 @@ Future<NoteReady> readyNotePhoto(Uint8List raw) async {
 /// a gif's bytes made ready: its frames and loop kept, its comments gone
 Future<NoteReady> readyNoteGif(Uint8List data) async {
   if (data.length > kNoteGifMost) return _say(l10n.chatGifTooBig8);
+  // picked as a gif and is not one: a photo like any other
+  if (!photoLaneKeeps(pictureKind(data))) return readyNotePhoto(data);
   final clean = stripPictureBytes(data);
   if (clean == null) return _say(l10n.chatCouldNotCleanThatGif);
   return _keepPicture(clean);
