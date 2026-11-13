@@ -22,6 +22,16 @@ final _afterPoll = <Completer<void>>[];
 /// or its phone removed it
 bool get linkSendsHeld => linkCheck.value != null || _linkRemoved;
 
+// the engine's own hold: what it sends again by itself goes nowhere either
+@visibleForTesting
+void Function(bool on) engineSendHold = (on) => engine.sendHold(on);
+
+// a removal taken: held here and in the engine, for good
+void _linkRemovedNow() {
+  _linkRemoved = true;
+  engineSendHold(true);
+}
+
 @visibleForTesting
 void linkCheckResetForTest() {
   linkCheck.value = null;
@@ -60,6 +70,7 @@ void _linkCheckStart() {
   if (!linkedRole || _linkCheckRunning) return;
   _linkCheckRunning = true;
   linkCheck.value ??= LinkCheckStage.checking;
+  engineSendHold(true);
   unawaited(_linkCheckOf().run());
 }
 
@@ -71,6 +82,7 @@ LinkCheck _linkCheckOf() => LinkCheck(
   removed: _linkedEnds,
   confirmed: () {
     dlog('linked: still on my phone\'s list');
+    if (!_linkRemoved) engineSendHold(false);
     appState._resumeEveryday();
     appState.notifyListeners();
   },

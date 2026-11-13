@@ -575,6 +575,9 @@ func dropPutPart(ctx context.Context, c *http.Client, base, id, own string, f io
 		if try > 0 && !dropWait(ctx, try) {
 			return "cancelled"
 		}
+		if sendHeld.Load() {
+			return "cancelled"
+		}
 		pr := &progressReader{r: bytes.NewReader(part), j: j, from: start}
 		req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("%s/files/%s/%d", base, id, n), pr)
 		if err != nil {
@@ -627,6 +630,9 @@ func dropAsk(ctx context.Context, c *http.Client, method, url string, body []byt
 	var word string
 	for try := 0; try < dropTries; try++ {
 		if try > 0 && !dropWait(ctx, try) {
+			return "cancelled"
+		}
+		if sendHeld.Load() {
 			return "cancelled"
 		}
 		var r io.Reader

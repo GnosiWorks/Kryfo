@@ -20,6 +20,7 @@ import 'package:kryfo/main.dart'
         AppState,
         HaloDb,
         deviceUnlinked,
+        engineSendHold,
         linkCheckResetForTest,
         linkRemovedForTest,
         linkSendsHeld,
@@ -68,6 +69,8 @@ void main() {
   late _Rows db;
   late ArrivalIo io;
   late AppState app;
+  // the engine's own hold, as the app sets it
+  final engineHeld = <bool>[];
 
   setUp(() async {
     docs = Directory.systemTemp.createTempSync('link_hold');
@@ -99,6 +102,8 @@ void main() {
     useDatabasesForTest(db, Session(db));
     linkCheckResetForTest();
     linkedEndResetForTest();
+    engineHeld.clear();
+    engineSendHold = engineHeld.add;
   });
 
   tearDown(() {
@@ -208,8 +213,10 @@ void main() {
     expect(app.everydayHeld, isFalse);
 
     final end = linkedEndsForTest(LinkedEnd.removed);
-    // held before the wipe has even begun its work
+    // held before the wipe has even begun its work, in the engine too
     expect(linkRemovedForTest, isTrue);
+    expect(engineHeld, isNotEmpty);
+    expect(engineHeld, everyElement(isTrue));
     expect(linkSendsHeld, isTrue);
     expect(deviceUnlinked.value, LinkedEnd.removed);
     await app.drainOutbox();
@@ -233,6 +240,7 @@ void main() {
       linkedWipeForTest = () async {};
       await linkedEndsForTest(LinkedEnd.self);
       expect(linkRemovedForTest, isFalse);
+      expect(engineHeld, isEmpty);
       expect(linkSendsHeld, isFalse);
     },
   );

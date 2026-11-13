@@ -250,6 +250,9 @@ func pubCloseURL(u string) {
 // a new one when the kept socket turns out dead. a wrap without a single
 // recipient gets a socket of its own.
 func publishTo(ctx context.Context, lane, u string, client *http.Client, ev nostr.Event) error {
+	if sendHeld.Load() {
+		return errSendHeld
+	}
 	addr := wrapAddr(ev)
 	if addr == "" {
 		paceCount(lane, u)

@@ -55,6 +55,7 @@ import 'package:kryfo/main.dart'
         deviceReceive,
         deviceUnlinked,
         devicesBootedForTest,
+        engineSendHold,
         linkCheckForTest,
         linkCheckResetForTest,
         linkSendsHeld,
@@ -2359,6 +2360,10 @@ void main() {
     Future<void> tick(Duration d) async => clock = clock.add(d);
 
     // still on my phone's list: the walk brings nothing, and it opens
+    final engineHeld = <bool>[];
+    final hold = engineSendHold;
+    addTearDown(() => engineSendHold = hold);
+    engineSendHold = engineHeld.add;
     linkCheck.value = LinkCheckStage.checking;
     expect(linkSendsHeld, isTrue);
     await linkCheckForTest(
@@ -2369,6 +2374,8 @@ void main() {
     ).run();
     expect(linkCheck.value, isNull);
     expect(linkSendsHeld, isFalse);
+    // the engine let go with it
+    expect(engineHeld, [false]);
     expect(wipes, 0);
 
     // closed now: my phone removes it, and its last word waits on the relay
@@ -2427,6 +2434,10 @@ void main() {
     expect(seen, everyElement(LinkCheckStage.checking));
     expect(linkCheck.value, LinkCheckStage.checking);
     expect(linkSendsHeld, isTrue);
+    // held in the engine at the removal, never let go
+    expect(engineHeld.first, isFalse);
+    expect(engineHeld.skip(1), isNotEmpty);
+    expect(engineHeld.skip(1), everyElement(isTrue));
   });
 
   test('a removal whose phone has no relay for hours is tried on, goes once '

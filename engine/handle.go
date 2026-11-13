@@ -330,6 +330,9 @@ func handleRefusal(msg string) string {
 }
 
 func handlePost(path string, body []byte) string {
+	if sendHeld.Load() {
+		return "error: " + errSendHeld.Error()
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
 	defer cancel()
 	resp, err := handleDo(ctx, handleClient, func() { handleNewCircuit() }, func() (*http.Request, error) {

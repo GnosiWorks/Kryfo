@@ -60,7 +60,7 @@ void _bootUnlink(DeviceState ds, DeviceSend send, DeviceReceive recv) {
   // the callbacks run inside a receive: the wipe goes on beside it, and
   // nothing leaves from this moment
   recv.ownRemoved = (_) async {
-    if (linkedRole) _linkRemoved = true;
+    if (linkedRole) _linkRemovedNow();
     unawaited(_linkedEnds(LinkedEnd.removed));
   };
   recv.ownGoneHere = (ident, gone) async {
@@ -284,7 +284,7 @@ const kLinkedWordMost = Duration(seconds: 2);
 /// word handed to the relay, and the page says what happened
 Future<void> _linkedEnds(LinkedEnd why) async {
   // a removal holds every send at once, a second end too
-  if (why == LinkedEnd.removed && linkedRole) _linkRemoved = true;
+  if (why == LinkedEnd.removed && linkedRole) _linkRemovedNow();
   if (!linkedRole || haloWiping || deviceUnlinked.value != null) return;
   if (_linkedEnding) return;
   _linkedEnding = true;

@@ -860,6 +860,19 @@ class HaloEngine {
     }
   }
 
+  // a linked computer not confirmed as linked, or removed: the engine
+  // sends nothing, what it would send again on its own included
+  late final IdentFnDart _sendHold = _lib.lookupFunction<IdentFn, IdentFnDart>(
+    'HaloSendHold',
+  );
+  void sendHold(bool on) {
+    try {
+      engineTake(_sendHold(on ? 1 : 0));
+    } catch (e) {
+      dlog('engine: send hold not set (${e.runtimeType})');
+    }
+  }
+
   // linked devices: device-pair args ("x/their/my") on or off in the
   // engine. off refuses every one, as today
   late final IdentFnDart _devicePairsOn = _lib
