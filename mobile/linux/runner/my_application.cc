@@ -799,7 +799,9 @@ static void my_application_activate(GApplication* application) {
   if (icon != nullptr) gtk_window_set_icon_from_file(window, icon, nullptr);
   g_signal_connect(window, "delete-event", G_CALLBACK(delete_cb), self);
 
-  gboolean use_header_bar = TRUE;
+  // a header bar only on gnome: kde and the rest draw their own frame
+  const gchar* desk = g_getenv("XDG_CURRENT_DESKTOP");
+  gboolean use_header_bar = desk != nullptr && g_strrstr(desk, "GNOME") != nullptr;
 #ifdef GDK_WINDOWING_X11
   GdkScreen* screen = gtk_window_get_screen(window);
   if (GDK_IS_X11_SCREEN(screen)) {
