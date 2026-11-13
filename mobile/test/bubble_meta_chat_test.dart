@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the time and tick in a chat: only the newest of ours spells Delivered,
-// a text of theirs says when on the last bubble of a run, and a short one
-// keeps its meta on its line. the chat's own screen over rows kept in maps
+// a text of theirs says when on the last bubble of a run, and the meta sits
+// on its own line under the words, at the end. the chat's own screen over
+// rows kept in maps
 import 'dart:async';
 import 'dart:io';
 
@@ -10,7 +11,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
-import 'package:kryfo/widgets/bubble_meta.dart' show RenderMetaFlow, MetaFlow;
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/l10n/l10n.dart';
@@ -307,22 +307,20 @@ void main() {
     // a tick on each of ours, the word on the newest alone
     expect(find.byType(SentTick), findsNWidgets(3));
     expect(find.text(l10n.chatDelivered), findsOneWidget);
+    // the meta takes its own line under the words, at the end
     final word = t.getRect(find.text(l10n.chatDelivered));
     final ok = t.getRect(find.text('Ok'));
-    expect((word.center.dy - ok.center.dy).abs(), lessThan(ok.height));
+    expect(word.top, greaterThanOrEqualTo(ok.bottom));
+    expect(word.right, greaterThan(ok.right));
     // the time is drawn once per run: theirs on Hello?, ours on Ok
-    final runs = [
-      for (final m in find.byType(MetaFlow).evaluate())
-        t.renderObject<RenderMetaFlow>(find.byWidget(m.widget)),
-    ];
-    // theirs above the run's last has no meta at all; every other one
-    // keeps it on its short line
-    expect(runs.length, 5);
-    expect(runs.where((r) => r.inline).length, 4);
     String hm(int ago) =>
         hourMinute(DateTime.fromMillisecondsSinceEpoch(at - ago));
     expect(find.text(hm(590000)), findsOneWidget);
     expect(find.text(hm(280000)), findsWidgets);
+    final theirs = t.getRect(find.text(hm(590000)));
+    final hello = t.getRect(find.text('Hello?'));
+    expect(theirs.top, greaterThanOrEqualTo(hello.bottom));
+    expect(theirs.right, greaterThanOrEqualTo(hello.right));
     await devClose(t);
   });
 }
