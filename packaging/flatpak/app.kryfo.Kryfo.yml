@@ -133,7 +133,8 @@ modules:
       - ln -s ../lib/kryfo/kryfo ${FLATPAK_DEST}/bin/kryfo
       - install -Dm644 app.kryfo.Kryfo.desktop ${FLATPAK_DEST}/share/applications/app.kryfo.Kryfo.desktop
       - install -Dm644 app.kryfo.Kryfo.metainfo.xml ${FLATPAK_DEST}/share/metainfo/app.kryfo.Kryfo.metainfo.xml
-      - install -Dm644 bundle/data/kryfo.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png
+      - mkdir -p ${FLATPAK_DEST}/share/icons
+      - cp -r bundle/data/icons/hicolor ${FLATPAK_DEST}/share/icons/
     sources:
       # the checked bundle from BUILDING.md's desktop section
       - type: dir
