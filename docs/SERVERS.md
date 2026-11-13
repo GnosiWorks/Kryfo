@@ -66,8 +66,8 @@ table on disk and writes no file; in ram it holds a keyed hash of a token with t
 times of its last pushes for an hour, to keep one push per phone every 45
 seconds and thirty an hour, a keyed hash of a token fcm calls no phone's for
 a day, short hashes of the seals each token was knocked on, up to a day
-each, to refuse copies, and a held-back push's token for up to 45 seconds. once an hour it
-logs counts. google sees the install and when it
+each, to refuse copies, and a held-back push's token for up to 45 seconds. it logs
+nothing but its start, no counts either. google sees the install and when it
 is woken, never by whom or with what. it has no public route: only our relay
 posts to it, on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`, 127.0.0.1:3340 by
 default), which on the first box is a tunnel to the gateway on the second.

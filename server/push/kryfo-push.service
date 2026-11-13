@@ -13,7 +13,7 @@ LoadCredential=fcm.json:/etc/kryfo-push/fcm.json
 Restart=always
 RestartSec=3
 DynamicUser=yes
-# logs to ram only, same posture as the relay: counts once an hour
+# prints only its start line and fatal errors, nothing per push, no counts
 StandardOutput=journal
 StandardError=journal
 
