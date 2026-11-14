@@ -222,9 +222,22 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
         }
         blob = (await File(path).readAsString()).trim();
       }
-    } catch (_) {
+    } catch (e) {
+      // a copy cut short went over the last pick's own copy: neither is
+      // kept. one the phone had no room for is not a damaged file
+      if (own != null) {
+        await shredFile(own).catchError((Object _) {});
+        if (_path == own) {
+          _path = null;
+          _fileName = null;
+        }
+      }
       if (mounted) {
-        setState(() => _error = l10n.restoreThisFileIsDamaged);
+        setState(
+          () => _error = outOfSpace(e)
+              ? const RestoreError(RestoreFailure.noSpace).line
+              : l10n.restoreThisFileIsDamaged,
+        );
       }
       return;
     } finally {
@@ -232,7 +245,9 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
     }
     if (!mounted) return;
     HapticFeedback.selectionClick();
-    await _dropOwnCopy();
+    // a v2 pick after a v2 pick wrote over the same copy: shredding the old
+    // name would take the new file with it
+    if (_path != own) await _dropOwnCopy();
     setState(() {
       _fileName = path.split('/').last;
       _blob = blob;
@@ -283,11 +298,13 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
         _error = e.line;
         _busy = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       HapticFeedback.heavyImpact();
       setState(() {
-        _error = l10n.restoreThisFileIsDamaged;
+        _error = outOfSpace(e)
+            ? const RestoreError(RestoreFailure.noSpace).line
+            : l10n.restoreThisFileIsDamaged;
         _busy = false;
       });
     }

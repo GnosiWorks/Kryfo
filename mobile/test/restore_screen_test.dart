@@ -18,6 +18,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart' show HaloScrollBehavior;
 import 'package:kryfo/backup.dart';
+import 'package:kryfo/backup_stream.dart' show kBackupMagic;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
@@ -223,6 +224,89 @@ void main() {
     await t.tap(find.text(l10n.restoreCheckTheFile));
     await t.pumpAndSettle();
     expect(inspected, 1);
+  });
+
+  // a wrong file first, then the right one: both v2, both copied to the
+  // same own name. the second pick must keep the copy it just made
+  testWidgets('a second v2 pick keeps its own copy', (t) async {
+    phone(t);
+    var n = 0;
+    pickForTest = () async {
+      n++;
+      final f = File('${tmp.path}/pick$n.kryfo')
+        ..writeAsBytesSync([
+          ...kBackupMagic.codeUnits,
+          ...List<int>.filled(40, n),
+        ]);
+      return AndroidPlatformFile.fromMap({
+        'name': 'pick$n.kryfo',
+        'path': f.path,
+        'size': f.lengthSync(),
+      });
+    };
+    await t.pumpWidget(
+      app(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => Navigator.of(ctx).push(
+              MaterialPageRoute<void>(builder: (_) => const RestoreScreen()),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.restorePickTheBackupFile));
+    await _until(t, find.text('pick1.kryfo'));
+    await t.pumpAndSettle();
+    final own = File('${tmp.path}/restore_in.kryfo');
+    expect(await t.runAsync(own.exists), isTrue);
+    // picked again: the button now reads as a change of file
+    await t.tap(find.text('pick1.kryfo'));
+    await _until(t, find.text('pick2.kryfo'));
+    await t.pumpAndSettle();
+    expect(find.text('pick2.kryfo'), findsOneWidget);
+    expect(await t.runAsync(own.exists), isTrue);
+    final bytes = (await t.runAsync(own.readAsBytes))!;
+    expect(bytes.last, 2);
+  });
+
+  // a check the phone had no room for says so, not that the file is bad
+  testWidgets('no room on the phone is not a damaged file', (t) async {
+    phone(t);
+    inspectForTest = (_) async => throw const FileSystemException(
+      'write',
+      'restore_peek.db',
+      OSError('No space left on device', 28),
+    );
+    await t.pumpWidget(
+      app(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => Navigator.of(ctx).push(
+              MaterialPageRoute<void>(builder: (_) => const RestoreScreen()),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.restorePickTheBackupFile));
+    await _until(t, find.text('old.txt'));
+    await t.pumpAndSettle();
+    await t.enterText(find.byType(TextField), 'the passphrase');
+    await t.tap(find.text(l10n.restoreCheckTheFile));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.voiceNoRoom), findsOneWidget);
+    expect(find.text(l10n.restoreThisFileIsDamaged), findsNothing);
+    expect(
+      const RestoreError(RestoreFailure.noSpace).line,
+      l10n.voiceNoRoom,
+    );
   });
 
   testWidgets('a restore under way cannot be left', (t) async {

@@ -101,6 +101,23 @@ void main() {
       expect(all(), before);
     });
 
+    test('a picked backup copy a kill left goes, one picked since stays',
+        () async {
+      put('restore_in.kryfo', 'an old pick');
+      File(at('restore_in.kryfo'))
+          .setLastModifiedSync(DateTime.now().subtract(const Duration(hours: 1)));
+      await sweepBackupLeftovers();
+      expect(there('restore_in.kryfo'), isFalse);
+      forgetLeftoverSweep();
+      // a pick made after this start began is the restore screen's
+      final started = sweepBackupLeftovers();
+      put('restore_in.kryfo', 'picked now');
+      File(at('restore_in.kryfo'))
+          .setLastModifiedSync(DateTime.now().add(const Duration(minutes: 1)));
+      await started;
+      expect(there('restore_in.kryfo'), isTrue);
+    });
+
     test('once a start: a stage made after it is left to its backup', () async {
       await sweepBackupLeftovers();
       put('backup_stage/halo.db', 'a backup under way');
