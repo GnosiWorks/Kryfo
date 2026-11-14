@@ -921,6 +921,7 @@
   "homeTurnThemOn": "開啟通知",
   "homeLeaveThemOff": "保持關閉",
   "homeKeepWaiting": "繼續等待",
+  "homeFirstRunBridgeHint": "還在連線？先透過 VPN 連線一次，或貼上橋接。",
   "homeOffline": "離線",
   "homeWaiting": "等待中",
   "homeNothingWaitingToSend": "沒有待傳送的內容",

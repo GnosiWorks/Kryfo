@@ -2938,6 +2938,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeKeepWaiting => '继续等待';
 
   @override
+  String get homeFirstRunBridgeHint => '还在连接？先通过 VPN 连接一次，或粘贴网桥。';
+
+  @override
   String get homeOffline => '离线';
 
   @override
@@ -14514,6 +14517,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeKeepWaiting => '繼續等待';
+
+  @override
+  String get homeFirstRunBridgeHint => '還在連線？先透過 VPN 連線一次，或貼上橋接。';
 
   @override
   String get homeOffline => '離線';

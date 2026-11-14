@@ -23,7 +23,7 @@ extension AppStateBridges on AppState {
   // chats
   String? get homeBridgeCard {
     if (inDecoyView || lockState.inVault) return null;
-    if (autoStruggling || captiveWait) return 'auto';
+    if (autoStruggling || captiveWait || firstAutoStuck) return 'auto';
     if (suggestBridgesOff) return 'stuck';
     if (suggestBridges) return 'hint';
     if (_bridge.offerAuto &&
@@ -62,6 +62,11 @@ extension AppStateBridges on AppState {
     // what automatic learnt and the lines the engine refreshed, back in
     _memKept = await st.read(key: 'bridge_auto_mem');
     _cacheKept = await st.read(key: 'bridge_cache');
+    // an install from before the flag that connected has automatic's memory
+    _torUpOnce =
+        _torUpOnce ||
+        _memKept != null ||
+        (await st.read(key: 'tor_up_once')) == '1';
     _handBridgeMemoryOver();
     if (!_lockHooked) {
       _lockHooked = true;

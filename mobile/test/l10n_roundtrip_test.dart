@@ -1389,6 +1389,10 @@ void main() {
     expect(l.homeTurnThemOn, "Turn them on");
     expect(l.homeLeaveThemOff, "Leave them off");
     expect(l.homeKeepWaiting, "Keep waiting");
+    expect(
+      l.homeFirstRunBridgeHint,
+      "Still connecting? Connect once through a VPN, or paste bridges.",
+    );
     expect(l.homeOffline, "Offline");
     expect(l.homeWaiting, "Waiting");
     expect(l.homeNothingWaitingToSend, "Nothing waiting to send");

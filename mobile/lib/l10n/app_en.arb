@@ -3889,6 +3889,10 @@
   "@homeKeepWaiting": {
     "description": "screens/home_screen.dart"
   },
+  "homeFirstRunBridgeHint": "Still connecting? Connect once through a VPN, or paste bridges.",
+  "@homeFirstRunBridgeHint": {
+    "description": "screens/home_screen.dart: automatic bridges on a first run, nothing through yet"
+  },
   "homeOffline": "Offline",
   "@homeOffline": {
     "description": "screens/home_screen.dart"

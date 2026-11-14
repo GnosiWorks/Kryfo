@@ -2963,6 +2963,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeKeepWaiting => 'Beklemeye devam et';
 
   @override
+  String get homeFirstRunBridgeHint => 'Hâlâ bağlanıyor mu? Bir kez VPN üzerinden bağlanın ya da köprü yapıştırın.';
+
+  @override
   String get homeOffline => 'Çevrimdışı';
 
   @override

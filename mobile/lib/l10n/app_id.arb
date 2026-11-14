@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Nyalakan",
   "homeLeaveThemOff": "Biarkan mati",
   "homeKeepWaiting": "Tunggu lagi",
+  "homeFirstRunBridgeHint": "Masih menyambung? Sambungkan sekali lewat VPN, atau tempel jembatan.",
   "homeOffline": "Offline",
   "homeWaiting": "Menunggu",
   "homeNothingWaitingToSend": "Tidak ada yang menunggu dikirim",

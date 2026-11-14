@@ -2938,6 +2938,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeKeepWaiting => 'Tunggu lagi';
 
   @override
+  String get homeFirstRunBridgeHint => 'Masih menyambung? Sambungkan sekali lewat VPN, atau tempel jembatan.';
+
+  @override
   String get homeOffline => 'Offline';
 
   @override

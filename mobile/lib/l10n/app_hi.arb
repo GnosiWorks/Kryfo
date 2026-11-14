@@ -813,6 +813,7 @@
   "homeTurnThemOn": "चालू करें",
   "homeLeaveThemOff": "बंद रहने दें",
   "homeKeepWaiting": "इंतज़ार करते रहें",
+  "homeFirstRunBridgeHint": "अभी भी कनेक्ट हो रहा है? एक बार VPN से कनेक्ट करें, या ब्रिज पेस्ट करें।",
   "homeOffline": "ऑफ़लाइन",
   "homeWaiting": "इंतज़ार में",
   "homeNothingWaitingToSend": "भेजने के लिए कुछ बाक़ी नहीं",

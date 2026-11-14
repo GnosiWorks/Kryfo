@@ -3071,6 +3071,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeKeepWaiting => 'مواصلة الانتظار';
 
   @override
+  String get homeFirstRunBridgeHint => 'ما زال الاتصال جاريًا؟ اتصل مرة واحدة عبر VPN، أو الصق جسورًا.';
+
+  @override
   String get homeOffline => 'غير متصل';
 
   @override

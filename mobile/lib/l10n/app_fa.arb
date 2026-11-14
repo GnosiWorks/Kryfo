@@ -921,6 +921,7 @@
   "homeTurnThemOn": "روشن کردن",
   "homeLeaveThemOff": "خاموش بماند",
   "homeKeepWaiting": "منتظر ماندن",
+  "homeFirstRunBridgeHint": "هنوز در حال اتصال است؟ یک بار از طریق VPN وصل شوید، یا پل بچسبانید.",
   "homeOffline": "آفلاین",
   "homeWaiting": "در انتظار",
   "homeNothingWaitingToSend": "چیزی در انتظار ارسال نیست",

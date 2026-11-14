@@ -362,8 +362,13 @@ extension AppStateRoute on AppState {
         _everUsable = true;
         changed = true;
       }
+      _noteTorUpOnce();
     }
-    final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
+    final hints = (
+      suggestBridgesAt(at),
+      suggestBridgesOffAt(at),
+      firstAutoStuckAt(at),
+    );
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;
       changed = true;
@@ -539,6 +544,38 @@ extension AppStateRoute on AppState {
     if (_bridgeHintOff || !_online || inDecoyView) return false;
     if (_bridge.choice != BridgeChoice.direct) return false;
     return _torLooksBlockedAt(now);
+  }
+
+  // tor carried once: kept, so a first-run hint never comes back
+  void _noteTorUpOnce() {
+    if (_torUpOnce) return;
+    _torUpOnce = true;
+    if (inDecoyView) return;
+    unawaited(secureStore.write(key: 'tor_up_once', value: '1'));
+  }
+
+  bool get torUpOnce => _torUpOnce;
+  @visibleForTesting
+  set torUpOnceForTest(bool v) => _torUpOnce = v;
+
+  // automatic on a first run, nothing through yet. by 4 min direct (90 s),
+  // obfs4 (45 s) and webtunnel (90 s) have had their step limits in
+  // engine/auto.go and only snowflake is left; the blocked bar above is
+  // 120 s. some networks let automatic in only after one way out first
+  static const firstAutoStuckAfter = Duration(minutes: 4);
+
+  bool get firstAutoStuck => firstAutoStuckAt(DateTime.now());
+
+  @visibleForTesting
+  bool firstAutoStuckAt(DateTime now) {
+    if (_torUpOnce || !_online || inDecoyView) return false;
+    if (_sendMode != 'private' || torReady) return false;
+    if (_bridge.choice != BridgeChoice.auto) return false;
+    const away = {'no_internet', 'offline', 'paused', 'captive'};
+    if (away.contains(_bridgeStatus.phase)) return false;
+    if (_bridgeStatus.exhausted) return true;
+    final t = _torTryingSince;
+    return t != null && now.difference(t) >= firstAutoStuckAfter;
   }
 
   // a wi-fi that wants a sign-in first: its line and the way to the

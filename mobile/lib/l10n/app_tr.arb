@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Bildirimleri aç",
   "homeLeaveThemOff": "Kapalı kalsın",
   "homeKeepWaiting": "Beklemeye devam et",
+  "homeFirstRunBridgeHint": "Hâlâ bağlanıyor mu? Bir kez VPN üzerinden bağlanın ya da köprü yapıştırın.",
   "homeOffline": "Çevrimdışı",
   "homeWaiting": "Bekliyor",
   "homeNothingWaitingToSend": "Bekleyen mesaj yok",

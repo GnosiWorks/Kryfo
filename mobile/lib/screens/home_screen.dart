@@ -47,7 +47,7 @@ import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'notes_screen.dart';
 import 'bridges_screen.dart';
-import 'bridge_sheets.dart' show showTorBlockedSheet;
+import 'bridge_sheets.dart' show showFriendLinesSheet, showTorBlockedSheet;
 import '../bridge_mode.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
@@ -1782,7 +1782,8 @@ class _RouteMergedCard extends StatelessWidget {
 }
 
 // automatic is past the usual way or gave up: its own line, and the way
-// to the details
+// to the details. on a first run with nothing through yet it also says one
+// way out first or a pasted bridge gets in
 class _AutoStrip extends StatelessWidget {
   const _AutoStrip();
 
@@ -1793,6 +1794,11 @@ class _AutoStrip extends StatelessWidget {
       builder: (context, _) {
         final line = shownBridgeLine();
         final a = line.action;
+        final first = appState.firstAutoStuck;
+        final said = [
+          if (line.detail?.isNotEmpty ?? false) line.detail!,
+          if (first) l10n.homeFirstRunBridgeHint,
+        ].join('\n');
         // fast quiet, after the bridge way: this network sees it
         final relay = CardAction(
           label: l10n.homeUseFast,
@@ -1806,7 +1812,7 @@ class _AutoStrip extends StatelessWidget {
               ? HaloColors.rose
               : HaloColors.amber,
           title: line.head,
-          line: line.detail ?? '',
+          line: said,
           actions: [
             // nothing got through: the bridge way, then fast
             if (a != null)
@@ -1822,6 +1828,13 @@ class _AutoStrip extends StatelessWidget {
                 },
                 fill: HaloColors.amber,
                 ink: HaloColors.onAmber,
+              ),
+            if (first)
+              CardAction(
+                label: l10n.bridgesPasteABridge,
+                onTap: () => showFriendLinesSheet(context),
+                fill: a == null ? HaloColors.amber : null,
+                ink: a == null ? HaloColors.onAmber : HaloColors.amberText,
               ),
             if (line.offerRelay) relay,
             CardAction(
