@@ -5,7 +5,7 @@
 // the reads need zxing built for this computer (LD_LIBRARY_PATH to
 // libflutter_zxing.so); without it those cases skip.
 import 'dart:ffi';
-import 'dart:io' show Directory, File, ZLibEncoder;
+import 'dart:io' show Directory, File, Platform, ZLibEncoder;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -227,4 +227,56 @@ void main() {
       expect(await readAtMost('/dev/zero', 1 << 20), isEmpty);
     }
   });
+
+  // real phone and camera files stay outside the repo: KRYFO_CORPUS names
+  // their folder. each draws here (and passes the size checks) or goes to
+  // the phone's decoder; none is turned away as a bomb
+  test(
+    'real pictures pass the gates',
+    () {
+      final root = Platform.environment['KRYFO_CORPUS']!;
+      final dir = Directory('$root/cleaner-corpus');
+      final files = dir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where(
+            (f) => RegExp(
+              r'\.(jpe?g|png|webp|heic|heif|avif)$',
+            ).hasMatch(f.path.toLowerCase()),
+          )
+          .toList();
+      expect(files, isNotEmpty);
+      for (final f in files) {
+        final bytes = f.readAsBytesSync();
+        final dec = qrPictureDecoder(bytes);
+        final name = f.path.toLowerCase();
+        if (RegExp(r'\.(heic|heif|avif)$').hasMatch(name)) {
+          expect(dec, isNull, reason: f.path);
+          continue;
+        }
+        expect(dec, isNotNull, reason: f.path);
+        final info = dec!.startDecode(bytes)!;
+        expect(info.width * info.height, lessThan(kQrPicturePixelsMost));
+        if (dec is img.PngDecoder) expect(pngDataFits(bytes), isTrue);
+      }
+    },
+    skip: Platform.environment['KRYFO_CORPUS'] == null ? 'no corpus' : null,
+  );
+
+  test(
+    'real pictures read to the end without a code',
+    () {
+      final root = Platform.environment['KRYFO_CORPUS']!;
+      for (final name in [
+        'samsung/20261022_135215.jpg',
+        'samsung/Screenshot_20261022-135445_Camera.jpg',
+        'public/libwebp/test.webp',
+        'public/libavif/paris_icc_exif_xmp.png',
+      ]) {
+        final bytes = File('$root/cleaner-corpus/$name').readAsBytesSync();
+        expect(readQrPictureHere(bytes), isNull, reason: name);
+      }
+    },
+    skip: Platform.environment['KRYFO_CORPUS'] == null ? 'no corpus' : skip,
+  );
 }
