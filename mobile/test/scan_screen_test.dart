@@ -266,7 +266,8 @@ void main() {
     expect(find.text(l10n.scanPictureNoCode), findsOneWidget);
     expect(find.byType(ScanScreen), findsOneWidget);
     expect(got, isEmpty);
-    expect(haptics, isEmpty);
+    // the press of the button, nothing more
+    expect(haptics, ['HapticFeedbackType.selectionClick']);
     await t.pump(const Duration(seconds: 5));
   });
 
@@ -306,7 +307,11 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
     expect(read, [7, 7]);
     expect(got, ['kryfo://add/abc']);
-    expect(haptics, ['HapticFeedbackType.lightImpact']);
+    // the press, then one light tap at the lock
+    expect(haptics, [
+      'HapticFeedbackType.selectionClick',
+      'HapticFeedbackType.lightImpact',
+    ]);
   });
 
   testWidgets('no camera: a Kryfo picture still goes the same way', (t) async {
@@ -326,7 +331,11 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
     await t.pump(const Duration(milliseconds: 400));
     expect(got, ['kryfo://add/abc']);
-    expect(haptics, ['HapticFeedbackType.lightImpact']);
+    // the press, then one light tap at the lock
+    expect(haptics, [
+      'HapticFeedbackType.selectionClick',
+      'HapticFeedbackType.lightImpact',
+    ]);
   });
 
   testWidgets('while a picture is read: a wheel, and no second pick', (
@@ -389,7 +398,14 @@ void main() {
     await t.pumpWidget(framed(still: true));
     await t.pump(const Duration(milliseconds: 500));
     final hint = t.getRect(find.text(l10n.scanPointAtAKryfo));
-    final button = t.getRect(find.text(l10n.scanFromGallery));
+    final button = t.getRect(
+      find
+          .ancestor(
+            of: find.text(l10n.scanFromGallery),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
     expect(button.top, greaterThan(hint.bottom));
     expect(button.center.dx, closeTo(hint.center.dx, 1));
     // the top bar keeps only the way back and the flash
