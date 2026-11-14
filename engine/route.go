@@ -953,6 +953,12 @@ func netBounceWorker() {
 		bounce := netBounce
 		netMu.Unlock()
 
+		// fast bounces no tor: its sockets made on the network that went
+		// ask their probes now, and a dead one redials on this one
+		if !modeNeedsTor() && !netAway() {
+			kickRelaysMade()
+			return
+		}
 		// floors and back-offs were reset with the change. offline, the
 		// bounce and its check wait for the change that brings a network
 		if !modeNeedsTor() || torIsPaused() || netAway() {
