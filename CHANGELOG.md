@@ -2,6 +2,9 @@
 
 ## [0.6.2] - unreleased
 
+### Added
+- scan a QR code from a picture: "Choose from gallery" under the scanner's hint, read on the phone itself. the scanner's corners now find the code, follow it and lock on it.
+
 ### Fixed
 - "Servers not answering" no longer shows in Fast while your messages get through. Tor having a hard time on the few chats that always use it (rooms, hidden chats, pair codes, first messages) no longer counts as our servers being down, and one answer from a server clears the warning.
 - usernames that would not claim ("the invite isn't from your key") claim again, on phones and computers. it hit people who tapped for new words during setup; the update repairs their invite link on its own.
