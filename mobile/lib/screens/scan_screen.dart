@@ -265,7 +265,7 @@ class _ScanScreenState extends State<ScanScreen>
   // a picture from the gallery: read here, never sent anywhere
   Future<void> _fromPicture() async {
     if (_handled || _picking) return;
-    _picking = true;
+    setState(() => _picking = true);
     try {
       final bytes = await pickQrPicture();
       if (bytes == null || !mounted || _handled) return;
@@ -286,7 +286,11 @@ class _ScanScreenState extends State<ScanScreen>
       _raw = raw;
       _corners.lockNow();
     } finally {
-      _picking = false;
+      if (mounted) {
+        setState(() => _picking = false);
+      } else {
+        _picking = false;
+      }
     }
   }
 
@@ -492,6 +496,7 @@ class _ScanScreenState extends State<ScanScreen>
                         _PictureButton(
                           label: _pictureLabel,
                           onTap: _fromPicture,
+                          busy: _picking,
                         ),
                       ],
                     ],
@@ -709,17 +714,23 @@ class _ChromeGhost extends StatelessWidget {
 }
 
 // the way to a picture, under the hint: a quiet pill on the dark chrome,
-// as wide as its words
+// as wide as its words. while a picture is read it turns a small wheel and
+// takes no second tap
 class _PictureButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  const _PictureButton({required this.label, required this.onTap});
+  final bool busy;
+  const _PictureButton({
+    required this.label,
+    required this.onTap,
+    this.busy = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return PressScale(
       label: label,
-      onTap: onTap,
+      onTap: busy ? null : onTap,
       scale: 0.96,
       child: Container(
         constraints: const BoxConstraints(minHeight: 46),
@@ -733,10 +744,21 @@ class _PictureButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.photo_library_outlined,
-                color: Colors.white,
-                size: 18,
+              SizedBox.square(
+                dimension: 18,
+                child: busy && !motionStill(context)
+                    ? const Padding(
+                        padding: EdgeInsets.all(1.5),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.photo_library_outlined,
+                        color: Colors.white,
+                        size: 18,
+                      ),
               ),
               const SizedBox(width: 8),
               Flexible(

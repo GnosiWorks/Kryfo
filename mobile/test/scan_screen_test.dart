@@ -3,6 +3,8 @@
 // that is not a Kryfo one: it says what is wrong and offers a way out, and
 // the warning goes once the code leaves the frame. a Kryfo code locks with
 // one light tap and goes to today's flow, from the camera or a picture.
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -325,6 +327,35 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
     expect(got, ['kryfo://add/abc']);
     expect(haptics, ['HapticFeedbackType.lightImpact']);
+  });
+
+  testWidgets('while a picture is read: a wheel, and no second pick', (
+    t,
+  ) async {
+    listen(t);
+    var picks = 0;
+    final reading = Completer<String?>();
+    qrPicturePickForTest = () async {
+      picks++;
+      return Uint8List.fromList([1]);
+    };
+    qrPictureReadForTest = (_) => reading.future;
+    await t.pumpWidget(framed());
+    await t.pump(const Duration(milliseconds: 500));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await t.tap(find.text(l10n.scanFromGallery));
+    await t.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await t.tap(find.text(l10n.scanFromGallery));
+    await t.pump();
+    expect(picks, 1);
+    reading.complete(null);
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text(l10n.scanPictureNoCode), findsOneWidget);
+    await t.pump(const Duration(seconds: 5));
+    await t.pumpWidget(const SizedBox());
   });
 
   testWidgets('nothing picked: nothing happens', (t) async {
