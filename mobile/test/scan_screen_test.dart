@@ -258,7 +258,7 @@ void main() {
     await t.tap(find.text('open'));
     await t.pump();
     await t.pump(const Duration(milliseconds: 500));
-    await t.tap(find.byTooltip(l10n.scanFromGallery));
+    await t.tap(find.text(l10n.scanFromGallery));
     await t.pump();
     await t.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n.scanPictureNoCode), findsOneWidget);
@@ -277,7 +277,7 @@ void main() {
     await t.tap(find.text('open'));
     await t.pump();
     await t.pump(const Duration(milliseconds: 500));
-    await t.tap(find.byTooltip(l10n.scanFromGallery));
+    await t.tap(find.text(l10n.scanFromGallery));
     await t.pump();
     await t.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n.scanPictureNotKryfo), findsOneWidget);
@@ -298,7 +298,7 @@ void main() {
     await t.tap(find.text('open'));
     await t.pump();
     await t.pump(const Duration(milliseconds: 500));
-    await t.tap(find.byTooltip(l10n.scanFromGallery));
+    await t.tap(find.text(l10n.scanFromGallery));
     await t.pump();
     await t.pump(const Duration(milliseconds: 400));
     await t.pump(const Duration(milliseconds: 400));
@@ -316,7 +316,7 @@ void main() {
       return null;
     };
     await t.pumpWidget(framed(still: true));
-    await t.tap(find.byTooltip(l10n.scanFromGallery));
+    await t.tap(find.text(l10n.scanFromGallery));
     await t.pump();
     await t.pump(const Duration(milliseconds: 300));
     expect(reads, 0);
@@ -328,8 +328,36 @@ void main() {
     listen(t);
     onDesktop = true;
     await t.pumpWidget(framed(still: true));
-    expect(find.byTooltip(l10n.scanChoosePicture), findsOneWidget);
+    expect(find.text(l10n.scanChoosePicture), findsOneWidget);
+    expect(find.text(l10n.scanFromGallery), findsNothing);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the gallery is a labelled button under the hint', (t) async {
+    listen(t);
+    await t.pumpWidget(framed(still: true));
+    await t.pump(const Duration(milliseconds: 500));
+    final hint = t.getRect(find.text(l10n.scanPointAtAKryfo));
+    final button = t.getRect(find.text(l10n.scanFromGallery));
+    expect(button.top, greaterThan(hint.bottom));
+    expect(button.center.dx, closeTo(hint.center.dx, 1));
+    // the top bar keeps only the way back and the flash
     expect(find.byTooltip(l10n.scanFromGallery), findsNothing);
+    expect(find.byType(IconButton), findsNWidgets(2));
+    expect(find.bySemanticsLabel(l10n.scanFromGallery), findsOneWidget);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the camera is off: the card, and the gallery under it', (
+    t,
+  ) async {
+    listen(t);
+    await t.pumpWidget(framed(still: true));
+    created(null, CameraException('CameraAccessDenied', 'denied'));
+    await t.pump();
+    final card = t.getRect(find.byKey(const ValueKey('failed')));
+    final button = t.getRect(find.text(l10n.scanFromGallery));
+    expect(button.top, greaterThan(card.bottom));
     await t.pumpWidget(const SizedBox());
   });
 

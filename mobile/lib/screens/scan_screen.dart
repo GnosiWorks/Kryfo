@@ -362,11 +362,7 @@ class _ScanScreenState extends State<ScanScreen>
             const SizedBox(height: 8),
             _ChromeGhost(label: l10n.commonTryAgain, onTap: _retry),
           ] else if (_again)
-            HaloPrimaryButton(label: l10n.commonTryAgain, onTap: _retry)
-          else if (qrPictureHere) ...[
-            const SizedBox(height: 14),
-            HaloPrimaryButton(label: _pictureLabel, onTap: _fromPicture),
-          ],
+            HaloPrimaryButton(label: l10n.commonTryAgain, onTap: _retry),
         ],
       ),
     );
@@ -451,15 +447,6 @@ class _ScanScreenState extends State<ScanScreen>
                           ),
                         ),
                       ),
-                      if (qrPictureHere)
-                        IconButton(
-                          tooltip: _pictureLabel,
-                          onPressed: _fromPicture,
-                          icon: const Icon(
-                            Icons.photo_library_outlined,
-                            color: Colors.white,
-                          ),
-                        ),
                       IconButton(
                         tooltip: l10n.scanFlash,
                         onPressed: () async {
@@ -487,7 +474,8 @@ class _ScanScreenState extends State<ScanScreen>
                 ),
               ),
             ),
-            // the hint, or a short warning while a non-kryfo qr is in frame
+            // the hint, or a short warning while a non-kryfo qr is in frame,
+            // and under it the way to a picture
             Positioned(
               bottom: 0,
               left: 0,
@@ -495,44 +483,18 @@ class _ScanScreenState extends State<ScanScreen>
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                  child: AnimatedSwitcher(
-                    duration: motionStill(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 220),
-                    child: _error != null
-                        ? _failCard()
-                        : Container(
-                            key: ValueKey(_hint ?? 'default'),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.65),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: _hint != null
-                                    ? HaloColors.amber.withValues(alpha: 0.6)
-                                    : Colors.white.withValues(alpha: 0.08),
-                                width: 0.7,
-                              ),
-                            ),
-                            child: Text(
-                              _hint ??
-                                  (widget.bridges
-                                      ? l10n.bridgesPointAtTheBridge
-                                      : widget.link
-                                      ? l10n.scanLinkPoint
-                                      : l10n.scanPointAtAKryfo),
-                              textAlign: TextAlign.center,
-                              style: HaloType.sans(
-                                size: 12.5,
-                                color: _hint != null
-                                    ? HaloColors.amberText
-                                    : Colors.white,
-                              ),
-                            ),
-                          ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _hintOrCard(),
+                      if (qrPictureHere) ...[
+                        const SizedBox(height: 12),
+                        _PictureButton(
+                          label: _pictureLabel,
+                          onTap: _fromPicture,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -540,6 +502,43 @@ class _ScanScreenState extends State<ScanScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _hintOrCard() {
+    return AnimatedSwitcher(
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      child: _error != null
+          ? _failCard()
+          : Container(
+              key: ValueKey(_hint ?? 'default'),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _hint != null
+                      ? HaloColors.amber.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.08),
+                  width: 0.7,
+                ),
+              ),
+              child: Text(
+                _hint ??
+                    (widget.bridges
+                        ? l10n.bridgesPointAtTheBridge
+                        : widget.link
+                        ? l10n.scanLinkPoint
+                        : l10n.scanPointAtAKryfo),
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: _hint != null ? HaloColors.amberText : Colors.white,
+                ),
+              ),
+            ),
     );
   }
 }
@@ -702,6 +701,56 @@ class _ChromeGhost extends StatelessWidget {
           child: Text(
             label,
             style: HaloType.sans(size: 14, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// the way to a picture, under the hint: a quiet pill on the dark chrome,
+// as wide as its words
+class _PictureButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _PictureButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      label: label,
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 46),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(23),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        ),
+        child: ExcludeSemantics(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.photo_library_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
