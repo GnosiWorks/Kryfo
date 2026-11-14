@@ -871,6 +871,9 @@ extension AppStateRoute on AppState {
         // the wait goes, the count toward the cap stays
         _ackNextAt.clear();
       }
+      // tor's clock counts from the network's return, not from a spell
+      // with none: the offline card is about tor not getting through
+      if (_torTryingSince != null) _torTryingSince = at;
       // the status poll sees the route come up and drains
       _outboxWasReady = false;
       unawaited(_drainAcks());

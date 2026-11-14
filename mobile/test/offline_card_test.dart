@@ -88,6 +88,22 @@ void main() {
     appState.noteOnline(true);
   });
 
+  testWidgets('no network: the strip speaks, and back on one tor gets its '
+      'own five minutes', (t) async {
+    appState.torTryingSinceForTest = DateTime.now().subtract(
+      const Duration(hours: 3),
+    );
+    appState.noteOnline(false);
+    await t.pumpWidget(card());
+    await t.pump(const Duration(milliseconds: 400));
+    expect(find.text(l10n.homeKryfoIsOffline), findsNothing);
+    appState.noteOnline(true);
+    await t.pump(const Duration(milliseconds: 400));
+    expect(find.text(l10n.homeKryfoIsOffline), findsNothing);
+    expect(appState.looksOffline, isFalse);
+    await t.pumpWidget(const SizedBox());
+  });
+
   testWidgets('in a decoy: no card, no reconnect, no restart', (t) async {
     final decoy = ArrivalRows(HaloContainer.decoy);
     useDatabasesForTest(decoy, Session(decoy));

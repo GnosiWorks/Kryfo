@@ -1330,7 +1330,13 @@ class _OfflineCardState extends State<OfflineCard> {
         final busy = stage == ValveStage.working || stage == ValveStage.cooling;
         final restart = stage == ValveStage.restart;
         return _HomeCard(
-          show: appState.looksOffline && !quiet,
+          // no network has its own strip, a sign-in page its own card:
+          // neither is tor failing to connect
+          show:
+              appState.looksOffline &&
+              appState.online &&
+              !appState.captiveWait &&
+              !quiet,
           id: 'offline',
           tint: HaloColors.rose,
           title: l10n.homeKryfoIsOffline,
