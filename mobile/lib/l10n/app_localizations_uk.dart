@@ -3018,7 +3018,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get homeKeepWaiting => 'Чекати далі';
 
   @override
-  String get homeFirstRunBridgeHint => 'Досі підключається? Підключіться один раз через VPN або вставте мости.';
+  String get homeFirstRunBridgeHint => 'Досі підключається? Підключись один раз через VPN або встав мости.';
 
   @override
   String get homeOffline => 'Офлайн';

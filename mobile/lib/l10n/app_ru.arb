@@ -921,7 +921,7 @@
   "homeTurnThemOn": "Включить",
   "homeLeaveThemOff": "Оставить выключенными",
   "homeKeepWaiting": "Подождать ещё",
-  "homeFirstRunBridgeHint": "Всё ещё подключается? Подключитесь один раз через VPN или вставьте мосты.",
+  "homeFirstRunBridgeHint": "Всё ещё подключается? Подключись один раз через VPN или вставь мосты.",
   "homeOffline": "Не в сети",
   "homeWaiting": "В очереди",
   "homeNothingWaitingToSend": "Ничего не ждёт отправки",
