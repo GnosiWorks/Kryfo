@@ -4720,6 +4720,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get scanPointAtAKryfo => 'Arahkan ke QR Kryfo · tidak ada yang keluar dari ponselmu';
 
   @override
+  String get scanFromGallery => 'Pilih dari galeri';
+
+  @override
+  String get scanChoosePicture => 'Pilih gambar';
+
+  @override
+  String get scanQrFound => 'Kode QR ditemukan';
+
+  @override
+  String get scanPictureNoCode => 'Tidak ada kode QR di gambar ini. Coba gambar lain';
+
+  @override
+  String get scanPictureNotKryfo => 'Itu kode QR, tapi bukan dari Kryfo';
+
+  @override
   String get seenWhatWeCanSee => 'Apa yang bisa kami lihat';
 
   @override

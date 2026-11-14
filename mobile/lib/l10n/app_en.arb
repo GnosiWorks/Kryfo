@@ -6307,6 +6307,26 @@
   "@scanPointAtAKryfo": {
     "description": "screens/scan_screen.dart"
   },
+  "scanFromGallery": "Choose from gallery",
+  "@scanFromGallery": {
+    "description": "screens/scan_screen.dart"
+  },
+  "scanChoosePicture": "Choose a picture",
+  "@scanChoosePicture": {
+    "description": "screens/scan_screen.dart"
+  },
+  "scanQrFound": "QR code found",
+  "@scanQrFound": {
+    "description": "screens/scan_screen.dart"
+  },
+  "scanPictureNoCode": "No QR code in this picture. Try another one",
+  "@scanPictureNoCode": {
+    "description": "screens/scan_screen.dart"
+  },
+  "scanPictureNotKryfo": "That's a QR code, but not a Kryfo one",
+  "@scanPictureNotKryfo": {
+    "description": "screens/scan_screen.dart"
+  },
   "seenWhatWeCanSee": "What we can see",
   "@seenWhatWeCanSee": {
     "description": "screens/seen_screen.dart"

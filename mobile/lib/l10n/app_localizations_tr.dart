@@ -4754,6 +4754,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get scanPointAtAKryfo => 'Bir Kryfo QR koduna tut · hiçbir şey telefonundan çıkmaz';
 
   @override
+  String get scanFromGallery => 'Galeriden seç';
+
+  @override
+  String get scanChoosePicture => 'Resim seç';
+
+  @override
+  String get scanQrFound => 'QR kodu bulundu';
+
+  @override
+  String get scanPictureNoCode => 'Bu resimde QR kodu yok. Başka bir resim dene';
+
+  @override
+  String get scanPictureNotKryfo => 'Bu bir QR kodu ama Kryfo\'nun değil';
+
+  @override
   String get seenWhatWeCanSee => 'Neleri görebiliyoruz';
 
   @override

@@ -8164,6 +8164,36 @@ abstract class AppLocalizations {
   /// **'Point at a Kryfo QR · nothing leaves your phone'**
   String get scanPointAtAKryfo;
 
+  /// screens/scan_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get scanFromGallery;
+
+  /// screens/scan_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a picture'**
+  String get scanChoosePicture;
+
+  /// screens/scan_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'QR code found'**
+  String get scanQrFound;
+
+  /// screens/scan_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code in this picture. Try another one'**
+  String get scanPictureNoCode;
+
+  /// screens/scan_screen.dart
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s a QR code, but not a Kryfo one'**
+  String get scanPictureNotKryfo;
+
   /// screens/seen_screen.dart
   ///
   /// In en, this message translates to:

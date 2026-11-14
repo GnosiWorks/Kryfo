@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // in-app qr scanner: nothing leaves the app, and a non-kryfo qr in frame
-// gets a hint
+// gets a hint. the corners find a kryfo code, follow it, then lock. a
+// picture from the gallery is read on the device and goes the same way
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
@@ -15,12 +18,18 @@ import '../bridge_mode.dart' show looksLikeBridges;
 import '../theme.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
+import '../qr_picture.dart';
+import '../scan_corners.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show houseSpring, motionStill;
 import '../widgets/press_scale.dart';
+import '../widgets/say.dart' show sayOnce;
 
 /// how a new device's link code starts (engine/devices OfferPrefix)
 const kLinkCodePrefix = 'kryfo-link:';
+
+/// the middle of the camera image the reader decodes
+const kReaderCrop = 0.9;
 
 // stands in for the camera reader in tests
 @visibleForTesting
@@ -54,7 +63,6 @@ class _ScanScreenState extends State<ScanScreen>
   CameraController? _cam;
   bool _handled = false;
   bool _torchOn = false;
-  bool _detectedSuccess = false;
   String? _hint;
   Timer? _hintOff;
   // the camera would not open: what to say, and whether settings can fix it
@@ -66,7 +74,15 @@ class _ScanScreenState extends State<ScanScreen>
   bool _away = false;
   // off for a frame on a retry, so a new reader asks for the camera again
   bool _reader = true;
-  late final AnimationController _scanAnim;
+  // the corners and the frames that move them
+  late final ScanCorners _corners = ScanCorners(onLock: _locked);
+  late final Ticker _ticker = createTicker(_tick);
+  Duration _lastTick = Duration.zero;
+  // the kryfo code the corners follow, handed on at the lock
+  String? _raw;
+  Timer? _handOff;
+  // a picture is being picked or read
+  bool _picking = false;
 
   // the lock closes the scanner: its camera never runs under the pin pad
   VoidCallback? _unguard;
@@ -84,11 +100,21 @@ class _ScanScreenState extends State<ScanScreen>
     super.initState();
     _unguard = lockGuard.closeOnLock(_closeForLock);
     WidgetsBinding.instance.addObserver(this);
-    _scanAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
     _checkCameras();
+  }
+
+  void _tick(Duration now) {
+    final dt = (now - _lastTick).inMicroseconds / 1e6;
+    _lastTick = now;
+    _corners.advance(dt.clamp(0.0, 0.05));
+    if (!_corners.moving) _ticker.stop();
+  }
+
+  // frames only while something moves: breathing, a glide, a pulse
+  void _wake() {
+    if (_ticker.isActive || !_corners.moving) return;
+    _lastTick = Duration.zero;
+    _ticker.start();
   }
 
   // the reader waits forever on a phone with no camera
@@ -120,7 +146,8 @@ class _ScanScreenState extends State<ScanScreen>
 
   void _fail(String why, {required bool denied, bool again = true}) {
     if (!mounted || _handled) return;
-    _scanAnim.stop();
+    _corners.failed = true;
+    _ticker.stop();
     _hintOff?.cancel();
     setState(() {
       _error = why;
@@ -141,7 +168,9 @@ class _ScanScreenState extends State<ScanScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _reader = true);
-      if (!motionStill(context)) _scanAnim.repeat(reverse: true);
+      _corners.failed = false;
+      _corners.restart();
+      _wake();
     });
   }
 
@@ -157,25 +186,115 @@ class _ScanScreenState extends State<ScanScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // the line sweeps only while the camera looks, and never with less
-    // movement: the corners already say where to aim
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _scanAnim.stop();
-    } else if (!_scanAnim.isAnimating && !_detectedSuccess && _error == null) {
-      _scanAnim.repeat(reverse: true);
+    // the corners breathe only while the camera looks, and never with less
+    // movement
+    _corners.reduced = motionStill(context);
+    _wake();
+  }
+
+  // where the code sits on the screen, from the reader's corner points.
+  // null: the read has no position (then the lock is on the window)
+  List<Offset>? _quadOf(Code code, Size view) {
+    final pos = code.position;
+    if (pos == null || pos.imageWidth <= 0 || pos.imageHeight <= 0) {
+      return null;
+    }
+    final crop = readerCrop(pos.imageWidth, pos.imageHeight, kReaderCrop);
+    final cam = _cam;
+    final android = defaultTargetPlatform == TargetPlatform.android;
+    final front = cam?.description.lensDirection == CameraLensDirection.front;
+    double? preview;
+    try {
+      if (cam != null && cam.value.isInitialized) {
+        preview = cam.value.aspectRatio;
+      }
+    } catch (_) {}
+    return codeCornersInView(
+      corners: [
+        Offset(pos.topLeftX.toDouble(), pos.topLeftY.toDouble()),
+        Offset(pos.topRightX.toDouble(), pos.topRightY.toDouble()),
+        Offset(pos.bottomRightX.toDouble(), pos.bottomRightY.toDouble()),
+        Offset(pos.bottomLeftX.toDouble(), pos.bottomLeftY.toDouble()),
+      ],
+      image: Size(pos.imageWidth.toDouble(), pos.imageHeight.toDouble()),
+      view: view,
+      cropLeft: crop.left,
+      cropTop: crop.top,
+      // the phone is held upright: android hands frames as the sensor sees
+      turns: android && cam != null
+          ? uprightTurns(
+              sensor: cam.description.sensorOrientation,
+              device: 0,
+              front: front,
+            )
+          : 0,
+      mirror: front,
+      preview: android ? preview : null,
+    );
+  }
+
+  bool _fits(String raw) => widget.bridges
+      ? looksLikeBridges(raw)
+      : widget.link
+      ? raw.startsWith(kLinkCodePrefix)
+      : raw.startsWith('kryfo://');
+
+  String get _foreign => widget.bridges
+      ? l10n.bridgesThatSNotABridge
+      : widget.link
+      ? l10n.scanLinkNotOne
+      : l10n.scanThatSNotA;
+
+  // the corners locked on the code: a light tap, a word for the screen
+  // reader, then today's flow takes the code
+  void _locked() {
+    final raw = _raw;
+    if (raw == null || !mounted) return;
+    _handled = true;
+    _hintOff?.cancel();
+    HapticFeedback.lightImpact();
+    sayOnce(context, l10n.scanQrFound);
+    setState(() => _hint = null);
+    _wake();
+    _handOff = Timer(const Duration(milliseconds: 220), () {
+      if (!mounted || !_inFront) return;
+      Navigator.of(context).pop(raw);
+    });
+  }
+
+  // a picture from the gallery: read here, never sent anywhere
+  Future<void> _fromPicture() async {
+    if (_handled || _picking) return;
+    _picking = true;
+    try {
+      final bytes = await pickQrPicture();
+      if (bytes == null || !mounted || _handled) return;
+      final raw = await readQrPicture(bytes);
+      if (!mounted || _handled) return;
+      if (raw == null) {
+        showHaloToast(context, l10n.scanPictureNoCode);
+        return;
+      }
+      if (!_fits(raw)) {
+        HapticFeedback.selectionClick();
+        showHaloToast(
+          context,
+          widget.bridges || widget.link ? _foreign : l10n.scanPictureNotKryfo,
+        );
+        return;
+      }
+      _raw = raw;
+      _corners.read(null);
+    } finally {
+      _picking = false;
     }
   }
 
   void _onScan(Code code) {
-    if (_handled || !_inFront) return;
+    if (_handled || !_inFront || _picking) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
-    final fits = widget.bridges
-        ? looksLikeBridges(raw)
-        : widget.link
-        ? raw.startsWith(kLinkCodePrefix)
-        : raw.startsWith('kryfo://');
-    if (!fits) {
+    if (!_fits(raw)) {
       // the warning stays while that code is in frame and goes a little
       // after it leaves
       _hintOff?.cancel();
@@ -184,36 +303,25 @@ class _ScanScreenState extends State<ScanScreen>
       });
       if (_hint == null) {
         HapticFeedback.selectionClick();
-        setState(
-          () => _hint = widget.bridges
-              ? l10n.bridgesThatSNotABridge
-              : widget.link
-              ? l10n.scanLinkNotOne
-              : l10n.scanThatSNotA,
-        );
+        setState(() => _hint = _foreign);
       }
       return;
     }
-    _handled = true;
-    _scanAnim.stop();
-    _hintOff?.cancel();
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _detectedSuccess = true;
-      _hint = null;
-    });
-    Future.delayed(const Duration(milliseconds: 380), () {
-      if (!mounted || !_inFront) return;
-      Navigator.of(context).pop(raw);
-    });
+    // another kryfo code came into frame: the corners start over on it
+    if (_raw != raw) _corners.restart();
+    _raw = raw;
+    _corners.read(_quadOf(code, MediaQuery.sizeOf(context)));
+    _wake();
   }
 
   @override
   void dispose() {
     _unguard?.call();
     _hintOff?.cancel();
+    _handOff?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    _scanAnim.dispose();
+    _ticker.dispose();
+    _corners.dispose();
     super.dispose();
   }
 
@@ -254,16 +362,24 @@ class _ScanScreenState extends State<ScanScreen>
             const SizedBox(height: 8),
             _ChromeGhost(label: l10n.commonTryAgain, onTap: _retry),
           ] else if (_again)
-            HaloPrimaryButton(label: l10n.commonTryAgain, onTap: _retry),
+            HaloPrimaryButton(label: l10n.commonTryAgain, onTap: _retry)
+          else if (qrPictureHere) ...[
+            const SizedBox(height: 14),
+            HaloPrimaryButton(label: _pictureLabel, onTap: _fromPicture),
+          ],
         ],
       ),
     );
   }
 
+  String get _pictureLabel =>
+      onDesktop ? l10n.scanChoosePicture : l10n.scanFromGallery;
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final boxSize = (size.width * 0.7).clamp(220.0, 320.0);
+    _corners.layout(size, boxSize);
     // the camera under a dark mask, in both themes
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: haloOverlayOnDark,
@@ -286,10 +402,13 @@ class _ScanScreenState extends State<ScanScreen>
                     // decode almost the whole frame: the default 50% crop
                     // misses a qr that fills the screen. tryHarder and
                     // tryInverted read it on the first pass in poorer light.
-                    cropPercent: 0.9,
+                    cropPercent: kReaderCrop,
                     tryHarder: true,
                     tryInverted: true,
-                    scanDelay: const Duration(milliseconds: 500),
+                    // the corners follow the code: reads come often, and a
+                    // read does not pause the next one
+                    scanDelay: const Duration(milliseconds: 60),
+                    scanDelaySuccess: const Duration(milliseconds: 60),
                   ),
             // dim mask with an even-odd cutout, so the eye goes to the
             // viewfinder
@@ -299,13 +418,8 @@ class _ScanScreenState extends State<ScanScreen>
                 painter: _MaskPainter(boxSize: boxSize),
               ),
             ),
-            Center(
-              child: ScanFrame(
-                size: boxSize,
-                success: _detectedSuccess,
-                failed: _error != null,
-                scanAnim: _scanAnim,
-              ),
+            Positioned.fill(
+              child: ScanFrame(corners: _corners, failed: _error != null),
             ),
             Positioned(
               top: 0,
@@ -337,6 +451,15 @@ class _ScanScreenState extends State<ScanScreen>
                           ),
                         ),
                       ),
+                      if (qrPictureHere)
+                        IconButton(
+                          tooltip: _pictureLabel,
+                          onPressed: _fromPicture,
+                          icon: const Icon(
+                            Icons.photo_library_outlined,
+                            color: Colors.white,
+                          ),
+                        ),
                       IconButton(
                         tooltip: l10n.scanFlash,
                         onPressed: () async {
@@ -447,20 +570,13 @@ class _MaskPainter extends CustomPainter {
       oldDelegate.boxSize != boxSize;
 }
 
-// the viewfinder frame, closing in on the house spring as the scanner opens
+// the four corners, closing in on the house spring as the scanner opens.
+// they fill the screen: once a code is found they leave the window for it
 class ScanFrame extends StatefulWidget {
-  final double size;
-  final bool success;
-  // the camera would not open: dim corners, nothing sweeps
+  final ScanCorners corners;
+  // the camera would not open: dim corners, nothing moves
   final bool failed;
-  final Animation<double> scanAnim;
-  const ScanFrame({
-    super.key,
-    required this.size,
-    required this.success,
-    this.failed = false,
-    required this.scanAnim,
-  });
+  const ScanFrame({super.key, required this.corners, this.failed = false});
 
   @override
   State<ScanFrame> createState() => _ScanFrameState();
@@ -496,163 +612,70 @@ class _ScanFrameState extends State<ScanFrame>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _in,
-      builder: (_, child) {
-        final v = _in.value;
-        return Opacity(
-          opacity: v.clamp(0.0, 1.0),
-          child: Transform.scale(scale: 1.14 - 0.14 * v, child: child),
-        );
-      },
-      child: _Viewfinder(
-        size: widget.size,
-        success: widget.success,
-        failed: widget.failed,
-        scanAnim: widget.scanAnim,
-        still: MediaQuery.disableAnimationsOf(context),
-      ),
-    );
-  }
-}
-
-// the viewfinder frame: amber corner brackets + a moving horizontal
-// scan line + a brief success flash when a kryfo qr is detected.
-class _Viewfinder extends StatelessWidget {
-  final double size;
-  final bool success;
-  final bool failed;
-  final Animation<double> scanAnim;
-  final bool still;
-  const _Viewfinder({
-    required this.size,
-    required this.success,
-    required this.failed,
-    required this.scanAnim,
-    required this.still,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = success
-        ? HaloColors.green
-        : failed
-        ? HaloColors.line2
-        : HaloColors.amber;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          // corner brackets, placed by side, not by reading
-          // direction: each one is drawn for the corner it sits in
-          Positioned(left: 0, top: 0, child: _corner(accent, true, true)),
-          Positioned(right: 0, top: 0, child: _corner(accent, false, true)),
-          Positioned(left: 0, bottom: 0, child: _corner(accent, true, false)),
-          Positioned(right: 0, bottom: 0, child: _corner(accent, false, false)),
-          // scan line (hidden once success)
-          if (!success && !failed && !still)
-            AnimatedBuilder(
-              animation: scanAnim,
-              builder: (_, _) {
-                final y = scanAnim.value * (size - 4);
-                return Positioned(
-                  top: y,
-                  left: 14,
-                  right: 14,
-                  child: Container(
-                    height: 2,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          accent.withValues(alpha: 0),
-                          accent.withValues(alpha: 0.95),
-                          accent.withValues(alpha: 0),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.45),
-                          blurRadius: 14,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          AnimatedOpacity(
-            opacity: success ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 260),
-            child: Container(
-              decoration: BoxDecoration(
-                color: HaloColors.green.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: HaloColors.green, width: 2),
-              ),
-              alignment: Alignment.center,
-              child: AnimatedScale(
-                scale: success || still ? 1.0 : 0.4,
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutBack,
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: HaloColors.green,
-                  ),
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: HaloColors.ink,
-                    size: 38,
-                  ),
-                ),
-              ),
-            ),
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _in,
+        builder: (_, child) {
+          final v = _in.value;
+          return Opacity(
+            opacity: v.clamp(0.0, 1.0),
+            child: Transform.scale(scale: 1.14 - 0.14 * v, child: child),
+          );
+        },
+        child: CustomPaint(
+          painter: CornersPainter(
+            widget.corners,
+            // the app's accent, a darker amber in the light theme
+            widget.failed ? HaloColors.line2 : HaloColors.amber,
           ),
-        ],
+          child: const SizedBox.expand(),
+        ),
       ),
-    );
-  }
-
-  Widget _corner(Color c, bool isLeft, bool isTop) {
-    const len = 26.0;
-    const w = 3.0;
-    return SizedBox(
-      width: len,
-      height: len,
-      child: CustomPaint(painter: _CornerPainter(c, isLeft, isTop, len, w)),
     );
   }
 }
 
-class _CornerPainter extends CustomPainter {
+/// the corner arms: each runs along the code's edge, 16% of it, kept
+/// between 14 and 26 px (26 on the window, as before)
+class CornersPainter extends CustomPainter {
+  final ScanCorners corners;
   final Color color;
-  final bool isLeft;
-  final bool isTop;
-  final double len;
-  final double thickness;
-  _CornerPainter(this.color, this.isLeft, this.isTop, this.len, this.thickness);
+  CornersPainter(this.corners, this.color) : super(repaint: corners);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final pts = corners.shown;
     final paint = Paint()
       ..color = color
-      ..strokeWidth = thickness
+      ..strokeWidth = corners.stroke
       ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
-    final hx = isLeft ? 0.0 : len;
-    final hy = isTop ? 0.0 : len;
-    final endX = isLeft ? len : 0.0;
-    final endY = isTop ? len : 0.0;
-    canvas.drawLine(Offset(hx, hy), Offset(endX, hy), paint);
-    canvas.drawLine(Offset(hx, hy), Offset(hx, endY), paint);
+    for (var i = 0; i < 4; i++) {
+      final p = pts[i], a = pts[(i + 3) % 4], b = pts[(i + 1) % 4];
+      final la = (a - p).distance, lb = (b - p).distance;
+      if (la == 0 || lb == 0) continue;
+      final armA = (la * 0.16).clamp(14.0, 26.0);
+      final armB = (lb * 0.16).clamp(14.0, 26.0);
+      canvas.drawPath(
+        Path()
+          ..moveTo(
+            p.dx + (a.dx - p.dx) / la * armA,
+            p.dy + (a.dy - p.dy) / la * armA,
+          )
+          ..lineTo(p.dx, p.dy)
+          ..lineTo(
+            p.dx + (b.dx - p.dx) / lb * armB,
+            p.dy + (b.dy - p.dy) / lb * armB,
+          ),
+        paint,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(_CornerPainter old) => old.color != color;
+  bool shouldRepaint(CornersPainter old) =>
+      old.color != color || old.corners != corners;
 }
 
 // the quiet second button on the always-dark card: white like the rest of

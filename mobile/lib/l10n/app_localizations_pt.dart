@@ -4753,6 +4753,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scanPointAtAKryfo => 'Aponte para um QR do Kryfo · nada sai do seu celular';
 
   @override
+  String get scanFromGallery => 'Escolher da galeria';
+
+  @override
+  String get scanChoosePicture => 'Escolher uma imagem';
+
+  @override
+  String get scanQrFound => 'Código QR encontrado';
+
+  @override
+  String get scanPictureNoCode => 'Não há código QR nesta imagem. Tente outra';
+
+  @override
+  String get scanPictureNotKryfo => 'É um código QR, mas não do Kryfo';
+
+  @override
   String get seenWhatWeCanSee => 'O que conseguimos ver';
 
   @override

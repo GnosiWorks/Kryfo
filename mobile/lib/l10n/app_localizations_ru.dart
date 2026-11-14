@@ -4821,6 +4821,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanPointAtAKryfo => 'Наведи на QR Kryfo · ничего не покидает твой телефон';
 
   @override
+  String get scanFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get scanChoosePicture => 'Выбрать изображение';
+
+  @override
+  String get scanQrFound => 'QR-код найден';
+
+  @override
+  String get scanPictureNoCode => 'На этом изображении нет QR-кода. Попробуй другое';
+
+  @override
+  String get scanPictureNotKryfo => 'Это QR-код, но не от Kryfo';
+
+  @override
   String get seenWhatWeCanSee => 'Что мы можем видеть';
 
   @override

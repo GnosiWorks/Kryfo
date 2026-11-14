@@ -4720,6 +4720,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanPointAtAKryfo => '对准 Kryfo QR 码 · 什么都不会离开你的手机';
 
   @override
+  String get scanFromGallery => '从相册选择';
+
+  @override
+  String get scanChoosePicture => '选择图片';
+
+  @override
+  String get scanQrFound => '已找到二维码';
+
+  @override
+  String get scanPictureNoCode => '这张图片里没有二维码。换一张试试';
+
+  @override
+  String get scanPictureNotKryfo => '这是二维码，但不是 Kryfo 的';
+
+  @override
   String get seenWhatWeCanSee => '我们能看到什么';
 
   @override
@@ -16296,6 +16311,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get scanPointAtAKryfo => '對準 Kryfo QR 碼 · 不會有任何東西離開你的手機';
+
+  @override
+  String get scanFromGallery => '從相簿選擇';
+
+  @override
+  String get scanChoosePicture => '選擇圖片';
+
+  @override
+  String get scanQrFound => '已找到 QR 碼';
+
+  @override
+  String get scanPictureNoCode => '這張圖片裡沒有 QR 碼。換一張試試';
+
+  @override
+  String get scanPictureNotKryfo => '這是 QR 碼，但不是 Kryfo 的';
 
   @override
   String get seenWhatWeCanSee => '我們看得到什麼';
