@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 import '../app_icon.dart' show AppFace, appFaceNow;
+import '../dlog.dart';
 import '../lock_state.dart';
 import '../pass_rules.dart';
 import '../wipe.dart';
@@ -153,7 +154,15 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       final typed = _pin;
       // the digits leave the screen's hands as soon as they are handed on
       setState(() => _pin = '*' * passLength(typed));
-      final result = await _lock.verifyPin(typed);
+      // a check that throws (the store, the engine's table) is one the pin
+      // key did not answer: the pad comes back, never stuck on its stars
+      PinResult result;
+      try {
+        result = await _lock.verifyPin(typed);
+      } catch (e) {
+        dlog('lock: check threw (${e.runtimeType})');
+        result = PinResult.unavailable;
+      }
       if (result == PinResult.panic) {
         // silent wipe: the screen stays as if processing, then kryfo exits,
         // which looks like a crash
