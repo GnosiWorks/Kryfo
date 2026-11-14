@@ -98,6 +98,24 @@ Future<void> whenMediaFree(String msgUid) {
 
 int _mediaGrind(String seed) => grindPow(seed, powBits);
 
+// a nonce depends on its seed alone, and a photo's seed is its caption,
+// mostly none: one ground is kept, not ground again for every photo of an
+// album or every pass of the outbox
+final Map<String, int> _powKept = {};
+
+/// the stranger's nonce for [seed], ground once per process
+Future<int> mediaPow(
+  String seed, {
+  Future<int> Function(String seed)? grind,
+}) async {
+  final kept = _powKept[seed];
+  if (kept != null) return kept;
+  final n = await (grind ?? (s) => compute(_mediaGrind, s))(seed);
+  if (_powKept.length >= 32) _powKept.remove(_powKept.keys.first);
+  _powKept[seed] = n;
+  return n;
+}
+
 // base64 characters per slice on the wire. 12288 bytes of file make
 // exactly 16384 characters, so slicing the file and slicing its base64
 // give the same pieces. a slice is read from disk when its turn comes, so
@@ -294,7 +312,7 @@ Future<String> _sendChunkedMediaInner({
   }
   int? pow;
   if (needPow) {
-    pow = await compute(_mediaGrind, caption);
+    pow = await mediaPow(caption);
   }
   final now = DateTime.now().millisecondsSinceEpoch;
   final written = writtenAt ?? now;
