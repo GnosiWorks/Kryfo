@@ -140,6 +140,18 @@ void main() {
     await done(t);
   });
 
+  test('tor up while our relays stay quiet: no tip', () {
+    expect(appState.firstAutoStuck, isTrue);
+    appState.takeTorStatus('bootstrapped|100|0|0|1');
+    expect(appState.torUsable, isFalse);
+    expect(appState.firstAutoStuck, isFalse);
+    expect(appState.torUpOnce, isTrue);
+    // and on its own, before anything is kept
+    appState.torUpOnceForTest = false;
+    expect(appState.firstAutoStuck, isFalse);
+    appState.takeTorStatus('starting|10|0|0|1');
+  });
+
   testWidgets('gone for good once tor has carried', (t) async {
     phone(t);
     expect(appState.firstAutoStuck, isTrue);

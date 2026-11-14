@@ -362,8 +362,9 @@ extension AppStateRoute on AppState {
         _everUsable = true;
         changed = true;
       }
-      _noteTorUpOnce();
     }
+    // tor itself got through, whether or not our relays answer yet
+    if (_sendMode == 'private' && _torCarries) _noteTorUpOnce();
     final hints = (
       suggestBridgesAt(at),
       suggestBridgesOffAt(at),
@@ -575,6 +576,7 @@ extension AppStateRoute on AppState {
   bool firstAutoStuckAt(DateTime now) {
     if (_torUpOnce || !_online || inDecoyView) return false;
     if (_sendMode != 'private' || torReady) return false;
+    if (_torCarries || _bridgeStatus.canSend) return false;
     if (_bridge.choice != BridgeChoice.auto) return false;
     const away = {'no_internet', 'offline', 'paused', 'captive'};
     if (away.contains(_bridgeStatus.phase)) return false;
