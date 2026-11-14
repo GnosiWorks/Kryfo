@@ -152,6 +152,27 @@ void main() {
     appState.takeTorStatus('starting|10|0|0|1');
   });
 
+  testWidgets('a carry seen in a decoy keeps nothing', (t) async {
+    const st = FlutterSecureStorage();
+    lockState.inDecoy = true;
+    addTearDown(() => lockState.inDecoy = false);
+    appState.takeTorStatus('bootstrapped|100|0|1|1');
+    expect(appState.torUpOnce, isFalse);
+    await t.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(await st.read(key: 'tor_up_once'), isNull);
+    });
+    // the real view's next sample keeps it
+    lockState.inDecoy = false;
+    appState.takeTorStatus('bootstrapped|100|0|1|1');
+    expect(appState.torUpOnce, isTrue);
+    await t.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(await st.read(key: 'tor_up_once'), '1');
+    });
+    appState.takeTorStatus('starting|10|0|0|1');
+  });
+
   testWidgets('gone for good once tor has carried', (t) async {
     phone(t);
     expect(appState.firstAutoStuck, isTrue);

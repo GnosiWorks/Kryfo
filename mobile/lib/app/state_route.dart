@@ -549,9 +549,9 @@ extension AppStateRoute on AppState {
 
   // tor carried once: kept, so a first-run hint never comes back
   void _noteTorUpOnce() {
-    if (_torUpOnce) return;
+    // a decoy view marks nothing: the real view's own carry keeps it
+    if (_torUpOnce || inDecoyView) return;
     _torUpOnce = true;
-    if (inDecoyView) return;
     unawaited(
       secureStore.write(key: 'tor_up_once', value: '1').catchError((Object e) {
         // held for this run; the next run's first carry writes it again
