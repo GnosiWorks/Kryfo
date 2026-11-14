@@ -414,7 +414,8 @@ void main() {
       final ask = t.getRect(find.text(l10n.bridgesGetABridge));
       // either way: the bridge way first and filled, fast last with its
       // cost
-      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+      // a first run also gets the vpn or paste line under it
+      expect(find.textContaining(l10n.bridgesRelayThisNetworkSees), findsOne);
       expect(ask.left, lessThan(relay.left));
       expect(card(l10n.bridgesGetABridge).fill, isNotNull);
       expect(card(l10n.homeUseFast).fill, isNull);

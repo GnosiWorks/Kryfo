@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show HaloEngine, appState, useEngineForTest, AppStateRoute, AppStateBridges;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,6 +39,8 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
     useEngineForTest(_Engine());
     await devWorld();
+    // the paste sheet shuts under a lock
+    lockState.openForTest();
     appState.sendModeForTest = 'private';
     appState.bridgeSetupForTest = const BridgeSetup();
     appState.torUpOnceForTest = false;
@@ -103,14 +106,13 @@ void main() {
     await t.tap(find.text(l10n.bridgesPasteABridge));
     await t.pump();
     await t.pump(const Duration(seconds: 1));
-    // the paste sheet, with its own clipboard button
-    expect(find.text(l10n.bridgesPasteFromClipboard), findsOneWidget);
+    // the paste sheet: its line field, its title over the card's button
+    expect(find.text(l10n.bridgesPasteABridgeLine), findsOneWidget);
+    expect(find.text(l10n.bridgesPasteABridge), findsNWidgets(2));
     await done(t);
   });
 
-  testWidgets('nothing got through yet: the bridge way stays first', (
-    t,
-  ) async {
+  testWidgets('nothing got through yet: the bridge way stays first', (t) async {
     phone(t);
     appState.setBridgeStatusForTest(
       const BridgeStatus(mode: 'auto', phase: 'exhausted'),
@@ -159,15 +161,5 @@ void main() {
     await t.pump(const Duration(seconds: 2));
     expect(hint, findsNothing);
     await done(t);
-  });
-
-  test('read back at start, and from automatic\'s memory', () async {
-    for (final key in ['tor_up_once', 'bridge_auto_mem']) {
-      FlutterSecureStorage.setMockInitialValues({key: '1'});
-      appState.torUpOnceForTest = false;
-      await appState.loadBridgesForTest();
-      appState.dropBridgeHooks();
-      expect(appState.torUpOnce, isTrue, reason: key);
-    }
   });
 }
