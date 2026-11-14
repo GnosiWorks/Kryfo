@@ -877,6 +877,17 @@ func torRowFor(lane, u string) bool {
 	return relayOverTor(lane, u)
 }
 
+// a tor row's longest wait: our relay down's, not the other store's two
+// minutes. nothing wakes a lane napping on it when tor carries again, so
+// its first contacts, rooms and hidden chats would wait out the nap; one
+// dial a round per row (failingDialBegin) keeps a dead tor cheap
+func torRowCeiling(k string, ceiling time.Duration) time.Duration {
+	if isTorRow(k) {
+		return min(ceiling, ownRelayCeiling)
+	}
+	return ceiling
+}
+
 // the relay a row is about
 func healthURL(k string) string { return strings.TrimPrefix(k, torRowPrefix) }
 
@@ -1146,7 +1157,7 @@ func relayFailedAs(k string, began time.Time, route bool) {
 		routeNoteFailFrom(u, began)
 	}
 	_, ceiling := ownWaitRule(u, false)
-	ceiling = deadCeiling(u, ceiling)
+	ceiling = torRowCeiling(k, deadCeiling(u, ceiling))
 	nostrMu.Lock()
 	urls := nostrRelays
 	nostrMu.Unlock()
@@ -1272,11 +1283,17 @@ func relayOK(k string) {
 // (see ownWaitRule): exempt, every subscription would redial a failing relay
 // every few seconds, around the clock, on whatever connection the phone has.
 func relayRetryAfter(k string, base time.Duration, own bool) time.Duration {
+	return relayRetryAfterN(k, base, own, 0)
+}
+
+// the same for a runner whose own last n dials failed: it backs off by
+// those as by the row's, under the same ceiling
+func relayRetryAfterN(k string, base time.Duration, own bool, n int) time.Duration {
 	u := healthURL(k)
 	mine, ceiling := ownWaitRule(u, own)
-	ceiling = deadCeiling(u, ceiling)
+	ceiling = torRowCeiling(k, deadCeiling(u, ceiling))
 	relayHealthMu.Lock()
-	n := relayFails[k]
+	n = max(n, relayFails[k])
 	relayHealthMu.Unlock()
 	d := relayBackoffFor(u, n)
 	if d > ceiling {
@@ -1949,6 +1966,21 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			defer socks.Add(-1)
 			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
+			// this runner's own dials in a row that failed or were turned
+			// away. the row is cleared by any answer on any socket, so with
+			// the relay serving others it would never back off: at a relay
+			// turning new sockets away it would knock every few seconds
+			dialFails := 0
+			// a wake, a new network or a mode switch starts it again, as it
+			// does the rows (relayClearBenches)
+			failsFrom := benchClearChan()
+			dialFailed := func() int {
+				if isClosed(failsFrom) {
+					dialFails, failsFrom = 0, benchClearChan()
+				}
+				dialFails++
+				return dialFails
+			}
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
 			kicked := false
@@ -2247,7 +2279,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							noteTorLoss(lane, u)
 						}
 					}
-					nap(relayRetryAfter(row, retryFor(u, retry, own), own))
+					nap(relayRetryAfterN(row, retryFor(u, retry, own), own, dialFailed()))
 					continue
 				}
 				// the mode changed while it dialled. nothing is asked on it
@@ -2339,9 +2371,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					connDone()
 					ownMiss(dialAt)
 					relayFailed(row, dialAt)
-					nap(relayRetryAfter(row, retry, own))
+					nap(relayRetryAfterN(row, retry, own, dialFailed()))
 					continue
 				}
+				dialFails = 0
 				// our own relay's successes clear its failure count too
 				relayOK(row)
 				markAlive()
