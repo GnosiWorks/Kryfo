@@ -10,6 +10,11 @@
 #include <string>
 #include <vector>
 
+#if defined(__arm__)
+#include <asm/hwcap.h>
+#include <sys/auxv.h>
+#endif
+
 #include "translator/parser.h"
 #include "translator/response_options.h"
 #include "translator/service.h"
@@ -52,7 +57,21 @@ static void fail(char **err, const char *what) {
   if (err) *err = dup(what);
 }
 
+// the 32-bit build runs marian's sse code through neon. a core without it
+// gets an error to show instead of an illegal instruction
+static bool cpu_ok() {
+#if defined(__arm__)
+  return (getauxval(AT_HWCAP) & HWCAP_NEON) != 0;
+#else
+  return true;
+#endif
+}
+
 kt_model *kt_open(const char *config_yaml, char **err) {
+  if (!cpu_ok()) {
+    fail(err, "this phone's processor has no neon");
+    return nullptr;
+  }
   try {
     auto options = parseOptionsFromString(config_yaml, /*validate=*/false);
     // held past m, so a failed open lets go of the service under it too
