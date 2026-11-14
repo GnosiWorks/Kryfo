@@ -551,7 +551,12 @@ extension AppStateRoute on AppState {
     if (_torUpOnce) return;
     _torUpOnce = true;
     if (inDecoyView) return;
-    unawaited(secureStore.write(key: 'tor_up_once', value: '1'));
+    unawaited(
+      secureStore.write(key: 'tor_up_once', value: '1').catchError((Object e) {
+        // held for this run; the next run's first carry writes it again
+        dlog('tor up once: not kept (${e.runtimeType})');
+      }),
+    );
   }
 
   bool get torUpOnce => _torUpOnce;
