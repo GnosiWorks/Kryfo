@@ -172,6 +172,9 @@ type relayView struct {
 	Up bool `json:"up"`
 	// its store is the quicker of two that answer
 	Quicker bool `json:"quicker,omitempty"`
+	// on fast: failures of the lanes that reach it through tor, kept off
+	// fails. tor's trouble, never our relay's
+	TorFails int `json:"tor_fails,omitempty"`
 }
 
 type transportView struct {
@@ -245,8 +248,15 @@ func transportSnapshot() transportView {
 		rv.InUse = rv.Backup && inUse
 		rv.Quicker = rv.Store != "" && rv.Store == quick
 		rv.Ms = relayMsOf(u)
-		if at, ok := relayUpAt[u]; ok && relayFails[u] == 0 && now.Sub(at) < ownUpRecent {
-			rv.Up = true
+		// up: it answered lately either way in, and the direct way has not
+		// failed since. fails is the direct way's alone
+		rv.TorFails = relayFails[torRowPrefix+u]
+		if relayFails[u] == 0 {
+			for _, k := range []string{u, torRowPrefix + u} {
+				if at, ok := relayUpAt[k]; ok && now.Sub(at) < ownUpRecent {
+					rv.Up = true
+				}
+			}
 		}
 		rv.CatchupMs, rv.CatchupDrop, rv.CatchupLong, rv.CatchupSeen = catchupOf(u)
 		rv.ConnectMs, rv.CatchupPages, rv.CatchupEvents, rv.CatchupSubs, rv.CatchupDropped = catchupDetailOf(u)

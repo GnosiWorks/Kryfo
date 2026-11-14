@@ -467,6 +467,11 @@ type socksStandIn struct {
 	route map[string]string
 	// the client side of every stream, so a test can cut them all
 	clients map[net.Conn]bool
+	// every new stream is dropped before the handshake, as by a tor that
+	// cannot build a circuit: the dial fails, tor's own trouble
+	refuse atomic.Bool
+	// the streams it dropped so
+	refused atomic.Int32
 }
 
 // one direction of a circuit: bytes queue behind each other at its rate
@@ -510,6 +515,11 @@ func newSocksStandIn(t *testing.T) *socksStandIn {
 func (s *socksStandIn) port() int { return s.ln.Addr().(*net.TCPAddr).Port }
 
 func (s *socksStandIn) serve(c net.Conn) {
+	if s.refuse.Load() {
+		s.refused.Add(1)
+		c.Close()
+		return
+	}
 	s.mu.Lock()
 	s.clients[c] = true
 	s.mu.Unlock()

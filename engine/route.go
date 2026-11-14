@@ -649,6 +649,11 @@ func networkChangedTo(online bool) {
 // the network came back. runners that slept through the outage dial
 // again, through tor once the bounce has put it back on the network
 func netBack() {
+	// off the private route a streak counted on the way into the outage says
+	// nothing of the network that is back. private's tor bounce does this
+	if !modeNeedsTor() {
+		relayClearBenches()
+	}
 	if !modeNeedsTor() || !torParked.Load() {
 		kickRelaysMade()
 	}
