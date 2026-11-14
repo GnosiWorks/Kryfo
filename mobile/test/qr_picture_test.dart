@@ -189,4 +189,29 @@ void main() {
     expect(qrPictureDecoder(webp), isA<img.WebPDecoder>());
     expect(readQrPictureHere(webp), qrNotDrawn);
   });
+
+  test('a read that runs too long is stopped, and reads as none', () async {
+    final sw = Stopwatch()..start();
+    final r = await inIsolateAtMost<String>(() {
+      // a decoder that never ends
+      var i = 0;
+      while (i >= 0) {
+        i = (i + 1) % 1000;
+      }
+      return 'never';
+    }, const Duration(milliseconds: 300));
+    expect(r, isNull);
+    expect(sw.elapsed, lessThan(const Duration(seconds: 5)));
+    expect(
+      await inIsolateAtMost(() => 'read', const Duration(seconds: 5)),
+      'read',
+    );
+    expect(
+      await inIsolateAtMost<String>(
+        () => throw StateError('broken'),
+        const Duration(seconds: 5),
+      ),
+      isNull,
+    );
+  });
 }

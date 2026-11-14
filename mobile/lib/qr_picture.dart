@@ -4,6 +4,7 @@
 // throwaway isolate with caps on bytes and pixels, and zxing-cpp only ever
 // sees plain grey pixels, never the file. readQrPicture is the one door, so
 // the decode can move into the isolated parse helper later
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
@@ -27,6 +28,9 @@ const _platform = MethodChannel('halo/platform');
 /// past this a picture is not read
 const kQrPictureBytesMost = 40 * 1024 * 1024;
 const kQrPicturePixelsMost = 40 * 1000 * 1000;
+
+/// a picture still not read after this reads as none, and its isolate goes
+const kQrPictureTime = Duration(seconds: 20);
 
 // the long sides tried, small first: most codes read at the first
 const _edges = [1200, 2400];
@@ -91,7 +95,7 @@ Future<String?> readQrPicture(Uint8List bytes) async {
   if (seam != null) return seam(bytes);
   if (bytes.isEmpty || bytes.length > kQrPictureBytesMost) return null;
   try {
-    final r = await Isolate.run(() => _read(bytes));
+    final r = await inIsolateAtMost(() => _read(bytes), kQrPictureTime);
     if (r != _notDrawn) return r;
     // a format dart does not draw (heic on many phones): the phone draws
     // it as a plain jpeg first, as it does for a profile photo
@@ -102,13 +106,41 @@ Future<String?> readQrPicture(Uint8List bytes) async {
       'quality': 95,
     });
     if (jpeg == null || jpeg.isEmpty) return null;
-    final again = await Isolate.run(() => _read(jpeg));
+    final again = await inIsolateAtMost(() => _read(jpeg), kQrPictureTime);
     return again == _notDrawn ? null : again;
   } catch (e) {
     dlog('qr picture: not read (${e.runtimeType})');
     return null;
   }
 }
+
+/// [work] in its own isolate, killed if it runs past [most]: then null.
+/// an error in it is null too
+Future<T?> inIsolateAtMost<T>(T Function() work, Duration most) async {
+  final port = ReceivePort();
+  Isolate? iso;
+  try {
+    iso = await Isolate.spawn<(SendPort, T Function())>(
+      _sendBack<T>,
+      (port.sendPort, work),
+      onExit: port.sendPort,
+      onError: port.sendPort,
+      errorsAreFatal: true,
+    );
+    // its answer comes as [result]; an exit comes as null, an error as
+    // [error, stack]
+    final m = await port.first.timeout(most);
+    return m is List && m.length == 1 ? m.first as T? : null;
+  } on TimeoutException {
+    dlog('qr picture: out of time');
+    return null;
+  } finally {
+    iso?.kill(priority: Isolate.immediate);
+    port.close();
+  }
+}
+
+void _sendBack<T>((SendPort, T Function()) m) => m.$1.send([m.$2()]);
 
 /// what [readQrPictureHere] says for a picture dart does not draw
 @visibleForTesting
