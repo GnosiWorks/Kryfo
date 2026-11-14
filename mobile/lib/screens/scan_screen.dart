@@ -284,7 +284,7 @@ class _ScanScreenState extends State<ScanScreen>
         return;
       }
       _raw = raw;
-      _corners.read(null);
+      _corners.lockNow();
     } finally {
       _picking = false;
     }

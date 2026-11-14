@@ -217,5 +217,18 @@ void main() {
       expect(locks, 1);
       near(c.shown, windowQuad(view, box));
     });
+
+    test('a picture locks even when the camera failed', () {
+      var locks = 0;
+      final c = made(onLock: () => locks++)..failed = true;
+      // a camera read is ignored on a failed camera
+      c.read(null);
+      expect(c.mode, CornersMode.searching);
+      c.lockNow();
+      expect(c.mode, CornersMode.locked);
+      expect(locks, 1);
+      c.lockNow();
+      expect(locks, 1);
+    });
   });
 }

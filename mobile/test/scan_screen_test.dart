@@ -307,6 +307,26 @@ void main() {
     expect(haptics, ['HapticFeedbackType.lightImpact']);
   });
 
+  testWidgets('no camera: a Kryfo picture still goes the same way', (t) async {
+    listen(t);
+    final got = <String?>[];
+    qrPicturePickForTest = () async => Uint8List.fromList([7, 7]);
+    qrPictureReadForTest = (_) async => 'kryfo://add/abc';
+    await t.pumpWidget(opened(got, still: true));
+    await t.tap(find.text('open'));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 500));
+    created(null, CameraException('CameraAccessDenied', 'denied'));
+    await t.pump();
+    expect(find.text(l10n.cameraCameraPermissionIsOff), findsOneWidget);
+    await t.tap(find.text(l10n.scanFromGallery));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(const Duration(milliseconds: 400));
+    expect(got, ['kryfo://add/abc']);
+    expect(haptics, ['HapticFeedbackType.lightImpact']);
+  });
+
   testWidgets('nothing picked: nothing happens', (t) async {
     listen(t);
     qrPicturePickForTest = () async => null;

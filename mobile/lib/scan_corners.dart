@@ -232,6 +232,12 @@ class ScanCorners extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// a code from a picture: the lock on the window, whatever the camera did
+  void lockNow() {
+    if (mode == CornersMode.locked) return;
+    _lockOn(window);
+  }
+
   /// a different code came into frame: start counting again
   void restart() {
     if (mode == CornersMode.locked) return;
