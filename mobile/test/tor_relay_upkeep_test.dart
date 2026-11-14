@@ -26,6 +26,8 @@ import 'package:kryfo/main.dart'
         AppStateContacts,
         AppStateReceive;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/link_view.dart'
+    show LinkKind, kRelayDownAfter, linkViewOf;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/modes_screen.dart';
@@ -259,6 +261,110 @@ void main() {
       expect(app.suggestPrivateFallbackAt(later), isFalse);
       expect(app.relayDownSince, isNull);
       expect(told, 3);
+    });
+
+    // the pill as the home header reads it
+    LinkKind pillAt(AppState app, DateTime now) => linkViewOf(
+      mode: 'balanced',
+      status: TorStatus.reachable,
+      pct: 100,
+      online: true,
+      usable: true,
+      usableAt: now,
+      tryingSince: null,
+      relayDownSince: app.relayDownSince,
+      now: now,
+    ).kind;
+
+    test('tor lanes failing on fast while the direct sockets carry: no pill, '
+        'no hint, however long', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      // the engine keeps the tor lanes' failures apart (tor_fails)
+      eng.relays = const [
+        {
+          'url': 'wss://relay.kryfo.app',
+          'fails': 0,
+          'tor_fails': 9,
+          'up': true,
+        },
+        {
+          'url': 'wss://relay2.kryfo.app',
+          'fails': 0,
+          'tor_fails': 4,
+          'up': true,
+        },
+      ];
+      for (var s = 0; s <= 600; s += 5) {
+        final at = t0.add(Duration(seconds: s));
+        app.sampleRelayHealth(now: at);
+        expect(app.relayDownSince, isNull);
+        expect(app.suggestPrivateFallbackAt(at), isFalse);
+        expect(pillAt(app, at), LinkKind.relay);
+      }
+    });
+
+    test('tor flapping on fast never shows ours down', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      for (var s = 0; s <= 300; s += 5) {
+        final at = t0.add(Duration(seconds: s));
+        final bad = (s ~/ 15).isOdd;
+        eng.relays = [
+          {
+            'url': 'wss://relay.kryfo.app',
+            'fails': 0,
+            'tor_fails': bad ? s : 0,
+          },
+          {
+            'url': 'wss://relay2.kryfo.app',
+            'fails': 0,
+            'tor_fails': bad ? 1 : 0,
+          },
+        ];
+        app.sampleRelayHealth(now: at);
+        expect(pillAt(app, at), LinkKind.relay);
+      }
+    });
+
+    test('both of ours failing the direct way: the pill after 20 s, the '
+        'hint after 90, and an answer clears both', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      eng.relays = const [
+        {'url': 'wss://relay.kryfo.app', 'fails': 1},
+        {'url': 'wss://relay2.kryfo.app', 'fails': 2, 'benched': true},
+      ];
+      app.sampleRelayHealth(now: t0);
+      expect(pillAt(app, t0.add(const Duration(seconds: 19))), LinkKind.relay);
+      final at = t0.add(kRelayDownAfter);
+      app.sampleRelayHealth(now: at);
+      expect(pillAt(app, at), LinkKind.relayDown);
+      final hint = t0.add(const Duration(seconds: 95));
+      app.sampleRelayHealth(now: hint);
+      expect(app.suggestPrivateFallbackAt(hint), isTrue);
+
+      // one of ours answers again (relayUp clears its row in the engine)
+      eng.relays = const [
+        {'url': 'wss://relay.kryfo.app', 'fails': 0, 'up': true},
+        {'url': 'wss://relay2.kryfo.app', 'fails': 2, 'benched': true},
+      ];
+      final back = hint.add(const Duration(seconds: 5));
+      app.sampleRelayHealth(now: back);
+      expect(app.relayDownSince, isNull);
+      expect(app.suggestPrivateFallbackAt(back), isFalse);
+      expect(pillAt(app, back), LinkKind.relay);
+    });
+
+    test('one of ours failing is no outage', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      eng.relays = const [
+        {'url': 'wss://relay.kryfo.app', 'fails': 5, 'benched': true},
+        {'url': 'wss://relay2.kryfo.app', 'fails': 0},
+        {'url': 'wss://backup.example', 'fails': 0, 'backup': true},
+      ];
+      for (var s = 0; s <= 200; s += 5) {
+        final at = t0.add(Duration(seconds: s));
+        app.sampleRelayHealth(now: at);
+        expect(pillAt(app, at), LinkKind.relay);
+      }
     });
 
     test('a spell offline is not an outage, and the clock starts again when '
