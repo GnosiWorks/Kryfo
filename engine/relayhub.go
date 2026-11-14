@@ -198,7 +198,7 @@ func (c *hubConn) dial(client *http.Client) {
 	}
 	pcancel()
 	noteRelayDial(c.url)
-	opts := relayOptionsFor(c.url)
+	opts := relayOptionsFor(c.lane, c.url)
 	if c.paced {
 		opts.ClosedHandler = func(reason string) {
 			if tooFast(reason) {
@@ -905,7 +905,7 @@ func relayJoin(conn context.Context, k hubKey, addr string, client *http.Client,
 			rcancel()
 			return nil, false, at, err
 		}
-		r := nostr.NewRelay(conn, k.url, relayOptionsFor(k.url))
+		r := nostr.NewRelay(conn, k.url, relayOptionsFor(k.lane, k.url))
 		noteRelayDial(k.url)
 		dctx, dcancel := relayDialCtx(rctx, k.url)
 		err = r.ConnectWithClient(dctx, client)

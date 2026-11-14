@@ -170,10 +170,13 @@ func subscribeRelayOptions() nostr.RelayOptions {
 	return nostr.RelayOptions{PingInterval: torPingInterval, PongTimeout: torPongTimeout}
 }
 
-// the same for relay u: a backup goes through tor on every route
-func relayOptionsFor(u string) nostr.RelayOptions {
-	if isBackup(u) {
+// the same for a socket of lane to relay u: whatever goes through tor gets
+// tor's on every route. on fast the lanes that keep tor (rooms, pairs, first
+// contact, hello, hidden), the backups and the public relays reach theirs
+// through tor too, and the library's 800ms closed them about once a minute
+func relayOptionsFor(lane, u string) nostr.RelayOptions {
+	if modeNeedsTor() || relayOverTor(lane, u) {
 		return nostr.RelayOptions{PingInterval: torPingInterval, PongTimeout: torPongTimeout}
 	}
-	return subscribeRelayOptions()
+	return nostr.RelayOptions{}
 }
