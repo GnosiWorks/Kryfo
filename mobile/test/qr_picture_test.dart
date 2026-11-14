@@ -102,4 +102,25 @@ void main() {
     v.setUint32(20, 20000);
     expect(await readQrPicture(head), isNull);
   });
+
+  test('only the formats a gallery holds are drawn', () {
+    final pic = img.Image(width: 8, height: 8);
+    for (final ok in [
+      img.encodeJpg(pic),
+      img.encodePng(pic),
+      img.encodeGif(pic),
+      img.encodeBmp(pic),
+    ]) {
+      expect(qrPictureDecoder(ok), isNotNull);
+    }
+    // an ico holds a png of any size behind a <= 256 px directory: never
+    for (final no in [
+      img.encodeIco(pic),
+      img.encodeTiff(pic),
+      img.encodeTga(pic),
+      img.encodePvr(pic),
+    ]) {
+      expect(qrPictureDecoder(no), isNull);
+    }
+  });
 }

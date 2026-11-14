@@ -112,9 +112,26 @@ Future<String?> readQrPicture(Uint8List bytes) async {
 
 const _notDrawn = '\u0000';
 
+/// the decoder for [bytes] among the formats a gallery holds, or null.
+/// the image package knows more (tiff, psd, exr, ico, tga ...): an ico
+/// carries a png of any size past the pixel cap, so none of them runs
+@visibleForTesting
+img.Decoder? qrPictureDecoder(Uint8List bytes) {
+  for (final d in <img.Decoder>[
+    img.JpegDecoder(),
+    img.PngDecoder(),
+    img.GifDecoder(),
+    img.WebPDecoder(),
+    img.BmpDecoder(),
+  ]) {
+    if (d.isValidFile(bytes)) return d;
+  }
+  return null;
+}
+
 // in the isolate: draw, shrink, grey, read
 String? _read(Uint8List bytes) {
-  final dec = img.findDecoderForData(bytes);
+  final dec = qrPictureDecoder(bytes);
   if (dec == null) return _notDrawn;
   final info = dec.startDecode(bytes);
   if (info == null) return _notDrawn;
