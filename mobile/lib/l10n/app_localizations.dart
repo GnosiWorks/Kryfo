@@ -5002,6 +5002,12 @@ abstract class AppLocalizations {
   /// **'Keep waiting'**
   String get homeKeepWaiting;
 
+  /// screens/home_screen.dart: automatic bridges on a first run, nothing through yet
+  ///
+  /// In en, this message translates to:
+  /// **'Still connecting? Connect once through a VPN, or paste bridges.'**
+  String get homeFirstRunBridgeHint;
+
   /// screens/home_screen.dart
   ///
   /// In en, this message translates to:

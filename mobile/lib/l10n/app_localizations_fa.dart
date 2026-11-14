@@ -2961,6 +2961,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeKeepWaiting => 'منتظر ماندن';
 
   @override
+  String get homeFirstRunBridgeHint => 'هنوز در حال اتصال است؟ یک بار از طریق VPN وصل شوید، یا پل بچسبانید.';
+
+  @override
   String get homeOffline => 'آفلاین';
 
   @override

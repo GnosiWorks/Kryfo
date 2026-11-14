@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Bật thông báo",
   "homeLeaveThemOff": "Cứ để tắt",
   "homeKeepWaiting": "Tiếp tục chờ",
+  "homeFirstRunBridgeHint": "Vẫn đang kết nối? Hãy kết nối một lần qua VPN, hoặc dán cầu nối.",
   "homeOffline": "Ngoại tuyến",
   "homeWaiting": "Đang chờ",
   "homeNothingWaitingToSend": "Không có gì chờ gửi",

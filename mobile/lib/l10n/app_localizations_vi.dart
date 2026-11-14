@@ -2938,6 +2938,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeKeepWaiting => 'Tiếp tục chờ';
 
   @override
+  String get homeFirstRunBridgeHint => 'Vẫn đang kết nối? Hãy kết nối một lần qua VPN, hoặc dán cầu nối.';
+
+  @override
   String get homeOffline => 'Ngoại tuyến';
 
   @override

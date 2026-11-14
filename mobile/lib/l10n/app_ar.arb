@@ -921,6 +921,7 @@
   "homeTurnThemOn": "تفعيلها",
   "homeLeaveThemOff": "إبقاؤها معطّلة",
   "homeKeepWaiting": "مواصلة الانتظار",
+  "homeFirstRunBridgeHint": "ما زال الاتصال جاريًا؟ اتصل مرة واحدة عبر VPN، أو الصق جسورًا.",
   "homeOffline": "غير متصل",
   "homeWaiting": "في الانتظار",
   "homeNothingWaitingToSend": "لا شيء ينتظر الإرسال",

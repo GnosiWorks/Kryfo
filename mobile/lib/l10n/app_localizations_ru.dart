@@ -3021,6 +3021,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeKeepWaiting => 'Подождать ещё';
 
   @override
+  String get homeFirstRunBridgeHint => 'Всё ещё подключается? Подключитесь один раз через VPN или вставьте мосты.';
+
+  @override
   String get homeOffline => 'Не в сети';
 
   @override

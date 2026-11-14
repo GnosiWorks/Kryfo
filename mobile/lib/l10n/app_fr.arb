@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Les activer",
   "homeLeaveThemOff": "Laisser ainsi",
   "homeKeepWaiting": "Attendre encore",
+  "homeFirstRunBridgeHint": "Toujours en connexion ? Connectez-vous une fois via un VPN, ou collez des ponts.",
   "homeOffline": "Hors ligne",
   "homeWaiting": "En attente",
   "homeNothingWaitingToSend": "Rien en attente d’envoi",

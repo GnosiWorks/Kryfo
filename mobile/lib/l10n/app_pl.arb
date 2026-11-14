@@ -813,6 +813,7 @@
   "homeTurnThemOn": "Włącz je",
   "homeLeaveThemOff": "Zostaw wyłączone",
   "homeKeepWaiting": "Czekaj dalej",
+  "homeFirstRunBridgeHint": "Nadal się łączy? Połącz się raz przez VPN albo wklej mostki.",
   "homeOffline": "Offline",
   "homeWaiting": "Czeka",
   "homeNothingWaitingToSend": "Nic nie czeka na wysłanie",

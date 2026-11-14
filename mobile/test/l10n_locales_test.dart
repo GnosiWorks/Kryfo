@@ -1160,6 +1160,7 @@ final _calls = <_Call>[
   ('homeTurnThemOn', [], (l) => l.homeTurnThemOn),
   ('homeLeaveThemOff', [], (l) => l.homeLeaveThemOff),
   ('homeKeepWaiting', [], (l) => l.homeKeepWaiting),
+  ('homeFirstRunBridgeHint', [], (l) => l.homeFirstRunBridgeHint),
   ('homeOffline', [], (l) => l.homeOffline),
   ('homeWaiting', [], (l) => l.homeWaiting),
   ('homeNothingWaitingToSend', [], (l) => l.homeNothingWaitingToSend),

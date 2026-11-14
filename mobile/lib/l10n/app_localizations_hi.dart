@@ -2961,6 +2961,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeKeepWaiting => 'इंतज़ार करते रहें';
 
   @override
+  String get homeFirstRunBridgeHint => 'अभी भी कनेक्ट हो रहा है? एक बार VPN से कनेक्ट करें, या ब्रिज पेस्ट करें।';
+
+  @override
   String get homeOffline => 'ऑफ़लाइन';
 
   @override

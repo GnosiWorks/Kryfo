@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Увімкнути",
   "homeLeaveThemOff": "Залишити вимкненими",
   "homeKeepWaiting": "Чекати далі",
+  "homeFirstRunBridgeHint": "Досі підключається? Підключіться один раз через VPN або вставте мости.",
   "homeOffline": "Офлайн",
   "homeWaiting": "Очікування",
   "homeNothingWaitingToSend": "Черга порожня",

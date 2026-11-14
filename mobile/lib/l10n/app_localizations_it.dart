@@ -2965,6 +2965,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get homeKeepWaiting => 'Aspetta ancora';
 
   @override
+  String get homeFirstRunBridgeHint => 'Ancora in connessione? Connettiti una volta tramite una VPN, oppure incolla dei bridge.';
+
+  @override
   String get homeOffline => 'Offline';
 
   @override

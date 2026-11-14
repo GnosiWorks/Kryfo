@@ -921,6 +921,7 @@
   "homeTurnThemOn": "Attivale",
   "homeLeaveThemOff": "Lasciale spente",
   "homeKeepWaiting": "Aspetta ancora",
+  "homeFirstRunBridgeHint": "Ancora in connessione? Connettiti una volta tramite una VPN, oppure incolla dei bridge.",
   "homeOffline": "Offline",
   "homeWaiting": "In attesa",
   "homeNothingWaitingToSend": "Niente in attesa di invio",
