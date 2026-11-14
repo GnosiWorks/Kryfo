@@ -63,9 +63,7 @@ Future<Uint8List?> pickQrPicture() async {
         ))?.path,
       );
       if (path == null) return null;
-      final f = File(path);
-      if (await f.length() > kQrPictureBytesMost) return Uint8List(0);
-      return await f.readAsBytes();
+      return await readAtMost(path, kQrPictureBytesMost);
     }
     final x = await lockState.hold(
       () => ImagePicker().pickImage(
@@ -85,6 +83,19 @@ Future<Uint8List?> pickQrPicture() async {
   } catch (e) {
     dlog('qr picture: not picked (${e.runtimeType})');
     return Uint8List(0);
+  }
+}
+
+/// a file's bytes, read no further than [most]: past it, none. a file that
+/// grows, or a link to an endless one, never fills the memory
+@visibleForTesting
+Future<Uint8List> readAtMost(String path, int most) async {
+  final f = await File(path).open();
+  try {
+    final b = await f.read(most + 1);
+    return b.length > most ? Uint8List(0) : b;
+  } finally {
+    await f.close();
   }
 }
 

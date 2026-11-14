@@ -5,7 +5,7 @@
 // the reads need zxing built for this computer (LD_LIBRARY_PATH to
 // libflutter_zxing.so); without it those cases skip.
 import 'dart:ffi';
-import 'dart:io' show ZLibEncoder;
+import 'dart:io' show Directory, File, ZLibEncoder;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -213,5 +213,18 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  test('a computer\'s file is read no further than the cap', () async {
+    final dir = await Directory.systemTemp.createTemp('qr');
+    addTearDown(() => dir.delete(recursive: true));
+    final small = File('${dir.path}/a.png')..writeAsBytesSync([1, 2, 3]);
+    expect(await readAtMost(small.path, 3), [1, 2, 3]);
+    final big = File('${dir.path}/b.png')..writeAsBytesSync(Uint8List(4));
+    expect(await readAtMost(big.path, 3), isEmpty);
+    // a file that says it is empty and never ends
+    if (File('/dev/zero').existsSync()) {
+      expect(await readAtMost('/dev/zero', 1 << 20), isEmpty);
+    }
   });
 }
