@@ -3021,6 +3021,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeKeepWaiting => 'Подождать ещё';
 
   @override
+  String get homeFirstRunBridgeHint => 'Всё ещё подключается? Подключись один раз через VPN или вставь мосты.';
+
+  @override
   String get homeOffline => 'Не в сети';
 
   @override
@@ -4819,6 +4822,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'Наведи на QR Kryfo · ничего не покидает твой телефон';
+
+  @override
+  String get scanFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get scanChoosePicture => 'Выбрать изображение';
+
+  @override
+  String get scanQrFound => 'QR-код найден';
+
+  @override
+  String get scanPictureNoCode => 'На этом изображении нет QR-кода. Попробуй другое';
+
+  @override
+  String get scanPictureNotKryfo => 'Это QR-код, но не от Kryfo';
 
   @override
   String get seenWhatWeCanSee => 'Что мы можем видеть';

@@ -2938,6 +2938,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get homeKeepWaiting => 'Tunggu lagi';
 
   @override
+  String get homeFirstRunBridgeHint => 'Masih menyambung? Sambungkan sekali lewat VPN, atau tempel jembatan.';
+
+  @override
   String get homeOffline => 'Offline';
 
   @override
@@ -4718,6 +4721,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'Arahkan ke QR Kryfo · tidak ada yang keluar dari ponselmu';
+
+  @override
+  String get scanFromGallery => 'Pilih dari galeri';
+
+  @override
+  String get scanChoosePicture => 'Pilih gambar';
+
+  @override
+  String get scanQrFound => 'Kode QR ditemukan';
+
+  @override
+  String get scanPictureNoCode => 'Tidak ada kode QR di gambar ini. Coba gambar lain';
+
+  @override
+  String get scanPictureNotKryfo => 'Itu kode QR, tapi bukan dari Kryfo';
 
   @override
   String get seenWhatWeCanSee => 'Apa yang bisa kami lihat';

@@ -698,7 +698,7 @@ class AppState extends ChangeNotifier {
   int? _relayUpAt;
 
   // what the home screen was last told about the two bridge cards
-  (bool, bool) _bridgeHintsShown = (false, false);
+  (bool, bool, bool) _bridgeHintsShown = (false, false, false);
 
   // a route the person changed starts a try of its own: bridges, the mode, a
   // reconnect, another network. the last try's best and clock say nothing
@@ -733,6 +733,8 @@ class AppState extends ChangeNotifier {
   // minute or two, so we wait before suggesting anything.
   DateTime? _torTryingSince;
   bool _bridgeHintOff = false;
+  // tor carried once on this install, kept: the first-run hint never again
+  bool _torUpOnce = false;
   // when the bootstrap percentage last moved. a climbing bar is a slow
   // network; a stuck one under half way is a blocked one.
   int _pctBest = -1;
@@ -869,6 +871,9 @@ class AppState extends ChangeNotifier {
 
   // android's handle for the network the watch last said is there
   int? _netWatchNet;
+
+  // the watch says a sign-in page sits in front of the network
+  bool _netCaptive = false;
 
   // the kinds of network the last event named, sorted: "mobile,vpn". null
   // until connectivity has said anything: its first word is where the

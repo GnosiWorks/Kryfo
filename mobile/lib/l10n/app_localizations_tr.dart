@@ -2963,6 +2963,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeKeepWaiting => 'Beklemeye devam et';
 
   @override
+  String get homeFirstRunBridgeHint => 'Hâlâ bağlanıyor mu? Bir kez VPN üzerinden bağlan ya da köprü yapıştır.';
+
+  @override
   String get homeOffline => 'Çevrimdışı';
 
   @override
@@ -4752,6 +4755,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'Bir Kryfo QR koduna tut · hiçbir şey telefonundan çıkmaz';
+
+  @override
+  String get scanFromGallery => 'Galeriden seç';
+
+  @override
+  String get scanChoosePicture => 'Resim seç';
+
+  @override
+  String get scanQrFound => 'QR kodu bulundu';
+
+  @override
+  String get scanPictureNoCode => 'Bu resimde QR kodu yok. Başka bir resim dene';
+
+  @override
+  String get scanPictureNotKryfo => 'Bu bir QR kodu ama Kryfo\'nun değil';
 
   @override
   String get seenWhatWeCanSee => 'Neleri görebiliyoruz';

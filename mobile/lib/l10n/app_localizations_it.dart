@@ -2965,6 +2965,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get homeKeepWaiting => 'Aspetta ancora';
 
   @override
+  String get homeFirstRunBridgeHint => 'Ancora in connessione? Connettiti una volta tramite una VPN, oppure incolla dei bridge.';
+
+  @override
   String get homeOffline => 'Offline';
 
   @override
@@ -4753,6 +4756,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'Inquadra un QR Kryfo · niente lascia il tuo telefono';
+
+  @override
+  String get scanFromGallery => 'Scegli dalla galleria';
+
+  @override
+  String get scanChoosePicture => 'Scegli un\'immagine';
+
+  @override
+  String get scanQrFound => 'Codice QR trovato';
+
+  @override
+  String get scanPictureNoCode => 'In questa immagine non c\'è un codice QR. Provane un\'altra';
+
+  @override
+  String get scanPictureNotKryfo => 'È un codice QR, ma non di Kryfo';
 
   @override
   String get seenWhatWeCanSee => 'Cosa possiamo vedere';

@@ -395,7 +395,12 @@ extension AppStateInvites on AppState {
     _invitesFaceOwed = face == null;
     if (face == null) {
       dlog('invites: no face yet, listened on and kept once it is there');
-      if (!linkedRole) await _listenMyInvites(db, nowMs: nowMs);
+      // the ones an old key signed go already: the onion's first moments
+      // hand out no invite of keys nobody holds
+      if (!linkedRole) {
+        await _invitesGone(db, await dropForeignInvites(db, signalSession));
+        await _listenMyInvites(db, nowMs: nowMs);
+      }
       return;
     }
     final up = await keepInvites(
@@ -407,15 +412,7 @@ extension AppStateInvites on AppState {
       nowMs: nowMs,
     );
     if (up.made != null) dlog('invites: a main invite made');
-    for (final id in up.dropped) {
-      await engine.unsubscribeFcKey(kMainIdent, id);
-      // a hello of mine whose one-time invite went waits for nothing more
-      await db.delete(
-        'hellos',
-        where: 'ident = ? AND way = ? AND invite_id = ?',
-        whereArgs: [kMainIdent, kHelloOut, id],
-      );
-    }
+    await _invitesGone(db, up.dropped);
     // a hello waiting for an accept past its invite's life and a day
     // builds on keys its sender let go
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
@@ -432,6 +429,19 @@ extension AppStateInvites on AppState {
     await _passRosterOwed();
     await _rosterHellos();
     unawaited(sendHellosOwed(nowMs: nowMs));
+  }
+
+  // invites whose keys and row went: their address is not listened on
+  Future<void> _invitesGone(Database db, List<String> ids) async {
+    for (final id in ids) {
+      await engine.unsubscribeFcKey(kMainIdent, id);
+      // a hello of mine whose one-time invite went waits for nothing more
+      await db.delete(
+        'hellos',
+        where: 'ident = ? AND way = ? AND invite_id = ?',
+        whereArgs: [kMainIdent, kHelloOut, id],
+      );
+    }
   }
 
   /// "reset my invite link" for the v4 link, qr and handle: the main

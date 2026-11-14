@@ -18,6 +18,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"fiatjaf.com/nostr"
 )
 
 // an https service of ours as tor reaches it: answers yes to everything and
@@ -586,12 +588,18 @@ func TestSubscribeOptionsByMode(t *testing.T) {
 // ping and pong wait are scaled down here; the real ones are checked above.
 func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conns []siConn) bool) (conns []siConn, resent int) {
 	t.Helper()
+	return slowPongRunIn(t, modePrivate, interval, pongWait, until)
+}
+
+// the same on route mode, for a hidden chat's socket, which keeps tor there
+func slowPongRunIn(t *testing.T, mode string, interval, pongWait time.Duration, until func(conns []siConn) bool) (conns []siConn, resent int) {
+	t.Helper()
 	oldI, oldW := torPingInterval, torPongTimeout
 	torPingInterval, torPongTimeout = interval, pongWait
 	t.Cleanup(func() { torPingInterval, torPongTimeout = oldI, oldW })
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 1200*time.Millisecond)
-	useStandIns(t, modePrivate, socks, r)
+	useStandIns(t, mode, socks, r)
 	peer := newXid(t)
 	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
@@ -640,6 +648,56 @@ func TestSlowPongKeepsTheSocket(t *testing.T) {
 		if gap := p[i].Sub(p[i-1]); gap < 900*time.Millisecond || gap > 3*time.Second {
 			t.Errorf("ping %d came %s after the one before, want the set interval", i, gap)
 		}
+	}
+}
+
+// fast, the hidden chat's socket to our relay goes through tor: it gets
+// tor's ping and pong wait, not the library's 19 s and 800 ms, which closed
+// it about once a minute and redialled it through tor (0.6.0, 0.6.1)
+func TestSlowPongKeepsTheTorLaneOnFast(t *testing.T) {
+	for _, m := range []string{modeBalanced, modeFast} {
+		t.Run(m, func(t *testing.T) {
+			conns, resent := slowPongRunIn(t, m, time.Second, 3*time.Second, func(c []siConn) bool { return pings(c) >= 5 })
+			if len(conns) != 1 || !conns[0].closed.IsZero() {
+				t.Fatalf("%d connections, want the first one still open", len(conns))
+			}
+			if resent != 5 {
+				t.Fatalf("%d stored events sent, want the one window once", resent)
+			}
+		})
+	}
+}
+
+// what each socket gets, by lane and route: tor's wait wherever tor carries
+func TestRelayOptionsByLane(t *testing.T) {
+	useStandIns(t, modeBalanced, nil)
+	own, public := "wss://relay.kryfo.app", "wss://public.example"
+	setRelays([]string{own, "wss://relay2.kryfo.app"})
+	setBackups([]string{"wss://backup.example"})
+	clearTestHosts.Clear()
+	isTor := func(o nostr.RelayOptions) bool {
+		return o.PingInterval == torPingInterval && o.PongTimeout == torPongTimeout
+	}
+	for _, m := range []string{modeBalanced, modeFast} {
+		transportMode.Store(m)
+		if o := relayOptionsFor(laneEveryday, own); o.PingInterval != 0 || o.PongTimeout != 0 {
+			t.Errorf("%s everyday to ours, direct: %+v", m, o)
+		}
+		for _, lane := range []string{laneFirstContact, laneHello, roomLane("ab"), pairLane("cd"), laneHidden + ":x"} {
+			if o := relayOptionsFor(lane, own); !isTor(o) {
+				t.Errorf("%s %s to ours goes through tor and got %+v", m, laneKind(lane), o)
+			}
+		}
+		if o := relayOptionsFor(laneEveryday, "wss://backup.example"); !isTor(o) {
+			t.Errorf("%s a backup: %+v", m, o)
+		}
+		if relayOverTor(laneEveryday, public) && !isTor(relayOptionsFor(laneEveryday, public)) {
+			t.Errorf("%s a public relay through tor got the direct wait", m)
+		}
+	}
+	transportMode.Store(modePrivate)
+	if o := relayOptionsFor(laneEveryday, own); !isTor(o) {
+		t.Errorf("private everyday: %+v", o)
 	}
 }
 

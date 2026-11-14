@@ -271,7 +271,7 @@ func warmHello() {
 				}
 				dctx, dcancel := relayDialCtx(context.Background(), u)
 				defer dcancel()
-				r := nostr.NewRelay(dctx, u, relayOptionsFor(u))
+				r := nostr.NewRelay(dctx, u, relayOptionsFor(laneHello, u))
 				if err := r.ConnectWithClient(dctx, client); err != nil {
 					log.Printf("nostr: hello lane not warmed on %s: %v", u, err)
 					return

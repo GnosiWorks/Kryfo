@@ -192,6 +192,40 @@ func routeNoteFailFrom(u string, began time.Time) {
 	}
 	failedSinceOK[u] = true
 	lastFailAt = time.Now()
+	// the route in doubt now: the live sockets say whether it carries
+	if len(failedSinceOK) == 2 && (routeAskAt.IsZero() || time.Since(routeAskAt) >= routeAskGap) {
+		routeAskAt = time.Now()
+		routeAskLive()
+	}
+}
+
+// in private, once two relays failed since the route's last answer, every
+// live socket asks its probe, at most once a routeAskGap: a route that
+// carries but was quiet says so before the pill reads no relay. the verdict
+// waits routeAskWait for their answers. vars for the tests
+var (
+	routeAskGap  = time.Minute
+	routeAskWait = 15 * time.Second
+	// the last ask, under routeMu
+	routeAskAt time.Time
+	routeAsk   = struct {
+		sync.Mutex
+		c chan struct{}
+	}{c: make(chan struct{})}
+)
+
+// closed at the next ask
+func routeAskChan() <-chan struct{} {
+	routeAsk.Lock()
+	defer routeAsk.Unlock()
+	return routeAsk.c
+}
+
+func routeAskLive() {
+	routeAsk.Lock()
+	close(routeAsk.c)
+	routeAsk.c = make(chan struct{})
+	routeAsk.Unlock()
 }
 
 // the phone slept: a dead spell begun before it starts again from the wake
@@ -241,7 +275,9 @@ func routeVerdict(st string) (bool, int64) {
 		// nothing has connected since the latest bounce, or ever
 		return false, routeGen
 	}
-	return !(len(failedSinceOK) >= 2 && time.Since(firstFailAt) > 20*time.Second), routeGen
+	// an ask under way: the live sockets' answers first
+	asking := !routeAskAt.IsZero() && time.Since(routeAskAt) < routeAskWait
+	return !(len(failedSinceOK) >= 2 && time.Since(firstFailAt) > 20*time.Second && !asking), routeGen
 }
 
 func torStatusNow() string {
@@ -649,6 +685,11 @@ func networkChangedTo(online bool) {
 // the network came back. runners that slept through the outage dial
 // again, through tor once the bounce has put it back on the network
 func netBack() {
+	// off the private route a streak counted on the way into the outage says
+	// nothing of the network that is back. private's tor bounce does this
+	if !modeNeedsTor() {
+		relayClearBenches()
+	}
 	if !modeNeedsTor() || !torParked.Load() {
 		kickRelaysMade()
 	}
@@ -912,6 +953,12 @@ func netBounceWorker() {
 		bounce := netBounce
 		netMu.Unlock()
 
+		// fast bounces no tor: its sockets made on the network that went
+		// ask their probes now, and a dead one redials on this one
+		if !modeNeedsTor() && !netAway() {
+			kickRelaysMade()
+			return
+		}
 		// floors and back-offs were reset with the change. offline, the
 		// bounce and its check wait for the change that brings a network
 		if !modeNeedsTor() || torIsPaused() || netAway() {

@@ -1,35 +1,42 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the scanner's frame: its corners close in as it opens and come to rest,
 // each corner is drawn for the corner it sits in whichever way the language
-// reads, and with reduced motion nothing sweeps.
+// reads, and nothing sweeps or ticks over it.
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/scan_corners.dart';
 import 'package:kryfo/screens/scan_screen.dart';
 
 final _shot = GlobalKey();
 
-Widget framed(
-  Animation<double> sweep, {
-  bool still = false,
-  TextDirection dir = TextDirection.ltr,
-  bool success = false,
-}) => MaterialApp(
-  home: MediaQuery(
-    data: MediaQueryData(size: const Size(360, 640), disableAnimations: still),
-    child: Directionality(
-      textDirection: dir,
-      child: Center(
-        child: RepaintBoundary(
-          key: _shot,
-          child: ScanFrame(size: 240, success: success, scanAnim: sweep),
+Widget framed({bool still = false, TextDirection dir = TextDirection.ltr}) =>
+    MaterialApp(
+      home: MediaQuery(
+        data: MediaQueryData(
+          size: const Size(360, 640),
+          disableAnimations: still,
+        ),
+        child: Directionality(
+          textDirection: dir,
+          child: Center(
+            child: RepaintBoundary(
+              key: _shot,
+              child: SizedBox(
+                width: 300,
+                height: 300,
+                child: ScanFrame(
+                  corners: ScanCorners(reduced: still)
+                    ..layout(const Size(300, 300), 240),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
 
 Future<List<int>> pixels(WidgetTester t) async {
   final b = _shot.currentContext!.findRenderObject()! as RenderRepaintBoundary;
@@ -57,7 +64,7 @@ double scale(WidgetTester t) => t
 
 void main() {
   testWidgets('the corners close in as it opens, then rest', (t) async {
-    await t.pumpWidget(framed(const AlwaysStoppedAnimation(0)));
+    await t.pumpWidget(framed());
     await t.pump(const Duration(milliseconds: 40));
     expect(scale(t), greaterThan(1.01));
     await t.pump(const Duration(milliseconds: 400));
@@ -65,28 +72,22 @@ void main() {
     expect(scale(t), 1);
   });
 
-  testWidgets('reduced motion: no close in and no sweeping line', (t) async {
-    await t.pumpWidget(framed(const AlwaysStoppedAnimation(0.5), still: true));
+  testWidgets('reduced motion: no close in, and only the corners', (t) async {
+    await t.pumpWidget(framed(still: true));
     expect(scale(t), 1);
     expect(t.hasRunningAnimations, isFalse);
-    // the line is the one gradient in the frame
-    final lines = t
-        .widgetList<Container>(find.byType(Container))
-        .where((c) => (c.decoration as BoxDecoration?)?.gradient != null);
-    expect(lines, isEmpty);
+    // no sweeping line and no green check: the corners are all it draws
+    Finder inFrame(Type t) =>
+        find.descendant(of: find.byType(ScanFrame), matching: find.byType(t));
+    expect(inFrame(Container), findsNothing);
+    expect(inFrame(Icon), findsNothing);
   });
 
   testWidgets('right to left draws the very same frame', (t) async {
-    await t.pumpWidget(framed(const AlwaysStoppedAnimation(0), still: true));
+    await t.pumpWidget(framed(still: true));
     await t.pump();
     final ltr = await pixels(t);
-    await t.pumpWidget(
-      framed(
-        const AlwaysStoppedAnimation(0),
-        still: true,
-        dir: TextDirection.rtl,
-      ),
-    );
+    await t.pumpWidget(framed(still: true, dir: TextDirection.rtl));
     await t.pump();
     expect(await pixels(t), ltr);
   });

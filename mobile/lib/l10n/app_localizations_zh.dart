@@ -2938,6 +2938,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeKeepWaiting => '继续等待';
 
   @override
+  String get homeFirstRunBridgeHint => '还在连接？先通过 VPN 连接一次，或粘贴网桥。';
+
+  @override
   String get homeOffline => '离线';
 
   @override
@@ -4718,6 +4721,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => '对准 Kryfo QR 码 · 什么都不会离开你的手机';
+
+  @override
+  String get scanFromGallery => '从相册选择';
+
+  @override
+  String get scanChoosePicture => '选择图片';
+
+  @override
+  String get scanQrFound => '已找到二维码';
+
+  @override
+  String get scanPictureNoCode => '这张图片里没有二维码。换一张试试';
+
+  @override
+  String get scanPictureNotKryfo => '这是二维码，但不是 Kryfo 的';
 
   @override
   String get seenWhatWeCanSee => '我们能看到什么';
@@ -14516,6 +14534,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeKeepWaiting => '繼續等待';
 
   @override
+  String get homeFirstRunBridgeHint => '還在連線？先透過 VPN 連線一次，或貼上橋接。';
+
+  @override
   String get homeOffline => '離線';
 
   @override
@@ -16296,6 +16317,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get scanPointAtAKryfo => '對準 Kryfo QR 碼 · 不會有任何東西離開你的手機';
+
+  @override
+  String get scanFromGallery => '從相簿選擇';
+
+  @override
+  String get scanChoosePicture => '選擇圖片';
+
+  @override
+  String get scanQrFound => '已找到 QR 碼';
+
+  @override
+  String get scanPictureNoCode => '這張圖片裡沒有 QR 碼。換一張試試';
+
+  @override
+  String get scanPictureNotKryfo => '這是 QR 碼，但不是 Kryfo 的';
 
   @override
   String get seenWhatWeCanSee => '我們看得到什麼';

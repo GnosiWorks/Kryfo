@@ -515,6 +515,8 @@ const deviceKeys = {
   'bridge_offer_auto',
   'bridge_auto_mem',
   'bridge_cache',
+  // tor carried once on this phone: the first-run bridge hint stays away
+  'tor_up_once',
   'bridge_fresh',
   'onboarding_done',
   'moved.at',

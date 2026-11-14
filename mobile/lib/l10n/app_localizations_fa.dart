@@ -2961,6 +2961,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeKeepWaiting => 'منتظر ماندن';
 
   @override
+  String get homeFirstRunBridgeHint => 'هنوز در حال اتصال است؟ یک بار از طریق VPN وصل شوید، یا پل بچسبانید.';
+
+  @override
   String get homeOffline => 'آفلاین';
 
   @override
@@ -4746,6 +4749,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'رو به یک کد Kryfo بگیرید · چیزی از گوشی‌تان بیرون نمی‌رود';
+
+  @override
+  String get scanFromGallery => 'انتخاب از گالری';
+
+  @override
+  String get scanChoosePicture => 'انتخاب تصویر';
+
+  @override
+  String get scanQrFound => 'کد QR پیدا شد';
+
+  @override
+  String get scanPictureNoCode => 'در این تصویر کد QR نیست. تصویر دیگری را امتحان کنید';
+
+  @override
+  String get scanPictureNotKryfo => 'این یک کد QR است، اما مال Kryfo نیست';
 
   @override
   String get seenWhatWeCanSee => 'آنچه ما می‌بینیم';

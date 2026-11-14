@@ -84,10 +84,26 @@ Future<void> sweepBackupLeftovers() => _leftoversSwept ??= _sweepLeftovers();
 @visibleForTesting
 void forgetLeftoverSweep() => _leftoversSwept = null;
 
+// a copy older than [began] goes; a newer one is the screen's
+Future<void> _sweepPickedCopy(String path, DateTime began) async {
+  try {
+    final f = File(path);
+    if (!await f.exists()) return;
+    if (!(await f.lastModified()).isBefore(began)) return;
+    await shredFile(path);
+  } catch (err) {
+    dlog('backup: a picked copy stayed (${err.runtimeType})');
+  }
+}
+
 Future<void> _sweepLeftovers() async {
+  final began = DateTime.now();
   try {
     final support = (await getApplicationSupportDirectory()).path;
     final docs = (await getApplicationDocumentsDirectory()).path;
+    // the restore screen's own copy of a picked backup (restore_screen
+    // _pick), left by a kill: one picked since this start is in use
+    await _sweepPickedCopy(p.join(support, 'restore_in.kryfo'), began);
     // the one secret a stage holds in the clear, as a backup's own end does
     await shredFile(p.join(support, _kBackupStage, 'onion.key'));
     for (final e in <FileSystemEntity>[
@@ -130,6 +146,8 @@ enum RestoreFailure {
   newerVersion,
   damaged,
   cutShort,
+  // the phone ran out of room on the way: the file may be fine
+  noSpace,
 }
 
 class RestoreError implements Exception {
@@ -141,6 +159,8 @@ class RestoreError implements Exception {
     RestoreFailure.newerVersion => l10n.backupThisBackupIsFrom,
     RestoreFailure.damaged => l10n.backupThisFileIsDamaged,
     RestoreFailure.cutShort => l10n.backupTheRestoreStoppedPartway,
+    RestoreFailure.noSpace =>
+      onDesktop ? l10n.voiceNoRoomDesk : l10n.voiceNoRoom,
   };
   @override
   String toString() => line;
@@ -1770,7 +1790,19 @@ RestoreError _classify(Object e) {
   if (e is BackupLocked) {
     return const RestoreError(RestoreFailure.wrongPassphrase);
   }
+  if (outOfSpace(e)) return const RestoreError(RestoreFailure.noSpace);
   return const RestoreError(RestoreFailure.damaged);
+}
+
+/// a write the phone refused for want of room, from dart or from the copy
+/// job's own words
+bool outOfSpace(Object e) {
+  if (e is FileSystemException && e.osError?.errorCode == 28) return true;
+  final s = e.toString();
+  // sqlite's own words for it (SQLITE_FULL), from a vacuum or a copy
+  return s.contains('ENOSPC') ||
+      s.toLowerCase().contains('no space left on device') ||
+      s.contains('database or disk is full');
 }
 
 // how many chats and groups a hidden chats database holds

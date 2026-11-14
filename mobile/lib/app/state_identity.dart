@@ -30,7 +30,25 @@ extension AppStateIdentity on AppState {
     await _forgetAllFirst();
     // the invite address is derived from the key too
     if (_fcLoaded) unawaited(_listenFirstContact());
+    // the v4 invites the old key signed go, and the main one is made under
+    // the new key: the link, the qr and a handle claim show the keys held
+    // now. an upkeep under way on the old key ends first
+    await _invitesAfterRekey();
     notifyListeners();
+  }
+
+  Future<void> _invitesAfterRekey() async {
+    try {
+      for (var busy = _invitesKeep; busy != null; busy = _invitesKeep) {
+        try {
+          await busy;
+        } catch (_) {}
+      }
+      await keepMyInvites();
+    } catch (e) {
+      // the next upkeep drops them (dropForeignInvites)
+      dlog('invites: not kept after new words (${e.runtimeType})');
+    }
   }
 
   Future<void> _rekeySignal() async {

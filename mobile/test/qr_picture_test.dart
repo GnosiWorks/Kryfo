@@ -1,0 +1,282 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// a qr code read from a picture: found in a screenshot and in a photo that
+// is big, turned and grainy, nothing in a picture without one, nothing
+// from bytes that are no picture, and no huge picture is drawn at all.
+// the reads need zxing built for this computer (LD_LIBRARY_PATH to
+// libflutter_zxing.so); without it those cases skip.
+import 'dart:ffi';
+import 'dart:io' show Directory, File, Platform, ZLibEncoder;
+import 'dart:math' as math;
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_zxing/flutter_zxing.dart';
+import 'package:image/image.dart' as img;
+import 'package:kryfo/qr_picture.dart';
+
+bool get _reader {
+  try {
+    DynamicLibrary.open('libflutter_zxing.so');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+const _link = 'kryfo://add/k1?n=Mira&v=4&d=OBNXk2c2Fj0Lw1mZ8Vt3QpR7yHs9';
+
+// the code as zxing draws it, grey on a white margin
+img.Image _code(int side) {
+  final e = zx.encodeBarcode(
+    contents: _link,
+    params: EncodeParams(width: side, height: side, margin: 16),
+  );
+  final grey = e.data!;
+  final out = img.Image(width: side, height: side);
+  for (var y = 0; y < side; y++) {
+    for (var x = 0; x < side; x++) {
+      final v = grey[y * side + x];
+      out.setPixelRgb(x, y, v, v, v);
+    }
+  }
+  return out;
+}
+
+// a dim, grainy desk 4000 x 3000 with the code small, turned and off centre
+img.Image _photo() {
+  final r = math.Random(7);
+  final desk = img.Image(width: 4000, height: 3000);
+  img.fill(desk, color: img.ColorRgb8(70, 58, 44));
+  final code = img.copyRotate(_code(600), angle: 23);
+  img.compositeImage(desk, code, dstX: 2500, dstY: 1700);
+  for (final p in desk) {
+    final n = r.nextInt(31) - 15;
+    p
+      ..r = (p.r + n).clamp(0, 255)
+      ..g = (p.g + n).clamp(0, 255)
+      ..b = (p.b + n).clamp(0, 255);
+  }
+  return desk;
+}
+
+void main() {
+  final skip = _reader ? null : 'no zxing for this computer';
+
+  test('a screenshot of a code reads', () async {
+    final shot = img.Image(width: 1080, height: 2340);
+    img.fill(shot, color: img.ColorRgb8(13, 11, 9));
+    img.compositeImage(shot, _code(720), dstX: 180, dstY: 600);
+    expect(await readQrPicture(img.encodePng(shot)), _link);
+  }, skip: skip);
+
+  test('a big photo, turned and grainy, reads', () async {
+    final jpg = img.encodeJpg(_photo(), quality: 85);
+    expect(await readQrPicture(jpg), _link);
+  }, skip: skip);
+
+  test('a picture with no code reads as none', () async {
+    final r = math.Random(3);
+    final pic = img.Image(width: 1200, height: 900);
+    for (final p in pic) {
+      p
+        ..r = r.nextInt(256)
+        ..g = r.nextInt(256)
+        ..b = r.nextInt(256);
+    }
+    expect(await readQrPicture(img.encodePng(pic)), isNull);
+  }, skip: skip);
+
+  test('bytes that are no picture read as none', () async {
+    expect(await readQrPicture(Uint8List(0)), isNull);
+    expect(
+      await readQrPicture(Uint8List.fromList(List.generate(4096, (i) => i))),
+      isNull,
+    );
+  });
+
+  test('a picture past the pixel cap is not drawn', () async {
+    // a real png header claiming 20000 x 20000, the rest cut off
+    final png = img.encodePng(img.Image(width: 8, height: 8));
+    final head = Uint8List.fromList(png.sublist(0, 33));
+    final v = ByteData.sublistView(head);
+    v.setUint32(16, 20000);
+    v.setUint32(20, 20000);
+    expect(await readQrPicture(head), isNull);
+  });
+
+  test('only the formats a gallery holds are drawn', () {
+    final pic = img.Image(width: 8, height: 8);
+    for (final ok in [
+      img.encodeJpg(pic),
+      img.encodePng(pic),
+      img.encodeGif(pic),
+      img.encodeBmp(pic),
+    ]) {
+      expect(qrPictureDecoder(ok), isNotNull);
+    }
+    // an ico holds a png of any size behind a <= 256 px directory: never
+    for (final no in [
+      img.encodeIco(pic),
+      img.encodeTiff(pic),
+      img.encodeTga(pic),
+      img.encodePvr(pic),
+    ]) {
+      expect(qrPictureDecoder(no), isNull);
+    }
+  });
+
+  test('a png whose data inflates past its size is not drawn', () {
+    final png = img.encodePng(img.Image(width: 100, height: 100));
+    expect(pngDataFits(png), isTrue);
+    // the same 100 x 100 header, its data 16 MB of deflated zeros
+    final zeros = ZLibEncoder().convert(Uint8List(16 << 20));
+    final head = png.sublist(0, 33);
+    final len = ByteData(4)..setUint32(0, zeros.length);
+    final kind = 'IDAT'.codeUnits;
+    final bomb = Uint8List.fromList([
+      ...head,
+      ...len.buffer.asUint8List(),
+      ...kind,
+      ...zeros,
+      // the crc is not what stops it
+      0, 0, 0, 0,
+      0, 0, 0, 0, ...'IEND'.codeUnits, 0xae, 0x42, 0x60, 0x82,
+    ]);
+    expect(zeros.length, lessThan(64 * 1024));
+    expect(pngDataFits(bomb), isFalse);
+  });
+
+  test('an animated webp is left to the phone', () {
+    // riff, a vp8x canvas of 100 x 100 with the animation flag, an anim
+    // chunk: its frames would be drawn at their own size
+    final body = <int>[
+      ...'WEBP'.codeUnits,
+      ...'VP8X'.codeUnits,
+      10,
+      0,
+      0,
+      0,
+      0x02,
+      0,
+      0,
+      0,
+      99,
+      0,
+      0,
+      99,
+      0,
+      0,
+      ...'ANIM'.codeUnits,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+    ];
+    final webp = Uint8List.fromList([
+      ...'RIFF'.codeUnits,
+      body.length,
+      0,
+      0,
+      0,
+      ...body,
+    ]);
+    expect(qrPictureDecoder(webp), isA<img.WebPDecoder>());
+    expect(readQrPictureHere(webp), qrNotDrawn);
+  });
+
+  test('a read that runs too long is stopped, and reads as none', () async {
+    final sw = Stopwatch()..start();
+    final r = await inIsolateAtMost<String>(() {
+      // a decoder that never ends
+      var i = 0;
+      while (i >= 0) {
+        i = (i + 1) % 1000;
+      }
+      return 'never';
+    }, const Duration(milliseconds: 300));
+    expect(r, isNull);
+    expect(sw.elapsed, lessThan(const Duration(seconds: 5)));
+    expect(
+      await inIsolateAtMost(() => 'read', const Duration(seconds: 5)),
+      'read',
+    );
+    expect(
+      await inIsolateAtMost<String>(
+        () => throw StateError('broken'),
+        const Duration(seconds: 5),
+      ),
+      isNull,
+    );
+  });
+
+  test('a computer\'s file is read no further than the cap', () async {
+    final dir = await Directory.systemTemp.createTemp('qr');
+    addTearDown(() => dir.delete(recursive: true));
+    final small = File('${dir.path}/a.png')..writeAsBytesSync([1, 2, 3]);
+    expect(await readAtMost(small.path, 3), [1, 2, 3]);
+    final big = File('${dir.path}/b.png')..writeAsBytesSync(Uint8List(4));
+    expect(await readAtMost(big.path, 3), isEmpty);
+    // a file that says it is empty and never ends
+    if (File('/dev/zero').existsSync()) {
+      expect(await readAtMost('/dev/zero', 1 << 20), isEmpty);
+    }
+  });
+
+  // real phone and camera files stay outside the repo: KRYFO_CORPUS names
+  // their folder. each draws here (and passes the size checks) or goes to
+  // the phone's decoder; none is turned away as a bomb
+  test(
+    'real pictures pass the gates',
+    () {
+      final root = Platform.environment['KRYFO_CORPUS']!;
+      final dir = Directory('$root/cleaner-corpus');
+      final files = dir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where(
+            (f) => RegExp(
+              r'\.(jpe?g|png|webp|heic|heif|avif)$',
+            ).hasMatch(f.path.toLowerCase()),
+          )
+          .toList();
+      expect(files, isNotEmpty);
+      for (final f in files) {
+        final bytes = f.readAsBytesSync();
+        final dec = qrPictureDecoder(bytes);
+        final name = f.path.toLowerCase();
+        if (RegExp(r'\.(heic|heif|avif)$').hasMatch(name)) {
+          expect(dec, isNull, reason: f.path);
+          continue;
+        }
+        expect(dec, isNotNull, reason: f.path);
+        final info = dec!.startDecode(bytes)!;
+        expect(info.width * info.height, lessThan(kQrPicturePixelsMost));
+        if (dec is img.PngDecoder) expect(pngDataFits(bytes), isTrue);
+      }
+    },
+    skip: Platform.environment['KRYFO_CORPUS'] == null ? 'no corpus' : null,
+  );
+
+  test(
+    'real pictures read to the end without a code',
+    () {
+      final root = Platform.environment['KRYFO_CORPUS']!;
+      for (final name in [
+        'samsung/20261022_135215.jpg',
+        'samsung/Screenshot_20261022-135445_Camera.jpg',
+        'public/libwebp/test.webp',
+        'public/libavif/paris_icc_exif_xmp.png',
+      ]) {
+        final bytes = File('$root/cleaner-corpus/$name').readAsBytesSync();
+        expect(readQrPictureHere(bytes), isNull, reason: name);
+      }
+    },
+    skip: Platform.environment['KRYFO_CORPUS'] == null ? 'no corpus' : skip,
+  );
+}

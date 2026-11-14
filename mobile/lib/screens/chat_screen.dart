@@ -7450,7 +7450,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _declineRequestPeer() async {
     HapticFeedback.selectionClick();
-    await session.declineRequest(widget.peerHaloId);
+    await appState.declineRequest(widget.peerHaloId);
     await appState.refreshContacts();
     if (mounted) Navigator.pop(context);
   }

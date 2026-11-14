@@ -320,8 +320,9 @@ const (
 )
 
 // connections still fetching what they missed, and how many have begun
-// since the process started. a check-in waits for the first to reach zero
-// after the second has moved.
+// since the process started, a kick's probe answered on a live socket
+// counted as one begun and done. a check-in waits for the first to reach
+// zero after the second has moved.
 var (
 	catchupActive  int32
 	catchupStarted int64
@@ -854,12 +855,64 @@ const ownRelayCeiling = 20 * time.Second
 // another way into our relay that answered this recently is taken as up
 const ownUpRecent = 10 * time.Minute
 
-func relayUp(u string) {
+// the health rows are keyed by the way in. off the private route a lane that
+// keeps tor (room, pair, first contact, hello, hidden) reaches our clearnet
+// names through tor, and tor having a bad spell says nothing of our relay:
+// those attempts count on a row of their own, "tor|" + u, which the app
+// never reads as our servers. the plain url is the direct way
+const torRowPrefix = "tor|"
+
+// the row an attempt on u over lane counts on
+func healthKey(lane, u string) string {
+	if torRowFor(lane, u) {
+		return torRowPrefix + u
+	}
+	return u
+}
+
+func torRowFor(lane, u string) bool {
+	if modeNeedsTor() || isBackup(u) || isOnion(u) || !isOwnRelay(u) {
+		return false
+	}
+	return relayOverTor(lane, u)
+}
+
+// a tor row's longest wait: our relay down's, not the other store's two
+// minutes. nothing wakes a lane napping on it when tor carries again, so
+// its first contacts, rooms and hidden chats would wait out the nap; one
+// dial a round per row (failingDialBegin) keeps a dead tor cheap
+func torRowCeiling(k string, ceiling time.Duration) time.Duration {
+	if isTorRow(k) {
+		return min(ceiling, ownRelayCeiling)
+	}
+	return ceiling
+}
+
+// the relay a row is about
+func healthURL(k string) string { return strings.TrimPrefix(k, torRowPrefix) }
+
+func isTorRow(k string) bool { return strings.HasPrefix(k, torRowPrefix) }
+
+// an answer on a live socket: an eose, a live wrap, a probe answered. it
+// ends the row's failing streak as a new subscription does, or a single
+// failure would hold "not answering" over sockets that carry
+func relayUp(k string) {
 	wakeRouteProven()
+	u := healthURL(k)
 	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
-	relayUpAt[u] = time.Now()
+	relayUpAt[k] = time.Now()
+	cleared := relayFails[k] != 0
+	if cleared {
+		delete(relayFails, k)
+		delete(relayCoolTill, k)
+		delete(relayFailAt, k)
+	}
 	relayHealthMu.Unlock()
+	// once per streak, not once per answer
+	if cleared {
+		topupKick(u)
+	}
 }
 
 // the longest any relay is benched
@@ -1073,16 +1126,19 @@ func relayHasIt(err error) bool {
 	return err != nil && strings.HasPrefix(err.Error(), "msg: duplicate:")
 }
 
-// the relay answered no: benched as for a failure, the route not marked down
-func relayRefused(u string, began time.Time, err error) {
-	relayFailedAs(u, began, false)
+// the relay answered no: benched as for a failure, the route not marked down.
+// its next answer on a live socket ends the streak (relayUp)
+func relayRefused(k string, began time.Time, err error) {
+	relayFailedAs(k, began, false)
 }
 
-// an attempt on u that began at began has failed
-func relayFailed(u string, began time.Time) { relayFailedAs(u, began, true) }
+// an attempt on row k (a url, or a tor row) that began at began has failed
+func relayFailed(k string, began time.Time) { relayFailedAs(k, began, true) }
 
 // route: the failure may speak for the route, not only for u
-func relayFailedAs(u string, began time.Time, route bool) {
+func relayFailedAs(k string, began time.Time, route bool) {
+	u := healthURL(k)
+	torRow := isTorRow(k)
 	// only tor's warmup can make a connect failure meaningless, also for a
 	// backup, which goes through tor on every route
 	if (modeNeedsTor() && !torReadyNow()) || (isBackup(u) && !torCarriesNow()) {
@@ -1093,11 +1149,15 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	if route && wakeExcuses(began) {
 		return
 	}
+	// off the private route, no network says nothing of the relay
+	if route && !modeNeedsTor() && netAway() {
+		return
+	}
 	if modeNeedsTor() && route && !isBackup(u) {
 		routeNoteFailFrom(u, began)
 	}
 	_, ceiling := ownWaitRule(u, false)
-	ceiling = deadCeiling(u, ceiling)
+	ceiling = torRowCeiling(k, deadCeiling(u, ceiling))
 	nostrMu.Lock()
 	urls := nostrRelays
 	nostrMu.Unlock()
@@ -1105,21 +1165,28 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	now := time.Now()
 	// an attempt already under way when the last failure was counted, or
 	// failing right after it, went down in the same hiccup
-	if last, ok := relayFailAt[u]; ok && (began.Before(last) || now.Sub(last) < relayFailBurst) {
+	if last, ok := relayFailAt[k]; ok && (began.Before(last) || now.Sub(last) < relayFailBurst) {
 		relayHealthMu.Unlock()
 		return
 	}
-	relayFailAt[u] = now
-	relayFails[u]++
-	d := relayBackoffFor(u, relayFails[u])
+	// the relay answered this way after the attempt began: the attempt's
+	// own trouble, not the relay's
+	if up, ok := relayUpAt[k]; ok && !began.IsZero() && began.Before(up) {
+		relayHealthMu.Unlock()
+		return
+	}
+	relayFailAt[k] = now
+	relayFails[k]++
+	d := relayBackoffFor(u, relayFails[k])
 	if d > ceiling {
 		d = ceiling
 	}
 	if d > 0 {
-		relayCoolTill[u] = now.Add(d)
-		log.Printf("nostr: benching %s for %s, %d failures in a row", u, d, relayFails[u])
+		relayCoolTill[k] = now.Add(d)
+		log.Printf("nostr: benching %s for %s, %d failures in a row", k, d, relayFails[k])
 	}
-	gone := oursAllGoneLocked(urls, u)
+	// tor failing says nothing of whether our stores answer
+	gone := !torRow && oursAllGoneLocked(urls, u)
 	relayHealthMu.Unlock()
 	if gone {
 		log.Println("nostr: none of our relays answers, every one of them is tried again now")
@@ -1131,6 +1198,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 // nothing wrong, and holding it out for five more minutes after the route is
 // rebuilt is five more minutes of a message sitting in the outbox.
 func relayClearBenches() {
+	torBrakeClear()
 	benchClear.Lock()
 	close(benchClear.c)
 	benchClear.c = make(chan struct{})
@@ -1194,15 +1262,16 @@ func kickMadeSince(kc chan struct{}, from time.Time) bool {
 	return kc != nil && kc == kickMadeCh && !kickMadeAt.Before(from)
 }
 
-func relayOK(u string) {
+func relayOK(k string) {
 	wakeRouteProven()
+	u := healthURL(k)
 	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
-	relayUpAt[u] = time.Now()
-	if relayFails[u] != 0 {
-		delete(relayFails, u)
-		delete(relayCoolTill, u)
-		delete(relayFailAt, u)
+	relayUpAt[k] = time.Now()
+	if relayFails[k] != 0 {
+		delete(relayFails, k)
+		delete(relayCoolTill, k)
+		delete(relayFailAt, k)
 	}
 	relayHealthMu.Unlock()
 	// a store that answers takes what it missed meanwhile
@@ -1213,11 +1282,18 @@ func relayOK(u string) {
 // own cadence. our own relay backs off too, but to a much lower ceiling
 // (see ownWaitRule): exempt, every subscription would redial a failing relay
 // every few seconds, around the clock, on whatever connection the phone has.
-func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
+func relayRetryAfter(k string, base time.Duration, own bool) time.Duration {
+	return relayRetryAfterN(k, base, own, 0)
+}
+
+// the same for a runner whose own last n dials failed: it backs off by
+// those as by the row's, under the same ceiling
+func relayRetryAfterN(k string, base time.Duration, own bool, n int) time.Duration {
+	u := healthURL(k)
 	mine, ceiling := ownWaitRule(u, own)
-	ceiling = deadCeiling(u, ceiling)
+	ceiling = torRowCeiling(k, deadCeiling(u, ceiling))
 	relayHealthMu.Lock()
-	n := relayFails[u]
+	n = max(n, relayFails[k])
 	relayHealthMu.Unlock()
 	d := relayBackoffFor(u, n)
 	if d > ceiling {
@@ -1400,7 +1476,8 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 		// an entry of our second store on the bench is left out only while
 		// our first store answers: that one carries it, and the second is
 		// given it once it answers again (topup). the first never is
-		if (own[u] && !(relayCold(u) && secondStoreSpared(all, u))) || (!own[u] && !relayCold(u)) {
+		cold := relayCold(healthKey(lane, u))
+		if (own[u] && !(cold && secondStoreSpared(all, u))) || (!own[u] && !cold) {
 			urls = append(urls, u)
 		}
 	}
@@ -1484,9 +1561,9 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 					if relayAnswered(err) {
 						// tor carried the question and the answer
 						routeAliveOn(gen, u)
-						relayRefused(u, began, err)
+						relayRefused(healthKey(lane, u), began, err)
 					} else {
-						relayFailed(u, began)
+						relayFailed(healthKey(lane, u), began)
 					}
 				}
 				result <- false
@@ -1504,7 +1581,7 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 				tookPublic = true
 			}
 			tookMu.Unlock()
-			relayOK(u)
+			relayOK(healthKey(lane, u))
 			noteSend()
 			log.Printf("nostr: published to %s ok", u)
 			result <- true
@@ -1889,6 +1966,21 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			defer socks.Add(-1)
 			last := nostr.Timestamp(loadLast())
 			retry := 10 * time.Second
+			// this runner's own dials in a row that failed or were turned
+			// away. the row is cleared by any answer on any socket, so with
+			// the relay serving others it would never back off: at a relay
+			// turning new sockets away it would knock every few seconds
+			dialFails := 0
+			// a wake, a new network or a mode switch starts it again, as it
+			// does the rows (relayClearBenches)
+			failsFrom := benchClearChan()
+			dialFailed := func() int {
+				if isClosed(failsFrom) {
+					dialFails, failsFrom = 0, benchClearChan()
+				}
+				dialFails++
+				return dialFails
+			}
 			rejoin := 5 * time.Second
 			deaf := 4 * time.Minute
 			kicked := false
@@ -1902,9 +1994,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			var lastAlive time.Time
 			// the route generation the live connection was made in
 			connGen := int64(-1)
+			// the health row this attempt counts on: the direct one, or on
+			// fast a lane that keeps tor its own (healthKey). set per try
+			row := healthKey(lane, u)
 			markAlive := func() {
 				lastAlive = time.Now().Round(0)
-				relayUp(u)
+				relayUp(row)
 				if connGen >= 0 {
 					routeAliveOn(connGen, u)
 				}
@@ -1927,9 +2022,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			// the next read was drawn in the round for our relay down
 			drawnDown := false
 			// an attempt on our relay, begun at began, failed, while tor
-			// could carry it
+			// could carry it. one through tor on fast says nothing of ours:
+			// the direct sockets do
 			ownMiss := func(began time.Time) {
-				if ownEntry && !(modeNeedsTor() && !torReadyNow()) {
+				if ownEntry && !(modeNeedsTor() && !torReadyNow()) && !isTorRow(row) {
 					ownRelayFailed()
 					storeFailed(anchorKey, began)
 				}
@@ -2038,6 +2134,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// taken before the list and the client, so both are of one
 				// mode: a switch after this ends what it dials
 				routeC := routeEnded()
+				row = healthKey(lane, u)
 				// a mode switch took this relay off the list. the app starts
 				// every runner again on the new one; until it gets here this
 				// one must not dial it, least of all in the clear
@@ -2061,8 +2158,8 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					continue
 				}
 				// a public relay on the bench: its bench first
-				if !ownEntry && !backup && time.Until(relayCoolUntil(u)) > 0 {
-					if !waitOutBench(ctx, u) {
+				if !ownEntry && !backup && time.Until(relayCoolUntil(row)) > 0 {
+					if !waitOutBench(ctx, row) {
 						return
 					}
 					continue
@@ -2129,11 +2226,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// is up is no dial
 				goDial, dialOver := true, func() {}
 				if hk.group == "" || !isClosed(hubReady(hk)) {
-					goDial, dialOver = failingDialBegin(u)
+					goDial, dialOver = failingDialBegin(row)
 				}
 				if !goDial {
 					turn.dialed(false)
-					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
+					nap(relayRetryAfter(row, retryFor(u, retry, own), own))
 					continue
 				}
 				// each connection has a context of its own, so the relay and
@@ -2158,7 +2255,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// round goes from another try
 				if errors.Is(err, errPaceSkip) {
 					connDone()
-					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
+					nap(relayRetryAfter(row, retryFor(u, retry, own), own))
 					continue
 				}
 				if err != nil {
@@ -2168,7 +2265,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					if relayAnswered(err) {
 						// turned away at the door, through a route that works
 						routeAliveOn(dialGen, u)
-						relayRefused(u, dialAt, err)
+						relayRefused(row, dialAt, err)
 						// that was this round's read: every address past the
 						// cap asking again at the backoff's pace is the pile
 						// the relay turns away
@@ -2177,9 +2274,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							cuts = 0
 						}
 					} else {
-						relayFailed(u, dialAt)
+						relayFailed(row, dialAt)
+						if ctx.Err() == nil {
+							noteTorLoss(lane, u)
+						}
 					}
-					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
+					nap(relayRetryAfterN(row, retryFor(u, retry, own), own, dialFailed()))
 					continue
 				}
 				// the mode changed while it dialled. nothing is asked on it
@@ -2270,12 +2370,13 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					connDone()
 					ownMiss(dialAt)
-					relayFailed(u, dialAt)
-					nap(relayRetryAfter(u, retry, own))
+					relayFailed(row, dialAt)
+					nap(relayRetryAfterN(row, retry, own, dialFailed()))
 					continue
 				}
+				dialFails = 0
 				// our own relay's successes clear its failure count too
-				relayOK(u)
+				relayOK(row)
 				markAlive()
 				// set once the catch-up ran to its end: from then on each
 				// sign of life says the relay handed over all it took
@@ -2392,6 +2493,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if backup {
 					backupWake = liveWakeChan()
 				}
+				// the route in doubt (private): this socket says whether
+				// it carries
+				routeAsk := routeAskChan()
 				// a read closes once what it asked by ids is answered too, or
 				// the ask gave up on its own quiet: the held ones may be on
 				// this relay alone
@@ -2468,6 +2572,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							stopKick()
 							r.close()
 							dropped = true
+							if ctx.Err() == nil {
+								noteTorLoss(lane, u)
+							}
 							if !spoke {
 								ownMiss(dialAt)
 							}
@@ -2626,10 +2733,24 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
+						noteTorLoss(lane, u)
 						ownMiss(dialAt)
 						stopKick()
 						r.drop(asked)
 						goto reconnect
+					case <-routeAsk:
+						routeAsk = routeAskChan()
+						// an answer proves the route (probeProves). no answer
+						// is left to the quiet timer: a doubt is no drop
+						if probe() {
+							if !idle.Stop() {
+								select {
+								case <-idle.C:
+								default:
+								}
+							}
+							idle.Reset(quietFor(deaf))
+						}
 					case <-kickChan():
 						// the job knocks every fifteen minutes so sockets that
 						// died while the phone was asleep come back inside its
@@ -2655,6 +2776,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// tearing down.
 						if probe() {
 							turn.probed(true)
+							// the relay was reached and the live socket had
+							// it all: a catch-up begun and over at once. a
+							// check-in waiting on its kick reads no relay
+							// reached otherwise, over sockets that carry
+							atomic.AddInt64(&catchupStarted, 1)
 							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
@@ -2668,6 +2794,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
+						noteTorLoss(lane, u)
 						turn.probed(false)
 						ownMiss(dialAt)
 						idle.Stop()

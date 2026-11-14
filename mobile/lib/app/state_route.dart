@@ -363,7 +363,13 @@ extension AppStateRoute on AppState {
         changed = true;
       }
     }
-    final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
+    // tor itself got through, whether or not our relays answer yet
+    if (_sendMode == 'private' && _torCarries) _noteTorUpOnce();
+    final hints = (
+      suggestBridgesAt(at),
+      suggestBridgesOffAt(at),
+      firstAutoStuckAt(at),
+    );
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;
       changed = true;
@@ -541,12 +547,59 @@ extension AppStateRoute on AppState {
     return _torLooksBlockedAt(now);
   }
 
+  // tor carried once: kept, so a first-run hint never comes back
+  void _noteTorUpOnce() {
+    // a decoy view marks nothing: the real view's own carry keeps it
+    if (_torUpOnce || inDecoyView) return;
+    _torUpOnce = true;
+    unawaited(
+      secureStore.write(key: 'tor_up_once', value: '1').catchError((Object e) {
+        // held for this run; the next run's first carry writes it again
+        dlog('tor up once: not kept (${e.runtimeType})');
+      }),
+    );
+  }
+
+  bool get torUpOnce => _torUpOnce;
+  @visibleForTesting
+  set torUpOnceForTest(bool v) => _torUpOnce = v;
+
+  // automatic on a first run, nothing through yet. by 4 min direct (90 s),
+  // obfs4 (45 s) and webtunnel (90 s) have had their step limits in
+  // engine/auto.go and only snowflake is left; the blocked bar above is
+  // 120 s. some networks let automatic in only after one way out first
+  static const firstAutoStuckAfter = Duration(minutes: 4);
+
+  bool get firstAutoStuck => firstAutoStuckAt(DateTime.now());
+
+  @visibleForTesting
+  bool firstAutoStuckAt(DateTime now) {
+    if (_torUpOnce || !_online || inDecoyView) return false;
+    if (_sendMode != 'private' || torReady) return false;
+    if (_torCarries || _bridgeStatus.canSend) return false;
+    if (_bridge.choice != BridgeChoice.auto) return false;
+    const away = {'no_internet', 'offline', 'paused', 'captive'};
+    if (away.contains(_bridgeStatus.phase)) return false;
+    if (_bridgeStatus.exhausted) return true;
+    final t = _torTryingSince;
+    return t != null && now.difference(t) >= firstAutoStuckAfter;
+  }
+
   // a wi-fi that wants a sign-in first: its line and the way to the
-  // settings go on home, whatever way tor is set to take
+  // settings go on home, whatever way tor is set to take. on fast it is
+  // android's word, once our servers do not answer through it
   bool get captiveWait =>
       !inDecoyView &&
-      _sendMode == 'private' &&
-      _bridgeStatus.phase == 'captive';
+      (_sendMode == 'private'
+          ? _bridgeStatus.phase == 'captive'
+          : fastCaptive);
+
+  // fast behind a sign-in page: what is down is the wi-fi, not our servers
+  bool get fastCaptive =>
+      _sendMode == 'balanced' &&
+      _online &&
+      _netCaptive &&
+      _relayDownSince != null;
 
   // automatic is past the usual way, or gave up: the home shows its line
   bool get autoStruggling =>
@@ -562,6 +615,8 @@ extension AppStateRoute on AppState {
   @visibleForTesting
   bool suggestPrivateFallbackAt(DateTime now) {
     if (_relayHintOff || _sendMode != 'balanced' || !_online) return false;
+    // private would meet the same sign-in page
+    if (_netCaptive) return false;
     final t = _relayDownSince;
     if (t == null) return false;
     return now.difference(t).inSeconds > 90;
@@ -702,12 +757,19 @@ extension AppStateRoute on AppState {
     engine.networkDetail(json);
     bool? on;
     int? net;
+    var captive = false;
     try {
       final m = jsonDecode(json);
       if (m is Map && m['on'] is bool) on = m['on'] as bool;
       if (m is Map && m['net'] is int) net = m['net'] as int;
+      captive = m is Map && m['limited'] == true;
     } catch (_) {}
     if (on == null) return;
+    captive = captive && on;
+    if (captive != _netCaptive) {
+      _netCaptive = captive;
+      notifyListeners();
+    }
     _netWatchOn = on;
     // another network in place of the one there, of the same type or not:
     // wifi to another wifi is a change connectivity does not see
@@ -809,6 +871,9 @@ extension AppStateRoute on AppState {
         // the wait goes, the count toward the cap stays
         _ackNextAt.clear();
       }
+      // tor's clock counts from the network's return, not from a spell
+      // with none: the offline card is about tor not getting through
+      if (_torTryingSince != null) _torTryingSince = at;
       // the status poll sees the route come up and drains
       _outboxWasReady = false;
       unawaited(_drainAcks());

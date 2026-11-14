@@ -256,7 +256,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     if (!_answering.add(id)) return;
     HapticFeedback.selectionClick();
     try {
-      await session.declineRequest(id);
+      await appState.declineRequest(id);
       await appState.refreshContacts();
       await _load();
     } finally {
@@ -275,7 +275,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     // the sheet says their messages go: decline drops them, block shuts
     // the door
     try {
-      await session.declineRequest(id);
+      await appState.declineRequest(id);
       await appState.block(id);
       await session.clearUnread(id);
       await appState.refreshContacts();

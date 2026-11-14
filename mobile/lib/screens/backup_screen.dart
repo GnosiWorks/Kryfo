@@ -3,7 +3,6 @@
 // to the share sheet when that is refused.
 
 import 'dart:async';
-import 'dart:io' show FileSystemException;
 import 'dart:isolate';
 
 import '../bidi_safe.dart' show unmarked;
@@ -804,14 +803,6 @@ String backupFailLine(Object e) {
   return l10n.backupNotMade;
 }
 
-/// a write the phone refused for want of room, from dart or from the copy
-/// job's own words
-bool outOfSpace(Object e) {
-  if (e is FileSystemException && e.osError?.errorCode == 28) return true;
-  final s = e.toString();
-  return s.contains('ENOSPC') ||
-      s.toLowerCase().contains('no space left on device');
-}
 
 // a backup the lock took the screen from before the file was handed over
 // is not made. said once the same chats are open again and never elsewhere:

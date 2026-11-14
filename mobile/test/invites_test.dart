@@ -492,6 +492,101 @@ void main() {
       isNull,
     );
   });
+  test('invites a key the identity no longer has signed go at the next '
+      'upkeep with their keys, and a main one is made under the key it has '
+      'now', () async {
+    final old = await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    );
+    final once = await makeInvite(
+      db,
+      ss,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: _now,
+    );
+    // new words during setup: the identity is made again, x key and face
+    final k = testKeyPair();
+    await ss.rekey(
+      database: db,
+      xPubBytes: k.xPub,
+      xPrivBytes: k.privateKey.serialize(),
+    );
+    final keys = ed.newKeyFromSeed(Uint8List.fromList(List.filled(32, 21)));
+    final face = InviteFace(
+      onionKey: _face.onionKey,
+      face: Uint8List.fromList(ed.public(keys).bytes),
+      sign: (m) => Uint8List.fromList(ed.sign(keys, m)),
+    );
+    final up = await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: face,
+      nowMs: _now + _hour,
+    );
+    expect(
+      up.dropped,
+      unorderedEquals([old.made!.id, old.roster!.id, once.id]),
+    );
+    final main = (await currentMainInvite(db, kMainIdent))!;
+    expect(main.id, up.made!.id);
+    final inv = ss.lib.parseInvite(main.link);
+    expect(inv.identity, ss.identity.public);
+    expect(inv.face, face.face);
+    expect(up.roster, isNotNull);
+    expect(await invitesOf(db, kMainIdent), hasLength(2));
+    expect(await fcKeysOf(db, kMainIdent), hasLength(2));
+    // and the next upkeep finds nothing to do
+    final again = await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: face,
+      nowMs: _now + 2 * _hour,
+    );
+    expect(again.dropped, isEmpty);
+    expect(again.made, isNull);
+  });
+
+  test('a main invite showing a face that is not the identity\'s now is '
+      'made again; one made again at six months is still answered', () async {
+    final first = (await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: _now,
+    )).made!;
+    final at6 = _now + kMainReissueHours * _hour;
+    final second = (await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: _face,
+      nowMs: at6,
+    )).made!;
+    expect(await inviteOf(db, kMainIdent, first.id), isNotNull);
+    final keys = ed.newKeyFromSeed(Uint8List.fromList(List.filled(32, 22)));
+    final up = await keepInvites(
+      db,
+      ss,
+      fcPkOf: _fcPkOf,
+      face: InviteFace(
+        onionKey: _face.onionKey,
+        face: Uint8List.fromList(ed.public(keys).bytes),
+        sign: (m) => Uint8List.fromList(ed.sign(keys, m)),
+      ),
+      nowMs: at6 + _hour,
+    );
+    expect(up.dropped, unorderedEquals([first.id, second.id]));
+    expect((await currentMainInvite(db, kMainIdent))!.id, up.made!.id);
+  });
+
   test(
     'a hello: taken on the five rules, refused re-addressed, under a '
     'foreign seal, twice on a one-time invite or once seen; zero answers '

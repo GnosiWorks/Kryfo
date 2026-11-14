@@ -110,7 +110,7 @@ func pubGet(ctx context.Context, key pubKey, client *http.Client) (s *pubSock, f
 	// not tied to this caller's context, only to the route its client is of
 	// a burst can outlast a minute, and over a busy circuit the library's
 	// 800ms pong wait closes a socket that is only slow
-	r := nostr.NewRelay(context.Background(), key.url, relayOptionsFor(key.url))
+	r := nostr.NewRelay(context.Background(), key.url, relayOptionsFor(key.lane, key.url))
 	base, bcancel := context.Background(), context.CancelFunc(func() {})
 	if route := routeOf(ctx); route != nil {
 		base, bcancel = onRoute(base, route)

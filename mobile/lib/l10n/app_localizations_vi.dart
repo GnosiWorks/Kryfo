@@ -2938,6 +2938,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeKeepWaiting => 'Tiếp tục chờ';
 
   @override
+  String get homeFirstRunBridgeHint => 'Vẫn đang kết nối? Hãy kết nối một lần qua VPN, hoặc dán cầu nối.';
+
+  @override
   String get homeOffline => 'Ngoại tuyến';
 
   @override
@@ -4718,6 +4721,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get scanPointAtAKryfo => 'Hướng vào mã QR Kryfo · không có gì rời khỏi điện thoại của bạn';
+
+  @override
+  String get scanFromGallery => 'Chọn từ thư viện';
+
+  @override
+  String get scanChoosePicture => 'Chọn ảnh';
+
+  @override
+  String get scanQrFound => 'Đã tìm thấy mã QR';
+
+  @override
+  String get scanPictureNoCode => 'Ảnh này không có mã QR. Hãy thử ảnh khác';
+
+  @override
+  String get scanPictureNotKryfo => 'Đó là mã QR, nhưng không phải của Kryfo';
 
   @override
   String get seenWhatWeCanSee => 'Chúng tôi thấy được gì';
