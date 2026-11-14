@@ -88,6 +88,26 @@ extension AppStateContacts on AppState {
     await refreshContacts();
   }
 
+  // a request turned away: its rows go as before, and what it rang with
+  // leaves the shade with them
+  Future<void> declineRequest(String haloId) async {
+    var tags = const <String>{};
+    if (!sessionQuiet) {
+      try {
+        tags = await session.notifTagsOf(haloId);
+      } catch (e) {
+        dlog('decline: tags not read (${e.runtimeType})');
+      }
+    }
+    await session.declineRequest(haloId);
+    if (!sessionQuiet) {
+      await cancelWithRetry(
+        () => _io.unnotifyGone(haloId, tags),
+        'decline shade',
+      );
+    }
+  }
+
   Future<void> deleteConversation(String haloId) async {
     // messages + contact row only. the signal session stays: the peer still
     // holds a live session and their next message is a plain whisper, which
@@ -98,9 +118,25 @@ extension AppStateContacts on AppState {
     // only to an add the person makes, and asks (NameHold.ask)
     await dropChatDraft(haloId);
     final hellos = await hellosKeysOf(haloId);
+    // the tags its notifications went under, read while the rows still say
+    var tags = const <String>{};
+    if (!sessionQuiet) {
+      try {
+        tags = await session.notifTagsOf(haloId);
+      } catch (e) {
+        dlog('delete: tags not read (${e.runtimeType})');
+      }
+    }
     // linked devices: their devices get nothing more (read before the row)
     await _devForget(haloId);
     await session.deleteConversation(haloId);
+    // what it showed in the shade goes with it
+    if (!sessionQuiet) {
+      await cancelWithRetry(
+        () => _io.unnotifyGone(haloId, tags),
+        'delete shade',
+      );
+    }
     // their photo and the one set for them go; ours is taken back
     try {
       await session.draftsOf(haloId).dropPhotosOf(haloId);
