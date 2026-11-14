@@ -1,0 +1,1 @@
+Fixes: Kryfo no longer says the servers are not answering while your messages get through. Usernames that would not claim now claim, on phones and computers. Tor stays steadier with many contacts, in Fast and in Private. Translation works on 32-bit phones instead of closing the app.

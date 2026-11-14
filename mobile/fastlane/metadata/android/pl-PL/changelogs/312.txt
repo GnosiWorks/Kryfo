@@ -1,0 +1,1 @@
+Poprawki: Kryfo nie mówi już, że serwery nie odpowiadają, gdy Twoje wiadomości docierają. Nazwy użytkownika, których nie dało się zająć, teraz się zajmują, na telefonach i komputerach. Tor działa stabilniej przy wielu kontaktach, w trybie Szybki i Prywatny. Tłumaczenie działa na telefonach 32-bitowych zamiast zamykać aplikację.

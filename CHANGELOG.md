@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.2] - unreleased
+
+### Fixed
+- "Servers not answering" no longer shows in Fast while your messages get through. Tor having a hard time on the few chats that always use it (rooms, hidden chats, pair codes, first messages) no longer counts as our servers being down, and one answer from a server clears the warning.
+- usernames that would not claim ("the invite isn't from your key") claim again, on phones and computers. it hit people who tapped for new words during setup; the update repairs their invite link on its own.
+- steadier Tor with many contacts, in Fast and in Private: the chats that go through Tor keep their connection instead of dropping about once a minute, and after a big drop they reconnect a few at a time instead of all at once.
+- "No relay reached" after a check-in and "Waiting for a relay" in Private no longer show while the relays answer.
+- translation on 32-bit phones works instead of closing the app.
+
 ## [0.6.1] - unreleased
 
 ### Added

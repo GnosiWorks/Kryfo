@@ -1,0 +1,1 @@
+Düzeltmeler: Kryfo, mesajların ulaşırken artık sunucuların yanıt vermediğini söylemiyor. Alınamayan kullanıcı adları artık alınabiliyor, telefonlarda ve bilgisayarlarda. Tor çok kişiyle daha kararlı, Hızlı ve Özel modda. Çeviri 32 bit telefonlarda uygulamayı kapatmak yerine çalışıyor.
