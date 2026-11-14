@@ -13,6 +13,7 @@ import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/identities.dart' show kMainIdent;
 import 'package:kryfo/invites.dart';
 import 'package:kryfo/main.dart'
@@ -21,6 +22,7 @@ import 'package:kryfo/main.dart'
         AppState,
         HaloDb,
         HaloEngine,
+        linkedRole,
         makePreKeyBundleB64,
         useDatabasesForTest,
         useEngineForTest,
@@ -326,4 +328,80 @@ void main() {
       );
     },
   );
+
+  group('a computer of its own', () {
+    setUp(() => onDesktop = true);
+    tearDown(() => onDesktop = false);
+
+    test('new words during setup: the claim carries the new key', () async {
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+      final e = _Engine();
+      useEngineForTest(e);
+      final db = MemDb();
+      final live = _Live(db);
+      useDatabasesForTest(live, Session(live));
+      expect(linkedRole, isFalse);
+      await signalSession.rekey(
+        database: db,
+        xPubBytes: _unhex(e.myXPubkey()),
+        xPrivBytes: _unhex(e.myXPrivkey()),
+      );
+      final app = AppState(
+        io: const AppIo(),
+        router: VaultRouter(ArrivalStore(), ArrivalSeal()),
+      )..myId = e.id;
+      // a computer's tor is up before the words are read: the main invite
+      // is there when the arrow is tapped
+      app.myOnion = _onionOf(_onionKey);
+      await app.keepMyInvites();
+      final firstEd = e.myEdPubkey();
+      expect(await currentMainInvite(db, kMainIdent), isNotNull);
+
+      await app.regenerateIdentity();
+
+      final now = v4OfLink(await app.sessionInvite()) as LsInvite;
+      expect(_hex(now.face!), e.myEdPubkey());
+      expect(_hex(now.face!), isNot(firstEd));
+    });
+
+    test('one stuck since its words were made again heals at the next '
+        'upkeep', () async {
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+      final e = _Engine();
+      useEngineForTest(e);
+      final db = MemDb();
+      final live = _Live(db);
+      useDatabasesForTest(live, Session(live));
+      await signalSession.rekey(
+        database: db,
+        xPubBytes: _unhex(e.myXPubkey()),
+        xPrivBytes: _unhex(e.myXPrivkey()),
+      );
+      final app = AppState(
+        io: const AppIo(),
+        router: VaultRouter(ArrivalStore(), ArrivalSeal()),
+      )..myId = e.id;
+      app.myOnion = _onionOf(_onionKey);
+      await app.keepMyInvites();
+      final stale = (await currentMainInvite(db, kMainIdent))!;
+      // what 0.6.0 and 0.6.1 left: new keys and signal on them, the old
+      // key's main invite still in its row
+      e.generateIdentity();
+      await signalSession.rekey(
+        database: db,
+        xPubBytes: _unhex(e.myXPubkey()),
+        xPrivBytes: _unhex(e.myXPrivkey()),
+      );
+
+      // the start after the update
+      await app.keepMyInvites();
+
+      expect(await inviteOf(db, kMainIdent, stale.id), isNull);
+      final now = v4OfLink(await app.sessionInvite()) as LsInvite;
+      expect(_hex(now.face!), e.myEdPubkey());
+      expect(_hex(now.identity.sublist(1)), e.myXPubkey());
+    });
+  });
 }
