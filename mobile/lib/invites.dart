@@ -582,12 +582,19 @@ Future<void> spendOneTime(
 
 /// an invite past its expiry and a day of grace, or a one-time one used:
 /// its keys, its first-contact key and its row go. never one that
-/// never expires
-Future<void> dropInvite(Database db, SignalSession ss, InviteRow row) async {
+/// never expires. [rekeyed]: the identity was made again and its signed
+/// and kyber prekeys went with the old key, so their ids may name new
+/// keys now and only the ec key goes
+Future<void> dropInvite(
+  Database db,
+  SignalSession ss,
+  InviteRow row, {
+  bool rekeyed = false,
+}) async {
   if (row.neverExpires) return;
   await ss.dropInviteKeys(
-    spkId: row.spkId,
-    kyberId: row.kyberId,
+    spkId: rekeyed ? null : row.spkId,
+    kyberId: rekeyed ? null : row.kyberId,
     ecId: row.ecId,
   );
   await db.delete(
@@ -616,10 +623,43 @@ class InviteUpkeep {
   bool legacyGone = false;
 }
 
+/// invites a key this identity no longer has signed: made before "new
+/// words" made the identity again, or showing a [face] the engine no
+/// longer holds. they name keys nobody holds and a registry takes no claim
+/// on them, so each goes now with its keys, its address and its row. never
+/// one that never expires; a row that does not read is left to its expiry
+Future<List<String>> dropForeignInvites(
+  Database db,
+  SignalSession ss, {
+  Uint8List? face,
+}) async {
+  final out = <String>[];
+  final me = _hex(ss.identity.public);
+  final f = face == null ? null : _hex(face);
+  for (final r in await invitesOf(db, ss.ident)) {
+    if (r.neverExpires) continue;
+    final LsInvite inv;
+    try {
+      inv = ss.lib.parseInvite(r.link);
+    } catch (_) {
+      continue;
+    }
+    final shown = inv.face;
+    final rekeyed = _hex(inv.identity) != me;
+    if (!rekeyed && (f == null || shown == null || _hex(shown) == f)) {
+      continue;
+    }
+    await dropInvite(db, ss, r, rekeyed: rekeyed);
+    out.add(r.id);
+  }
+  return out;
+}
+
 /// the invites of [ss]'s identity kept as 2.3 says: a main one made when
 /// there is none, made again at six months (the old one is answered until
-/// it expires), and every invite past its expiry and a day of grace gone
-/// with its keys. the v3 invite's keys (signed 1, kyber 1, ec 999999)
+/// it expires), every invite past its expiry and a day of grace gone
+/// with its keys, and every one an old key signed gone at once
+/// (dropForeignInvites). the v3 invite's keys (signed 1, kyber 1, ec 999999)
 /// count as the first main invite's predecessor: they go once a v4 main
 /// invite has stood for a year and a day. [dev]: the developer's phone,
 /// whose main invite is made once and never replaced or dropped
@@ -634,6 +674,10 @@ Future<InviteUpkeep> keepInvites(
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final h = unixHours(now);
   final out = InviteUpkeep();
+  // a link, qr or handle shows only the keys held now
+  if (!dev) {
+    out.dropped.addAll(await dropForeignInvites(db, ss, face: face?.face));
+  }
   final mains = await invitesOf(db, ss.ident, kind: kInviteMain);
   final live = mains.where((r) => r.retiredAt == null).toList();
   final made = await _mainMade(db, ss.ident);
