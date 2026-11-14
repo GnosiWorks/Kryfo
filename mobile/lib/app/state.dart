@@ -872,6 +872,9 @@ class AppState extends ChangeNotifier {
   // android's handle for the network the watch last said is there
   int? _netWatchNet;
 
+  // the watch says a sign-in page sits in front of the network
+  bool _netCaptive = false;
+
   // the kinds of network the last event named, sorted: "mobile,vpn". null
   // until connectivity has said anything: its first word is where the
   // network starts, not a change

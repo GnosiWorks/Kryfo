@@ -1792,7 +1792,10 @@ class _AutoStrip extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
-        final line = shownBridgeLine();
+        // fast uses no bridge: only the sign-in line is its
+        final line = appState.fastCaptive
+            ? bridgeStatusLine(const BridgeStatus(phase: 'captive'))
+            : shownBridgeLine();
         final a = line.action;
         final first = appState.firstAutoStuck;
         final said = [

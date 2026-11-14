@@ -586,11 +586,20 @@ extension AppStateRoute on AppState {
   }
 
   // a wi-fi that wants a sign-in first: its line and the way to the
-  // settings go on home, whatever way tor is set to take
+  // settings go on home, whatever way tor is set to take. on fast it is
+  // android's word, once our servers do not answer through it
   bool get captiveWait =>
       !inDecoyView &&
-      _sendMode == 'private' &&
-      _bridgeStatus.phase == 'captive';
+      (_sendMode == 'private'
+          ? _bridgeStatus.phase == 'captive'
+          : fastCaptive);
+
+  // fast behind a sign-in page: what is down is the wi-fi, not our servers
+  bool get fastCaptive =>
+      _sendMode == 'balanced' &&
+      _online &&
+      _netCaptive &&
+      _relayDownSince != null;
 
   // automatic is past the usual way, or gave up: the home shows its line
   bool get autoStruggling =>
@@ -606,6 +615,8 @@ extension AppStateRoute on AppState {
   @visibleForTesting
   bool suggestPrivateFallbackAt(DateTime now) {
     if (_relayHintOff || _sendMode != 'balanced' || !_online) return false;
+    // private would meet the same sign-in page
+    if (_netCaptive) return false;
     final t = _relayDownSince;
     if (t == null) return false;
     return now.difference(t).inSeconds > 90;
@@ -746,12 +757,19 @@ extension AppStateRoute on AppState {
     engine.networkDetail(json);
     bool? on;
     int? net;
+    var captive = false;
     try {
       final m = jsonDecode(json);
       if (m is Map && m['on'] is bool) on = m['on'] as bool;
       if (m is Map && m['net'] is int) net = m['net'] as int;
+      captive = m is Map && m['limited'] == true;
     } catch (_) {}
     if (on == null) return;
+    captive = captive && on;
+    if (captive != _netCaptive) {
+      _netCaptive = captive;
+      notifyListeners();
+    }
     _netWatchOn = on;
     // another network in place of the one there, of the same type or not:
     // wifi to another wifi is a change connectivity does not see
