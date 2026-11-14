@@ -73,6 +73,11 @@ type paceTicket struct {
 	ok   chan struct{}
 	at   time.Time
 	skip bool
+	// a dial through tor in a wave (torBrakeJoin): not in the line, its
+	// slot comes by its timer
+	brake bool
+	once  sync.Once
+	timer *time.Timer
 }
 
 var dialPace struct {
@@ -96,7 +101,7 @@ func paceNeeded(lane, u string) bool {
 // a ticket in line, or nil when the dial needs no place
 func paceJoin(lane, u string, rank int) *paceTicket {
 	if !paceNeeded(lane, u) {
-		return nil
+		return torBrakeJoin(lane, u, rank)
 	}
 	dialPace.Lock()
 	defer dialPace.Unlock()
@@ -112,6 +117,9 @@ func paceJoin(lane, u string, rank int) *paceTicket {
 func (t *paceTicket) wait(ctx context.Context) error {
 	if t == nil {
 		return nil
+	}
+	if t.brake {
+		return t.waitBrake(ctx)
 	}
 	// in a check-in a ticket goes after checkInPaceWait whatever its place
 	var bound <-chan time.Time
@@ -187,6 +195,13 @@ func (t *paceTicket) placeAt() time.Time {
 // t moves up to rank, if that is better and it still waits
 func (t *paceTicket) raise(rank int) {
 	if t == nil {
+		return
+	}
+	// the open chat joining a socket that waits out a wave: it goes now
+	if t.brake {
+		if rank == paceFirst {
+			t.release()
+		}
 		return
 	}
 	dialPace.Lock()
@@ -355,4 +370,112 @@ func paceRankFor(tag, lane string, made bool) int {
 		return paceTop
 	}
 	return paceRest
+}
+
+// a wave of losses through tor: after a guard jam or a cut every socket
+// through tor would redial in the same second, each a new circuit on a
+// guard path that is already full, and the wave re-arms the next. once
+// torWaveFrom sockets through tor were lost within torWaveFor, each dial
+// through tor takes a slot torBrakeGap plus jitter after the one before,
+// none later than torBrakeMax, the open chat's batch at once. sends take
+// no slot. off again once the losses stop. the gap is 0 in the tests that
+// do not measure it
+var (
+	torWaveFrom                 = 6
+	torWaveFor                  = 15 * time.Second
+	torBrakeGap, torBrakeJitter = newDur(250 * time.Millisecond), newDur(250 * time.Millisecond)
+	torBrakeMax                 = 45 * time.Second
+)
+
+var torBrake struct {
+	sync.Mutex
+	// lane|url -> when the socket through tor was lost
+	lost map[string]time.Time
+	// the next slot
+	next time.Time
+}
+
+// the socket of lane to u was lost or its dial failed. only tor's count
+func noteTorLoss(lane, u string) {
+	if !relayOverTor(lane, u) {
+		return
+	}
+	torBrake.Lock()
+	if torBrake.lost == nil {
+		torBrake.lost = map[string]time.Time{}
+	}
+	torBrake.lost[lane+"|"+u] = time.Now()
+	torBrake.Unlock()
+}
+
+// a wave is on. torBrake held
+func torWaveLocked(now time.Time) bool {
+	n := 0
+	for k, at := range torBrake.lost {
+		if now.Sub(at) >= torWaveFor {
+			delete(torBrake.lost, k)
+			continue
+		}
+		n++
+	}
+	return n >= torWaveFrom
+}
+
+// a wake, a new network, a mode switch: what was lost before says nothing
+// of the route now
+func torBrakeClear() {
+	torBrake.Lock()
+	torBrake.lost = nil
+	torBrake.next = time.Time{}
+	torBrake.Unlock()
+}
+
+// a dial through tor in a wave gets its slot, nil when it needs none
+func torBrakeJoin(lane, u string, rank int) *paceTicket {
+	gap := torBrakeGap.Load()
+	if gap <= 0 || rank == paceFirst || !relayOverTor(lane, u) {
+		return nil
+	}
+	now := time.Now()
+	torBrake.Lock()
+	if !torWaveLocked(now) {
+		torBrake.Unlock()
+		return nil
+	}
+	at := torBrake.next
+	if at.Before(now) {
+		at = now
+	}
+	if last := now.Add(torBrakeMax); at.After(last) {
+		// past the longest wait: drawn inside its last quarter
+		at = last.Add(-time.Duration(mrand.Int64N(int64(torBrakeMax/4) + 1)))
+	}
+	torBrake.next = at.Add(time.Duration(gap + mrand.Int64N(torBrakeJitter.Load()+1)))
+	torBrake.Unlock()
+	t := &paceTicket{rank: rank, url: u, lane: lane, ok: make(chan struct{}), brake: true}
+	t.timer = time.AfterFunc(time.Until(at), t.release)
+	return t
+}
+
+func (t *paceTicket) release() { t.once.Do(func() { close(t.ok) }) }
+
+// a braked ticket's wait: its slot, in a check-in no later than a place's
+func (t *paceTicket) waitBrake(ctx context.Context) error {
+	var bound <-chan time.Time
+	if inCheckIn() {
+		tm := time.NewTimer(checkInPaceWait)
+		defer tm.Stop()
+		bound = tm.C
+	}
+	select {
+	case <-t.ok:
+	case <-bound:
+		t.release()
+	case <-ctx.Done():
+		t.timer.Stop()
+		return ctx.Err()
+	}
+	t.timer.Stop()
+	t.at = time.Now()
+	return nil
 }

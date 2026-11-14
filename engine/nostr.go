@@ -320,8 +320,9 @@ const (
 )
 
 // connections still fetching what they missed, and how many have begun
-// since the process started. a check-in waits for the first to reach zero
-// after the second has moved.
+// since the process started, a kick's probe answered on a live socket
+// counted as one begun and done. a check-in waits for the first to reach
+// zero after the second has moved.
 var (
 	catchupActive  int32
 	catchupStarted int64
@@ -1186,6 +1187,7 @@ func relayFailedAs(k string, began time.Time, route bool) {
 // nothing wrong, and holding it out for five more minutes after the route is
 // rebuilt is five more minutes of a message sitting in the outbox.
 func relayClearBenches() {
+	torBrakeClear()
 	benchClear.Lock()
 	close(benchClear.c)
 	benchClear.c = make(chan struct{})
@@ -2241,6 +2243,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						}
 					} else {
 						relayFailed(row, dialAt)
+						if ctx.Err() == nil {
+							noteTorLoss(lane, u)
+						}
 					}
 					nap(relayRetryAfter(row, retryFor(u, retry, own), own))
 					continue
@@ -2455,6 +2460,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if backup {
 					backupWake = liveWakeChan()
 				}
+				// the route in doubt (private): this socket says whether
+				// it carries
+				routeAsk := routeAskChan()
 				// a read closes once what it asked by ids is answered too, or
 				// the ask gave up on its own quiet: the held ones may be on
 				// this relay alone
@@ -2531,6 +2539,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							stopKick()
 							r.close()
 							dropped = true
+							if ctx.Err() == nil {
+								noteTorLoss(lane, u)
+							}
 							if !spoke {
 								ownMiss(dialAt)
 							}
@@ -2689,10 +2700,24 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
+						noteTorLoss(lane, u)
 						ownMiss(dialAt)
 						stopKick()
 						r.drop(asked)
 						goto reconnect
+					case <-routeAsk:
+						routeAsk = routeAskChan()
+						// an answer proves the route (probeProves). no answer
+						// is left to the quiet timer: a doubt is no drop
+						if probe() {
+							if !idle.Stop() {
+								select {
+								case <-idle.C:
+								default:
+								}
+							}
+							idle.Reset(quietFor(deaf))
+						}
 					case <-kickChan():
 						// the job knocks every fifteen minutes so sockets that
 						// died while the phone was asleep come back inside its
@@ -2718,6 +2743,11 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						// tearing down.
 						if probe() {
 							turn.probed(true)
+							// the relay was reached and the live socket had
+							// it all: a catch-up begun and over at once. a
+							// check-in waiting on its kick reads no relay
+							// reached otherwise, over sockets that carry
+							atomic.AddInt64(&catchupStarted, 1)
 							turn.done()
 							log.Printf("nostr: %s kicked but still answering, keeping the sub", u)
 							askWanted()
@@ -2731,6 +2761,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
+						noteTorLoss(lane, u)
 						turn.probed(false)
 						ownMiss(dialAt)
 						idle.Stop()

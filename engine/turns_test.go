@@ -16,6 +16,10 @@ import (
 func TestMain(m *testing.M) {
 	subSpread = 0
 	paceGap.Store(0)
+	torBrakeGap.Store(0)
+	// the verdict does not wait for the live sockets' answers but in the
+	// tests that measure it
+	routeAskWait = 0
 	// one process runs every test, for longer than a start lasts
 	startMadeFor = 24 * time.Hour
 	os.Exit(m.Run())

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -229,5 +230,116 @@ func TestHealthKeyByRoute(t *testing.T) {
 	transportMode.Store(modePrivate)
 	if k := healthKey(laneFirstContact, own); k != own {
 		t.Fatalf("private first contact: row %q", k)
+	}
+}
+
+// a check-in kicks and waits for a catch-up to begin. sockets that are up
+// answer the kick's probe and keep their subscription: that is a relay
+// reached, in every mode, not "no relay reached" over sockets that carry
+func TestAKickAnsweredLiveCountsAsReached(t *testing.T) {
+	for _, m := range []string{modeBalanced, modePrivate} {
+		t.Run(m, func(t *testing.T) {
+			socks := newSocksStandIn(t)
+			relay := newRelayStandIn(t, 0)
+			useStandIns(t, m, socks, relay)
+			old := kickSpread
+			kickSpread = 500 * time.Millisecond
+			t.Cleanup(func() { kickSpread = old })
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			peer := newXid(t)
+			rcv := mustRcv(t, peer)
+			go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
+			waitFor(t, "the subscription caught up", 20*time.Second, func() bool {
+				catchupMu.Lock()
+				defer catchupMu.Unlock()
+				_, done := catchupLast[catchupKey(relay.url(), rcv)]
+				return done && atomic.LoadInt32(&catchupActive) == 0
+			})
+			conns := len(relay.snapshot())
+			begun := atomic.LoadInt64(&catchupStarted)
+			nostrKick()
+			waitFor(t, "the kick answered", 15*time.Second, func() bool {
+				return atomic.LoadInt64(&catchupStarted) > begun && atomic.LoadInt32(&catchupActive) == 0
+			})
+			if n := len(relay.snapshot()); n != conns {
+				t.Fatalf("%d connections after the kick, want the live one kept (%d)", n, conns)
+			}
+		})
+	}
+}
+
+// private, a quiet route that carries: two of our relays fail a dial while
+// the live socket has nothing to say. the live sockets are asked at once,
+// and their answer keeps the pill off. with no live socket to answer, the
+// route still reads down, and the next answer clears it
+func TestPrivateQuietRouteAnswersBeforeThePill(t *testing.T) {
+	socks := newSocksStandIn(t)
+	relay := newRelayStandIn(t, 0)
+	useStandIns(t, modePrivate, socks, relay)
+	resetRoute(t, "reachable", 100)
+	oldWait, oldGap := routeAskWait, routeAskGap
+	routeAskWait, routeAskGap = 15*time.Second, time.Minute
+	t.Cleanup(func() { routeAskWait, routeAskGap = oldWait, oldGap })
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	peer := newXid(t)
+	rcv := mustRcv(t, peer)
+	go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
+	waitFor(t, "the route proven by the live socket", 20*time.Second, func() bool {
+		catchupMu.Lock()
+		_, done := catchupLast[catchupKey(relay.url(), rcv)]
+		catchupMu.Unlock()
+		return done && routeOK()
+	})
+	probes := func() int {
+		n := 0
+		for _, c := range relay.snapshot() {
+			n += len(c.reqs)
+		}
+		return n
+	}
+	// two relays that answered on this route fail a dial: ours, and
+	// another that answered lately
+	other := "wss://other.example"
+	routeAnswered(other, -1)
+	before := probes()
+	routeNoteFail(relay.url())
+	routeNoteFail(other)
+	if n := failedCount(); n != 2 && n != 0 {
+		t.Fatalf("%d failures counted", n)
+	}
+	routeMu.Lock()
+	firstFailAt = time.Now().Add(-21 * time.Second)
+	routeMu.Unlock()
+	end := time.Now().Add(10 * time.Second)
+	for !(probes() > before && failedCount() == 0) {
+		if time.Now().After(end) {
+			t.Fatalf("no answer to the ask: %d reqs before, %d after, %d failures", before, probes(), failedCount())
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if !routeOK() {
+		t.Fatal("the route reads down while its live socket answers")
+	}
+
+	// nothing live: a real outage still shows, once the ask had its time
+	cancel()
+	runnersGone(t)
+	routeMu.Lock()
+	routeAskAt = time.Time{}
+	routeMu.Unlock()
+	routeNoteFail(relay.url())
+	routeNoteFail(other)
+	routeMu.Lock()
+	firstFailAt = time.Now().Add(-21 * time.Second)
+	routeAskAt = time.Now().Add(-routeAskWait - time.Second)
+	routeMu.Unlock()
+	if routeOK() {
+		t.Fatal("every relay failing reads up")
+	}
+	// and the first answer ends it: nothing sticks
+	if !probeProves(relay.url(), func() bool { return true }) || !routeOK() {
+		t.Fatal("an answer did not clear the route's doubt")
 	}
 }
