@@ -29,6 +29,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/link_view.dart'
     show LinkKind, kRelayDownAfter, linkViewOf;
 import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/pill_grace.dart' show kPillGrace;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/bridge_mode.dart';
@@ -365,6 +366,53 @@ void main() {
         app.sampleRelayHealth(now: at);
         expect(pillAt(app, at), LinkKind.relay);
       }
+    });
+
+    test('fast: tor down or climbing never reads as no relay', () {
+      final app = AppState()..sendModeForTest = 'balanced';
+      eng.relays = const [
+        {'url': 'wss://relay.kryfo.app', 'fails': 0, 'up': true},
+        {'url': 'wss://relay2.kryfo.app', 'fails': 0, 'up': true},
+      ];
+      for (final raw in const [
+        'starting|10|0|0|1',
+        'reachable|100|1|0|1',
+        'off|0|0|0|2',
+      ]) {
+        final at = t0.add(const Duration(minutes: 5));
+        app.takeTorStatus(raw, now: at);
+        app.sampleRelayHealth(now: at);
+        expect(app.linkViewAt(at).kind, LinkKind.relay, reason: raw);
+        expect(app.suggestPrivateFallbackAt(at), isFalse, reason: raw);
+        expect(app.suggestBridgesAt(at), isFalse, reason: raw);
+      }
+    });
+
+    test('private: no relay only while the engine reads the route down, '
+        'and gone at its next answer', () {
+      final app = AppState()..sendModeForTest = 'private';
+      // relays answering through tor: ten minutes of polls, never no relay
+      for (var s = 0; s <= 600; s += 5) {
+        final at = t0.add(Duration(seconds: s));
+        app.takeTorStatus('reachable|100|1|1|3', now: at);
+        expect(app.linkViewAt(at).kind, LinkKind.ready);
+        expect(app.suggestBridgesAt(at), isFalse);
+        expect(app.suggestPrivateFallbackAt(at), isFalse);
+      }
+      // the engine's verdict down: held through the grace, then said
+      final down = t0.add(const Duration(seconds: 605));
+      app.takeTorStatus('reachable|100|1|0|3', now: down);
+      expect(app.linkViewAt(down).kind, LinkKind.ready);
+      final late = down.add(kPillGrace + const Duration(seconds: 1));
+      app.takeTorStatus('reachable|100|1|0|3', now: late);
+      expect(app.linkViewAt(late).kind, LinkKind.relayWait);
+      // one answer: the next poll is ready, nothing held over
+      final back = late.add(const Duration(seconds: 1));
+      app.takeTorStatus('reachable|100|1|1|3', now: back);
+      final v = app.linkViewAt(back);
+      expect(v.kind, LinkKind.ready);
+      expect(v.held, isFalse);
+      expect(app.suggestBridgesAt(back), isFalse);
     });
 
     test('a spell offline is not an outage, and the clock starts again when '
