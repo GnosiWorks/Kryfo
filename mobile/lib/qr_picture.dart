@@ -137,6 +137,7 @@ String? _read(Uint8List bytes) {
   if (info == null) return _notDrawn;
   if (info.width <= 0 || info.height <= 0) return null;
   if (info.width * info.height > kQrPicturePixelsMost) return null;
+  if (dec is img.PngDecoder && !pngDataFits(bytes)) return null;
   final pic = dec.decodeFrame(0);
   if (pic == null) return null;
   final long = math.max(pic.width, pic.height);
@@ -185,4 +186,92 @@ String? readGrey(img.Image pic) {
   );
   final t = code.text;
   return code.isValid && t != null && t.isNotEmpty ? t : null;
+}
+
+class _TooBig implements Exception {
+  const _TooBig();
+}
+
+// counts what zlib gives back and stops it past [most]
+class _Counted implements Sink<List<int>> {
+  final int most;
+  var n = 0;
+  _Counted(this.most);
+  @override
+  void add(List<int> chunk) {
+    n += chunk.length;
+    if (n > most) throw const _TooBig();
+  }
+
+  @override
+  void close() {}
+}
+
+/// a png's pixel data inflates to no more than its header allows. the
+/// image package inflates it whole with no limit, so a few kB of zeros
+/// behind a small width and height would grow to gigabytes
+@visibleForTesting
+bool pngDataFits(Uint8List bytes) {
+  final b = ByteData.sublistView(bytes);
+  int? w, h, depth, type, interlace;
+  final idat = <Uint8List>[];
+  var o = 8;
+  while (o + 8 <= bytes.length) {
+    final len = b.getUint32(o);
+    final kind = String.fromCharCodes(bytes, o + 4, o + 8);
+    final at = o + 8;
+    if (len > bytes.length - at) break;
+    if (kind == 'IHDR' && len >= 13) {
+      w = b.getUint32(at);
+      h = b.getUint32(at + 4);
+      depth = bytes[at + 8];
+      type = bytes[at + 9];
+      interlace = bytes[at + 12];
+    } else if (kind == 'IDAT') {
+      idat.add(Uint8List.sublistView(bytes, at, at + len));
+    } else if (kind == 'IEND') {
+      break;
+    }
+    o = at + len + 4;
+  }
+  if (w == null || h == null || depth == null) return false;
+  final channels = switch (type) {
+    0 || 3 => 1,
+    4 => 2,
+    2 => 3,
+    6 => 4,
+    _ => 0,
+  };
+  if (channels == 0) return false;
+  final bits = channels * depth;
+  int rows(int pw, int ph) =>
+      pw <= 0 || ph <= 0 ? 0 : ph * (1 + (pw * bits + 7) ~/ 8);
+  var most = 0;
+  if (interlace == 1) {
+    // adam7: seven passes, each row with its own filter byte
+    for (final (x0, y0, dx, dy) in const [
+      (0, 0, 8, 8),
+      (4, 0, 8, 8),
+      (0, 4, 4, 8),
+      (2, 0, 4, 4),
+      (0, 2, 2, 4),
+      (1, 0, 2, 2),
+      (0, 1, 1, 2),
+    ]) {
+      most += rows((w - x0 + dx - 1) ~/ dx, (h - y0 + dy - 1) ~/ dy);
+    }
+  } else {
+    most = rows(w, h);
+  }
+  try {
+    final z = ZLibDecoder().startChunkedConversion(_Counted(most));
+    for (final d in idat) {
+      z.add(d);
+    }
+    z.close();
+    return true;
+  } catch (_) {
+    // past the size, or data zlib will not take
+    return false;
+  }
 }

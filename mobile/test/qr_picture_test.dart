@@ -5,6 +5,7 @@
 // the reads need zxing built for this computer (LD_LIBRARY_PATH to
 // libflutter_zxing.so); without it those cases skip.
 import 'dart:ffi';
+import 'dart:io' show ZLibEncoder;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -122,5 +123,26 @@ void main() {
     ]) {
       expect(qrPictureDecoder(no), isNull);
     }
+  });
+
+  test('a png whose data inflates past its size is not drawn', () {
+    final png = img.encodePng(img.Image(width: 100, height: 100));
+    expect(pngDataFits(png), isTrue);
+    // the same 100 x 100 header, its data 16 MB of deflated zeros
+    final zeros = ZLibEncoder().convert(Uint8List(16 << 20));
+    final head = png.sublist(0, 33);
+    final len = ByteData(4)..setUint32(0, zeros.length);
+    final kind = 'IDAT'.codeUnits;
+    final bomb = Uint8List.fromList([
+      ...head,
+      ...len.buffer.asUint8List(),
+      ...kind,
+      ...zeros,
+      // the crc is not what stops it
+      0, 0, 0, 0,
+      0, 0, 0, 0, ...'IEND'.codeUnits, 0xae, 0x42, 0x60, 0x82,
+    ]);
+    expect(zeros.length, lessThan(64 * 1024));
+    expect(pngDataFits(bomb), isFalse);
   });
 }
