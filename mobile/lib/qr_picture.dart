@@ -110,7 +110,10 @@ Future<String?> readQrPicture(Uint8List bytes) async {
   }
 }
 
-const _notDrawn = '\u0000';
+/// what [readQrPictureHere] says for a picture dart does not draw
+@visibleForTesting
+const qrNotDrawn = '\u0000';
+const _notDrawn = qrNotDrawn;
 
 /// the decoder for [bytes] among the formats a gallery holds, or null.
 /// the image package knows more (tiff, psd, exr, ico, tga ...): an ico
@@ -130,11 +133,18 @@ img.Decoder? qrPictureDecoder(Uint8List bytes) {
 }
 
 // in the isolate: draw, shrink, grey, read
-String? _read(Uint8List bytes) {
+String? _read(Uint8List bytes) => readQrPictureHere(bytes);
+
+/// [readQrPicture] without the isolate: the text, null, or [qrNotDrawn]
+@visibleForTesting
+String? readQrPictureHere(Uint8List bytes) {
   final dec = qrPictureDecoder(bytes);
   if (dec == null) return _notDrawn;
   final info = dec.startDecode(bytes);
   if (info == null) return _notDrawn;
+  // an animated webp's frames carry their own size, not the canvas checked
+  // below: the phone's decoder takes its first frame
+  if (info is img.WebPInfo && info.hasAnimation) return _notDrawn;
   if (info.width <= 0 || info.height <= 0) return null;
   if (info.width * info.height > kQrPicturePixelsMost) return null;
   if (dec is img.PngDecoder && !pngDataFits(bytes)) return null;

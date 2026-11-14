@@ -145,4 +145,48 @@ void main() {
     expect(zeros.length, lessThan(64 * 1024));
     expect(pngDataFits(bomb), isFalse);
   });
+
+  test('an animated webp is left to the phone', () {
+    // riff, a vp8x canvas of 100 x 100 with the animation flag, an anim
+    // chunk: its frames would be drawn at their own size
+    final body = <int>[
+      ...'WEBP'.codeUnits,
+      ...'VP8X'.codeUnits,
+      10,
+      0,
+      0,
+      0,
+      0x02,
+      0,
+      0,
+      0,
+      99,
+      0,
+      0,
+      99,
+      0,
+      0,
+      ...'ANIM'.codeUnits,
+      6,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+    ];
+    final webp = Uint8List.fromList([
+      ...'RIFF'.codeUnits,
+      body.length,
+      0,
+      0,
+      0,
+      ...body,
+    ]);
+    expect(qrPictureDecoder(webp), isA<img.WebPDecoder>());
+    expect(readQrPictureHere(webp), qrNotDrawn);
+  });
 }
