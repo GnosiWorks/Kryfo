@@ -3,6 +3,7 @@
 ## [0.6.2] - unreleased
 
 ### Added
+- on a first start where automatic bridges have not connected yet, a short tip: connecting once through a VPN, or pasting bridges, helps.
 - scan a QR code from a picture: "Choose from gallery" under the scanner's hint, read on the phone itself. the scanner's corners now find the code, follow it and lock on it.
 
 ### Fixed
