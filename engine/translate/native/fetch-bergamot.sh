@@ -96,6 +96,26 @@ FV="$T/inference/marian-fork/src/3rd_party/faiss/VectorTransform.cpp"
 sed -i 's/^#include <cstring>$/#include <cstring>\n#ifdef __SSE__\n#include <immintrin.h>\n#endif/' "$FV"
 grep -q '^#include <immintrin.h>$' "$FV" || { echo "error: faiss has no immintrin.h" >&2; exit 1; }
 
+# marian reads a model's u64 header fields and the float quant multiplier
+# behind each int8 matrix through plain casts, at whatever byte they land
+# on. 64-bit arm and x86 load those fine; 32-bit arm compiles them to ldrd
+# and vldr, which need 4-byte alignment, and the phone kills the app with a
+# sigbus on the first model it opens (every *_QuantMultA sits at +1). each
+# such read and write goes through memcpy instead
+IC="$T/inference/marian-fork/src/tensors/cpu/integer_common.h"
+sed -i '0,/^#pragma once$/s//#pragma once\n#include <cstdint>\n#include <cstring>\n\/\/ kryfo: reads and writes at any byte, safe on 32-bit arm\nstatic inline float kt_ldf(const void *p) { float v; std::memcpy(\&v, p, sizeof v); return v; }\nstatic inline void kt_stf(void *p, float v) { std::memcpy(p, \&v, sizeof v); }\nstatic inline uint64_t kt_ldu64(const void *p) { uint64_t v; std::memcpy(\&v, p, sizeof v); return v; }/' "$IC"
+sed -i 's/^\(\s*\)\*(reinterpret_cast<float \*>(&(\*(output_tensor + item.shape.elements())))) = quantMult;/\1kt_stf(\&(*(output_tensor + item.shape.elements())), quantMult);/' "$IC"
+for f in "$IC" "$T/inference/marian-fork/src/tensors/cpu/intgemm_interface.h" "$T/inference/marian-fork/src/tensors/cpu/ruy_interface.h"; do
+  sed -i 's/\*(reinterpret_cast<\(const \)\?float \*>(\(.*elements()\)))/kt_ldf(\2)/' "$f"
+done
+sed -i 's/\*get<uint64_t>(current)/kt_ldu64(get<uint64_t>(current))/' "$T/inference/marian-fork/src/common/binary.cpp"
+{ [[ "$(grep -c 'kt_ldf(' "$IC")" == 3 && "$(grep -c 'kt_stf(' "$IC")" == 2 ]] &&
+  [[ "$(grep -c 'kt_ldf(' "$T/inference/marian-fork/src/tensors/cpu/intgemm_interface.h")" == 4 ]] &&
+  [[ "$(grep -c 'kt_ldf(' "$T/inference/marian-fork/src/tensors/cpu/ruy_interface.h")" == 2 ]] &&
+  [[ "$(grep -c 'kt_ldu64(get<uint64_t>(current))' "$T/inference/marian-fork/src/common/binary.cpp")" == 3 ]] &&
+  ! grep -rqE '\*\(reinterpret_cast<(const )?float \*>\(.*elements\(\)' "$T/inference/marian-fork/src/tensors/cpu/"{integer_common,intgemm_interface,ruy_interface}.h; } ||
+  { echo "error: marian's unaligned reads were not all changed" >&2; exit 1; }
+
 # marian stamps its git revision in at build time with git log, into its
 # source tree. there is no git here, and the revision is the pin's: written
 # once, and the step that would run git taken out
