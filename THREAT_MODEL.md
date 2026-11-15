@@ -23,7 +23,7 @@ put you in danger, read all of it.
   to one conversation and to nobody's identity. no relay can read them.
   messages from 0.5.2 on are padded to one of five sizes, so a relay sees
   roughly how big a message is, not how long. how many you send and when
-  still shows. on the onion route, the relays never learn your ip address
+  still shows. in private mode, the relays never learn your ip address
   or who you are. it writes to both our relays, each through its own onion,
   and to a few public ones, so one of ours can stop without messages
   stopping.
