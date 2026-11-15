@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.2] - unreleased
+## [0.6.2] - 2026-11-15
 
 ### Added
 - on a first start where automatic bridges have not connected yet, a short tip: connecting once through a VPN, or pasting bridges, helps.
