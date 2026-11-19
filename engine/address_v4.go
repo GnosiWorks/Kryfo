@@ -130,7 +130,7 @@ func v4UnwrapStamped(p v4Pair, gw nostr2.Event) (string, nostr2.Timestamp, error
 		if err != nil {
 			return "", err
 		}
-		return nip44.Decrypt(ct, k)
+		return nip44Open(ct, k)
 	})
 	if err != nil {
 		return "", 0, err

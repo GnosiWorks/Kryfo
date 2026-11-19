@@ -1868,7 +1868,15 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			seen.notOpened(ev.ID)
 			return true, false
 		}
-		content, sent, err := unwrap(gw)
+		type unwrapped struct {
+			content string
+			sent    nostr2.Timestamp
+		}
+		o, err := unwrapGuarded(func() (unwrapped, error) {
+			c, at, err := unwrap(gw)
+			return unwrapped{c, at}, err
+		})
+		content, sent := o.content, o.sent
 		if err != nil {
 			log.Printf("nostr: unwrap dropped one: %v", err)
 			seen.notOpened(ev.ID)

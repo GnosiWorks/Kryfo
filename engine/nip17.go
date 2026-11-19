@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	nostr2 "github.com/nbd-wtf/go-nostr"
@@ -136,7 +137,7 @@ func nip17UnwrapAsStamped(me xid, peer [32]byte, gw nostr2.Event) (string, nostr
 		if err != nil {
 			return "", err
 		}
-		return nip44.Decrypt(ct, k)
+		return nip44Open(ct, k)
 	})
 	if err != nil {
 		return "", 0, err
@@ -149,4 +150,26 @@ func nip17UnwrapAsStamped(me xid, peer [32]byte, gw nostr2.Event) (string, nostr
 		return "", 0, fmt.Errorf("seal not from expected peer")
 	}
 	return rumor.Content, rumor.CreatedAt, nil
+}
+
+var errNotSealed = errors.New("not a sealed message")
+
+// a sealed payload is one line of base64, anything else is refused before
+// the library sees it. every opener goes through here
+func nip44Open(ct string, k [32]byte) (string, error) {
+	if strings.ContainsAny(ct, "\r\n") {
+		return "", errNotSealed
+	}
+	return nip44.Decrypt(ct, k)
+}
+
+// an opener that falls over on what came is the same as one that refuses it
+func unwrapGuarded[T any](open func() (T, error)) (out T, err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			var zero T
+			out, err = zero, fmt.Errorf("unwrap: %v", p)
+		}
+	}()
+	return open()
 }
