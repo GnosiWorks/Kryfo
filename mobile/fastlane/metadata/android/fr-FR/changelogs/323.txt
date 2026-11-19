@@ -1,0 +1,1 @@
+Kryfo ignore désormais les messages mal formés au lieu de s'arrêter.

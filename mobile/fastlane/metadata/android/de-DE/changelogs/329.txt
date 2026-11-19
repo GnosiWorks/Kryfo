@@ -1,0 +1,1 @@
+Kryfo ignoriert jetzt fehlerhafte Nachrichten, statt anzuhalten.
