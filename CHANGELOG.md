@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.2.1] - unreleased
+## [0.6.3] - unreleased
 
 ### Fixed
 - Kryfo now ignores malformed messages instead of stopping.
