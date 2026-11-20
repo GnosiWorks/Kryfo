@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#0D0B09</color>
+    <!-- the launcher icon's tile behind the seal -->
+    <color name="ic_launcher_seal">#E58A2B</color>
     <!-- ink token. painted behind the flutter surface so a surface swap never flashes white -->
     <color name="halo_ink">#0D0B09</color>
 </resources>
