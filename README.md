@@ -22,7 +22,7 @@ Also in the app: groups, files up to 50 MB, voice notes with on-device transcrip
 
 ## Status
 
-Kryfo is alpha software, written by one developer. It has not been audited yet.
+Kryfo is alpha software, written by one developer and 2 helpers. It has not been audited yet.
 
 Cure53 has quoted €15,470 for an independent security audit. It is booked once it is funded, and the full report will be public. If a funder brings its own audit firm, we use theirs. You can help fund it on [Open Collective](https://opencollective.com/kryfo/projects/independent-security-audit).
 
