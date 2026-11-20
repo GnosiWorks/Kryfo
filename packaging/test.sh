@@ -123,6 +123,15 @@ stage "$tmp/pin-zero.txt" --check-dll "$tmp/halo-zeros.dll" >/dev/null 2>&1 \
 python3 -I "$HERE/check_packaging.py" flatpak "$R" "$tmp/app" || fail=1
 python3 -I "$HERE/check_packaging.py" iss "$R" || fail=1
 
+# the ico, the hicolor pngs and kryfo.png are what the generator makes now
+py="${ICON_PYTHON:-python3}"
+if "$py" -I -c 'import PIL' 2>/dev/null; then
+  "$py" -I "$ROOT/mobile/tool/desktop_icons.py" --check >/dev/null \
+    && ok "desktop icons match tool/desktop_icons.py" || no "desktop icons differ: run tool/desktop_icons.py"
+else
+  skip "desktop icons (no pillow, set ICON_PYTHON)"
+fi
+
 if command -v desktop-file-validate >/dev/null; then
   out="$(desktop-file-validate "$HERE/flatpak/app.kryfo.Kryfo.desktop" 2>&1)"
   [ -z "$out" ] && ok "desktop-file-validate" || no "desktop-file-validate: $out"
