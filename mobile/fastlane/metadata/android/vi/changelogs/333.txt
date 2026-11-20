@@ -1,0 +1,1 @@
+Kryfo giờ bỏ qua tin nhắn sai định dạng thay vì dừng lại.

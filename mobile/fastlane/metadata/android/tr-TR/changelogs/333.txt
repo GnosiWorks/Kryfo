@@ -1,0 +1,1 @@
+Kryfo artık bozuk mesajları durmak yerine yok sayıyor.

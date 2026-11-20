@@ -85,7 +85,7 @@ func linkEventOpen(seed [32]byte, ev nostr.Event) ([]byte, bool) {
 	if err != nil {
 		return nil, false
 	}
-	pt, err := nip44.Decrypt(ev.Content, ck)
+	pt, err := nip44Open(ev.Content, ck)
 	if err != nil {
 		return nil, false
 	}

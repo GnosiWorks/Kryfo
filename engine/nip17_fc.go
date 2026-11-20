@@ -91,7 +91,7 @@ func nip17UnwrapFirstContactWithStamped(fcSk string, gw nostr2.Event) (content, 
 		if kerr != nil {
 			return "", kerr
 		}
-		return nip44.Decrypt(ct, k)
+		return nip44Open(ct, k)
 	})
 	if err != nil {
 		return "", "", 0, err

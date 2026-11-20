@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.3] - 2026-11-20
+
+### Fixed
+- Kryfo now ignores malformed messages instead of stopping.
+
 ## [0.6.2] - 2026-11-15
 
 ### Added

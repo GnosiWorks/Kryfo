@@ -1,0 +1,1 @@
+Kryfo kini mengabaikan pesan yang rusak alih-alih berhenti.

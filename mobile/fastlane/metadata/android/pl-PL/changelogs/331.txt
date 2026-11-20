@@ -1,0 +1,1 @@
+Kryfo pomija teraz uszkodzone wiadomości, zamiast się zatrzymywać.

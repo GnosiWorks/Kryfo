@@ -138,7 +138,7 @@ func pairBoxOpen(ev nostr.Event, addrs []pairAddr) ([]byte, pairAddr, bool) {
 		if tg[1] != a.pk {
 			continue
 		}
-		pt, err := nip44.Decrypt(ev.Content, a.ck)
+		pt, err := nip44Open(ev.Content, a.ck)
 		if err != nil {
 			return nil, a, false
 		}
