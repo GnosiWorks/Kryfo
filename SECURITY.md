@@ -2,7 +2,7 @@
 
 If you found a way to read someone's messages, learn who talks to whom, unmask a Kryfo user, get past the app lock, or make the app or the servers do something they shouldn't, please tell me privately first.
 
-Kryfo is built by one person, so these reports come straight to me.
+Kryfo is built by one person and 2 volunteers, so these reports come straight to me.
 
 ## How to report
 
