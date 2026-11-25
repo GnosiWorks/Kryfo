@@ -1,6 +1,6 @@
 # Contributing
 
-Kryfo is made by one developer, and help is welcome. Translations and good bug reports help the most.
+Kryfo is made by one developer and two volunteers, and help is welcome. Translations and good bug reports help the most.
 
 Security problems don't go in public issues. See SECURITY.md.
 
